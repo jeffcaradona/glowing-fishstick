@@ -1,0 +1,9 @@
+<%- include('../layouts/header', { appName: 'Error' }) %>
+
+  <div class="error-page">
+    <h1><%= statusCode %></h1>
+    <p><%= message %></p>
+    <a href="/">Go Home</a>
+  </div>
+
+<%- include('../layouts/footer') %>

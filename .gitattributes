@@ -1,0 +1,22 @@
+# Normalize line endings to LF on commit, checkout as OS-native
+* text=auto eol=lf
+
+# Force LF for scripts and source
+*.js text eol=lf
+*.json text eol=lf
+*.ejs text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files — don't touch
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

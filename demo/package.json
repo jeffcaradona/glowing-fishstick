@@ -1,3 +1,4 @@
 {
-    "name": "glowing-fishstick-tasks"
+    "name": "glowing-fishstick-tasks",
+    "type": "module"
 }

@@ -1,0 +1,40 @@
+<%- include('../layouts/header', { appName }) %>
+
+  <h1>Admin Dashboard</h1>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>Application</h3>
+      <table>
+        <tr><td>Name</td><td><%= appName %></td></tr>
+        <tr><td>Version</td><td><%= appVersion %></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Runtime</h3>
+      <table>
+        <tr><td>Node.js</td><td><%= nodeVersion %></td></tr>
+        <tr><td>Uptime</td><td><%= Math.floor(uptime) %>s</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Memory Usage</h3>
+      <table>
+        <tr><td>RSS</td><td><%= (memoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td></tr>
+        <tr><td>Heap Used</td><td><%= (memoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td></tr>
+        <tr><td>Heap Total</td><td><%= (memoryUsage.heapTotal / 1024 / 1024).toFixed(2) %> MB</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="/admin/config">View Configuration</a></li>
+        <li><a href="/healthz">Health Check</a></li>
+      </ul>
+    </div>
+  </div>
+
+<%- include('../layouts/footer') %>

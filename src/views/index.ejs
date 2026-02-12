@@ -1,0 +1,19 @@
+<%- include('layouts/header', { appName }) %>
+
+  <h1><%= welcomeMessage %></h1>
+  <p>This application is running on the <strong>glowing-fishstick</strong> core module.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>Health Check</h3>
+      <p>Verify the app is running.</p>
+      <a href="/healthz">/healthz</a>
+    </div>
+    <div class="card">
+      <h3>Admin Dashboard</h3>
+      <p>View runtime info and configuration.</p>
+      <a href="/admin">/admin</a>
+    </div>
+  </div>
+
+<%- include('layouts/footer') %>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof appName !== 'undefined' ? appName : 'App' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a class="navbar-brand" href="/"><%= typeof appName !== 'undefined' ? appName : 'App' %></a>
+    <ul class="nav-links">
+      <% (typeof navLinks !== 'undefined' ? navLinks : []).forEach(function(link) { %>
+        <li><a href="<%= link.url %>"><%= link.label %></a></li>
+      <% }) %>
+    </ul>
+  </nav>
+  <main class="container">
