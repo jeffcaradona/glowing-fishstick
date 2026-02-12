@@ -1,0 +1,34 @@
+# Tests & test configs
+tests/
+vitest.config.js
+*.test.js
+*.spec.js
+coverage/
+
+# Development & tooling
+.eslintrc.json
+.eslintignore
+.prettierrc.json
+.prettierignore
+.gitignore
+.env
+.env.*.local
+
+# Documentation & demo
+documentation/
+demo/
+*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitkeep

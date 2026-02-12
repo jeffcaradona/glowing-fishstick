@@ -1,0 +1,54 @@
+{
+  "name": "glowing-fishstick",
+  "version": "0.0.1",
+  "description": "A Demo on Replacing distributed Templates with a module",
+  "keywords": [
+    "template",
+    "module",
+    "demo"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    }
+  },
+  "scripts": {
+    "start:demo": "node demo/src/server.js",
+    "dev:demo": "nodemon --exec node demo/src/server.js",
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose tests/unit",
+    "test:integration": "vitest run --reporter=verbose tests/integration",
+    "test:smoke": "vitest run --reporter=verbose tests/smoke",
+    "test:all": "vitest run --reporter=verbose",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.5.0",
+    "eslint": "^9.5.0",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.3.2",
+    "supertest": "^6.3.3",
+    "vitest": "^1.6.0"
+  }
+}
