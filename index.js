@@ -4,8 +4,8 @@
  * @module glowing-fishstick
  */
 
-export { createApp } from './src/app.js';
-export { createServer } from './src/server.js';
+export { createApp } from './src/app-factory.js';
+export { createServer } from './src/server-factory.js';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,

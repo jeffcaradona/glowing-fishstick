@@ -27,9 +27,13 @@
       "import": "./index.js"
     }
   },
+  "files": [
+    "index.js",
+    "src/"
+  ],
   "scripts": {
-    "start:demo": "node demo/src/server.js",
-    "dev:demo": "nodemon --exec node demo/src/server.js",
+    "start:demo": "node app /src/server.js",
+    "dev:demo": "nodemon --exec node app/src/server.js",
     "test": "vitest",
     "test:unit": "vitest run --reporter=verbose tests/unit",
     "test:integration": "vitest run --reporter=verbose tests/integration",
