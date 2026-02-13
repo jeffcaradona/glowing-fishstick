@@ -483,9 +483,11 @@ See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running th
 
 ---
 
-## Contributing
+## Project Status
 
-Contributions are welcome! This is a demonstration project showing how to build a composable Express.js framework.
+This is a **proof of concept** and demonstration project showing how to build a composable Express.js framework distributed as an npm module. It is not intended for production use without significant additional development work.
+
+Feel free to explore the concepts and patterns demonstrated here and apply them to your own projects as they best fit your needs.
 
 ---
 
