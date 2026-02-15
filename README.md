@@ -41,13 +41,18 @@ This module provides:
 ## Installation
 
 ```bash
-npm install glowing-fishstick
+npm install @glowing-fishstick/app
 ```
 
 **Requirements:**
 
 - Node.js >= 22
 - ES Modules support (`"type": "module"` in package.json)
+
+Note on repository layout and installs
+
+- This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` (Option A: workspace is the source; consumers install the package).
+- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. You may also import directly from the local source (`../../index.js`) for quick experiments, but examples and docs use the package name to mirror real-world consumption.
 
 ---
 
@@ -57,7 +62,7 @@ npm install glowing-fishstick
 
 ```js
 // server.js
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 const config = createConfig({
   appName: 'my-app',
@@ -344,6 +349,14 @@ import { createConfig } from 'glowing-fishstick';
 
 const config = createConfig();
 ```
+
+**Workspace Package Map**
+
+- `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
+- `core/shared` — Shared utilities and supporting code used by `core/app`. Published as `@glowing-fishstick/shared` when distributed separately.
+- `app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
+
+These roles reflect the current repository structure and are the intended mapping for consumers and maintainers.
 
 ---
 

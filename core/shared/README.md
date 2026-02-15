@@ -20,6 +20,16 @@ Import shared utilities in your module:
 import { someUtility } from '@glowing-fishstick/shared';
 ```
 
+Server factory:
+
+This package contains the `createServer` factory used to start HTTP servers and provide graceful shutdown. Consumers may import it directly:
+
+```js
+import { createServer } from '@glowing-fishstick/shared';
+```
+
+When consuming via `@glowing-fishstick/app`, `createServer` is re-exported from `@glowing-fishstick/app` for convenience.
+
 ## Contents
 
 - Shared utility functions
