@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof appName !== 'undefined' ? appName : 'App' %></title>
   <link rel="stylesheet" href="/css/style.css">
+  <% if (typeof styles !== 'undefined' && styles) { %>
+    <% (Array.isArray(styles) ? styles : [styles]).forEach(function(style) { %>
+  <link rel="stylesheet" href="<%= style %>">
+    <% }); %>
+  <% } %>
 </head>
 <body>
   <nav class="navbar">

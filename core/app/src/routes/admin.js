@@ -23,6 +23,7 @@ export function adminRoutes(config) {
       uptime: process.uptime(),
       nodeVersion: process.version,
       memoryUsage: process.memoryUsage(),
+      scripts: ['/js/admin/dashboard.js'],
     });
   });
 
