@@ -20,7 +20,7 @@
     </div>
 
     <div class="card">
-      <h3>Memory Usage</h3>
+      <h3>Memory Usage</h3>      
       <table>
         <tr><td>RSS</td><td><%= (memoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td></tr>
         <tr><td>Heap Used</td><td><%= (memoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td></tr>
@@ -35,6 +35,5 @@
         <li><button id="healthCheckBtn" type="button">Health Check</button> <span id="healthCheckResult"></span></li>
       </ul>
     </div>
-  </div>
-
+  </div>  
 <%- include('../layouts/footer', { scripts }) %>
