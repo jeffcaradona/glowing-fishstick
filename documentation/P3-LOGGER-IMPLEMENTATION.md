@@ -299,6 +299,7 @@ glowing-fishstick/            # Monorepo root (not logged to)
    - Verify shutdown logs emitted
 
 4. Production mode test:
+
    ```bash
    NODE_ENV=production npm start
    ```
