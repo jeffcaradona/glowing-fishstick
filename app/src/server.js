@@ -4,7 +4,8 @@
  * plugins and boots the server.
  */
 
-import { createApp, createServer, createConfig } from '../../index.js';
+
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { taskManagerApplicationPlugin } from './app.js';
 import { demoOverrides } from './config/env.js';
 

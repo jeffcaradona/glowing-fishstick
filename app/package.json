@@ -7,7 +7,7 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/app": "*",
+    "@glowing-fishstick/app": "file:../core/app",
     "express": "^5.2.1"
   },
   "devDependencies": {
