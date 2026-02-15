@@ -21,13 +21,13 @@ The `app/` directory simulates a real-world consumer application (like a "Task M
 npm install glowing-fishstick
 ```
 
-**For local development**, the `app/` directory imports directly from the source:
+**For local development**, the `app/` directory simulates a consumer importing the package by name:
 
 ```js
-import { createApp, createServer, createConfig } from '../../index.js';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
-This allows you to develop and test the core module alongside the app without publishing to npm.
+In this repository the package name is resolved via workspace package linkage (or `npm link`/monorepo tooling). You can still import directly from the local source (e.g. `../../index.js`) if you prefer, but the examples use the package name to mirror a real consumer app.
 
 ---
 
@@ -96,28 +96,23 @@ Open your browser to:
 
 ### Entry Point: `app/src/server.js`
 
-This is the main file that composes the application:
+This is the main file that composes the application. The actual entrypoint imports the workspace package by name:
 
 ```js
-import { createApp, createServer, createConfig } from '../../index.js';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { taskManagerApplicationPlugin } from './app.js';
 import { appOverrides } from './config/env.js';
 
-// 1. Create configuration with app overrides
 const config = createConfig(appOverrides);
-
-// 2. Create Express app with app plugin
 const app = createApp(config, [taskManagerApplicationPlugin]);
-
-// 3. Start HTTP server
-const { server, close } = createServer(app, config);
+const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
 
 export { server, close };
 ```
 
 **Key points:**
 
-1. Imports from the local module (`../../index.js`)
+1. Imports the workspace package (`@glowing-fishstick/app`) to simulate a consumer dependency
 2. Applies app-specific configuration overrides
 3. Passes the app plugin to `createApp()`
 4. Exports `server` and `close` for testing
@@ -191,20 +186,26 @@ export function taskRoutes(config) {
 
 ---
 
-## Development Workflow
+
+### Development Workflow
 
 ### 1. Make Changes to Core Module
 
-Edit files in the `src/` directory (core module):
+Edit files in the core packages under `core/`:
 
 ```
-src/
+core/app/src/
 ├── app-factory.js
 ├── server-factory.js
-├── config/env.js
+├── config/
 ├── routes/
 ├── middlewares/
 └── views/
+
+core/shared/src/
+├── hook-registry.js
+├── server-factory.js
+└── other shared utilities
 ```
 
 ### 2. Test with App
