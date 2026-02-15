@@ -2,5 +2,10 @@
   <footer class="footer">
     <p>&copy; <%= new Date().getFullYear() %> — Powered by glowing-fishstick</p>
   </footer>
+  <% if (typeof scripts !== 'undefined' && scripts) { %>
+    <% (Array.isArray(scripts) ? scripts : [scripts]).forEach(function(script) { %>
+  <script src="<%= script %>"></script>
+    <% }); %>
+  <% } %>
 </body>
 </html>

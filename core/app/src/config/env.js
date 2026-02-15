@@ -3,11 +3,48 @@
  * @description Configuration factory and utilities for the core module.
  */
 
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+
 /**
  * Regex pattern matching sensitive key names that should be filtered
  * from config output (case-insensitive).
  */
 const SENSITIVE_PATTERN = /SECRET|KEY|PASSWORD|TOKEN|CREDENTIAL/i;
+
+/**
+ * Repository root directory - discovered by traversing up looking for jsconfig.json.
+ */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = (() => {
+  let current = __dirname;
+  const root = path.parse(current).root;
+  while (current !== root) {
+    try {
+      // Check if jsconfig.json exists in this directory (repo root marker)
+      const configPath = path.join(current, 'jsconfig.json');
+      if (existsSync(configPath)) {
+        return current;
+      }
+      // Also check for package.json with expected repo structure
+      const pkgPath = path.join(current, 'package.json');
+      if (existsSync(pkgPath)) {
+        const content = readFileSync(pkgPath, 'utf8');
+        if (content.includes('"name"') && (content.includes('glowing-fishstick') || content.includes('"type": "module"'))) {
+          // Check if core/ subdirectory exists to confirm repo root
+          if (existsSync(path.join(current, 'core'))) {
+            return current;
+          }
+        }
+      }
+    } catch {
+      // Continue traversing
+    }
+    current = path.dirname(current);
+  }
+  return root;
+})();
 
 /**
  * Default configuration values.
@@ -50,12 +87,32 @@ export function createConfig(overrides = {}, env = process.env) {
 
 /**
  * Return a shallow copy of `config` with keys matching the sensitive
- * pattern removed. Used by the admin config viewer to prevent
- * accidental secret exposure.
+ * pattern removed and absolute paths converted to repo-relative paths.
+ * Used by the admin config viewer to prevent accidental secret exposure
+ * and to display paths in a more readable format.
  *
  * @param {object} config - The configuration object to filter.
- * @returns {object} A new object with sensitive keys removed.
+ * @returns {object} A new object with sensitive keys removed and paths normalized.
  */
 export function filterSensitiveKeys(config) {
-  return Object.fromEntries(Object.entries(config).filter(([key]) => !SENSITIVE_PATTERN.test(key)));
+  return Object.fromEntries(
+    Object.entries(config)
+      .filter(([key]) => !SENSITIVE_PATTERN.test(key))
+      .map(([key, value]) => {
+        // Convert absolute paths to repo-relative paths for display
+        if (typeof value === 'string' && path.isAbsolute(value)) {
+          try {
+            const relativePath = path.relative(REPO_ROOT, value);
+            // Only use relative path if it doesn't start with '..' (outside repo)
+            if (!relativePath.startsWith('..')) {
+              // Normalize to forward slashes for cross-platform display
+              return [key, relativePath.replace(/\\/g, '/')];
+            }
+          } catch {
+            // If conversion fails, keep original value
+          }
+        }
+        return [key, value];
+      })
+  );
 }

@@ -1,4 +1,4 @@
-<%- include('../layouts/header', { appName }) %>
+<%- include('../layouts/header', { appName, scripts }) %>
 
   <h1>Admin Dashboard</h1>
 
@@ -20,7 +20,7 @@
     </div>
 
     <div class="card">
-      <h3>Memory Usage</h3>
+      <h3>Memory Usage</h3>      
       <table>
         <tr><td>RSS</td><td><%= (memoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td></tr>
         <tr><td>Heap Used</td><td><%= (memoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td></tr>
@@ -32,9 +32,8 @@
       <h3>Quick Links</h3>
       <ul>
         <li><a href="/admin/config">View Configuration</a></li>
-        <li><a href="/healthz">Health Check</a></li>
+        <li><button id="healthCheckBtn" type="button">Health Check</button> <span id="healthCheckResult"></span></li>
       </ul>
     </div>
-  </div>
-
-<%- include('../layouts/footer') %>
+  </div>  
+<%- include('../layouts/footer', { scripts }) %>
