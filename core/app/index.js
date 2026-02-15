@@ -5,7 +5,7 @@
  */
 
 export { createApp } from './src/app-factory.js';
-export { createServer } from './src/server-factory.js';
+export { createServer } from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,

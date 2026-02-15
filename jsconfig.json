@@ -3,9 +3,15 @@
     "baseUrl": ".",
     "paths": {
       "@glowing-fishstick/app": ["core/app/index.js"],
-      "@glowing-fishstick/*": ["core/app/src/*"]
+      "@glowing-fishstick/shared": ["core/shared/index.js"]
     }
   },
-  "include": ["core/app/src/**/*.js"],
-  "exclude": ["node_modules"]
+  "include": [
+    "app/src/**/*.js",
+    "core/app/src/**/*.js",
+    "core/shared/src/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

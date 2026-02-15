@@ -9,7 +9,8 @@
   ],
   "workspaces": [
     "app",
-    "core/app"
+    "core/app",
+    "core/shared"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {
