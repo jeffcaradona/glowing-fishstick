@@ -106,7 +106,7 @@ export function filterSensitiveKeys(config) {
             // Only use relative path if it doesn't start with '..' (outside repo)
             if (!relativePath.startsWith('..')) {
               // Normalize to forward slashes for cross-platform display
-              return [key, relativePath.replace(/\\/g, '/')];
+              return [key, relativePath.replaceAll('\\', '/')];
             }
           } catch {
             // If conversion fails, keep original value

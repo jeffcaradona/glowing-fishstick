@@ -34,12 +34,12 @@ export function adminRoutes(config) {
   /** Config viewer — non-sensitive values only. */
   router.get('/admin/config', (_req, res) => {
     const coreViewsDir = path.join(__dirname, '..', 'views');
-    const coreViewsDirRelative = path.relative(process.cwd(), coreViewsDir).replace(/\\/g, '/');
-    const appViewsDirRelative = config.viewsDir ? path.relative(process.cwd(), config.viewsDir).replace(/\\/g, '/') : null;
+    const coreViewsDirRelative = path.relative(process.cwd(), coreViewsDir).replaceAll('\\', '/');
+    const appViewsDirRelative = config.viewsDir ? path.relative(process.cwd(), config.viewsDir).replaceAll('\\', '/') : null;
     
     const corePublicDir = path.join(__dirname, '..', 'public');
-    const corePublicDirRelative = path.relative(process.cwd(), corePublicDir).replace(/\\/g, '/');
-    const appPublicDirRelative = config.publicDir ? path.relative(process.cwd(), config.publicDir).replace(/\\/g, '/') : null;
+    const corePublicDirRelative = path.relative(process.cwd(), corePublicDir).replaceAll('\\', '/');
+    const appPublicDirRelative = config.publicDir ? path.relative(process.cwd(), config.publicDir).replaceAll('\\', '/') : null;
     
     res.render('admin/config', {
       config: filterSensitiveKeys(config),
