@@ -7,6 +7,7 @@
 ## Overview
 
 Replace all `console.*` calls across the monorepo with a centralized Pino-based logger that supports:
+
 - Structured JSON logging for production environments
 - Pretty-printed console output in development
 - Optional file logging with automatic directory creation
@@ -15,7 +16,7 @@ Replace all `console.*` calls across the monorepo with a centralized Pino-based 
 
 ## Goals
 
-1. **Replace console calls**: Eliminate 15+ console.* calls across core infrastructure and consumer apps
+1. **Replace console calls**: Eliminate 15+ console.\* calls across core infrastructure and consumer apps
 2. **Log directory management**: Auto-create `logs/` directory in consumer app root (process.cwd())
 3. **Environment-aware formatting**: JSON in production, pretty-print in development
 4. **Optional injection**: Accept `config.logger` or create sensible Pino default
@@ -26,14 +27,14 @@ Replace all `console.*` calls across the monorepo with a centralized Pino-based 
 
 ### Console Usage Inventory
 
-| Location | Count | Context |
-|----------|-------|---------|
-| [core/shared/src/server-factory.js](../core/shared/src/server-factory.js) | 9 | Startup, shutdown, hook errors, lifecycle |
-| [core/shared/src/hook-registry.js](../core/shared/src/hook-registry.js) | 1 | Hook execution errors |
-| [core/app/src/middlewares/errorHandler.js](../core/app/src/middlewares/errorHandler.js) | 1 | Unexpected HTTP errors |
-| [app/src/app.js](../app/src/app.js) | 2 | Plugin lifecycle hooks |
-| [app/src/server.js](../app/src/server.js) | 2 | Entry-point lifecycle |
-| **Total** | **15** | **Production-critical logging** |
+| Location                                                                                | Count  | Context                                   |
+| --------------------------------------------------------------------------------------- | ------ | ----------------------------------------- |
+| [core/shared/src/server-factory.js](../core/shared/src/server-factory.js)               | 9      | Startup, shutdown, hook errors, lifecycle |
+| [core/shared/src/hook-registry.js](../core/shared/src/hook-registry.js)                 | 1      | Hook execution errors                     |
+| [core/app/src/middlewares/errorHandler.js](../core/app/src/middlewares/errorHandler.js) | 1      | Unexpected HTTP errors                    |
+| [app/src/app.js](../app/src/app.js)                                                     | 2      | Plugin lifecycle hooks                    |
+| [app/src/server.js](../app/src/server.js)                                               | 2      | Entry-point lifecycle                     |
+| **Total**                                                                               | **15** | **Production-critical logging**           |
 
 ### Archived Logger Analysis
 
@@ -43,6 +44,7 @@ Two archived implementations exist but are not in use:
 - **archived-logger_alt.js**: Pino-based, stream-centric, container-friendly
 
 **Decision**: Use Pino (archived-logger_alt.js as foundation) for:
+
 - Superior performance (~10x faster than Winston)
 - Native streaming support for containerized environments
 - Built-in multistream for dev/prod differentiation
@@ -135,6 +137,7 @@ export function createRequestLogger(logger)
 ### Phase 4: Public API & Exports
 
 8. ✅ **Export from `core/shared/index.js`**
+
    ```javascript
    export { createLogger, createRequestLogger } from './src/logger.js';
    ```
@@ -299,6 +302,7 @@ glowing-fishstick/            # Monorepo root (not logged to)
    ```bash
    NODE_ENV=production npm start
    ```
+
    - Verify JSON-only stdout (no file logging)
    - Verify no pretty-printing
 
@@ -333,6 +337,7 @@ If logger introduces issues:
 ### New Package Dependencies
 
 **core/shared/package.json:**
+
 ```json
 {
   "dependencies": {
@@ -345,6 +350,7 @@ If logger introduces issues:
 ```
 
 **Rationale for versions:**
+
 - Pino 9.x: Latest stable, ESM-native
 - pino-pretty 11.x: Matches Pino 9.x compatibility
 

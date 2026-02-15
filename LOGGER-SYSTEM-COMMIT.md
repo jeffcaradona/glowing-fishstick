@@ -5,8 +5,8 @@
 ```
 feat: implement Pino-based logger system with HTTP request logging
 
-Replace all console.* calls with structured Pino logger across the monorepo. 
-Includes environment-aware formatting, automatic log directory creation, and 
+Replace all console.* calls with structured Pino logger across the monorepo.
+Includes environment-aware formatting, automatic log directory creation, and
 configurable HTTP request/response middleware with UUID-based request ID tracking.
 
 BREAKING CHANGE: None (logger is optional with sensible defaults)
@@ -175,29 +175,31 @@ Co-authored-by: GitHub Copilot <noreply@github.com>
 
 ## Implementation Metrics
 
-| Metric | Value |
-|--------|-------|
-| Files Created | 4 |
-| Files Modified | 11 |
-| Console Calls Replaced | 15 |
-| Lines of Code Added | ~350 (logger.js) |
-| Documentation Lines Added | ~1,000+ |
-| Dependencies Added | 2 (34 packages total) |
-| Tests Passing | 10/13 |
-| Security Vulnerabilities | 0 |
-| Linting Errors | 0 |
+| Metric                    | Value                 |
+| ------------------------- | --------------------- |
+| Files Created             | 4                     |
+| Files Modified            | 11                    |
+| Console Calls Replaced    | 15                    |
+| Lines of Code Added       | ~350 (logger.js)      |
+| Documentation Lines Added | ~1,000+               |
+| Dependencies Added        | 2 (34 packages total) |
+| Tests Passing             | 10/13                 |
+| Security Vulnerabilities  | 0                     |
+| Linting Errors            | 0                     |
 
 ## Key Features
 
 ### 1. Environment-Aware Logging
 
 **Development Mode** (`NODE_ENV=development`):
+
 ```javascript
 const logger = createLogger({ name: 'my-app' });
 // Output: Pretty-printed colorized console + JSON file in logs/
 ```
 
 **Production Mode**:
+
 ```javascript
 const logger = createLogger({ name: 'my-app' });
 // Output: JSON to stdout only (for container log collection)
@@ -253,6 +255,7 @@ export function myPlugin(app, config) {
 ## Usage Patterns
 
 ### Basic Usage (Auto-Logger)
+
 ```javascript
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
@@ -263,6 +266,7 @@ const { server } = createServer(app, config);
 ```
 
 ### Custom Logger
+
 ```javascript
 import { createApp, createServer, createConfig, createLogger } from '@glowing-fishstick/app';
 
@@ -279,6 +283,7 @@ const { server } = createServer(app, config);
 ```
 
 ### In Plugins
+
 ```javascript
 export function databasePlugin(app, config) {
   const logger = config.logger;
@@ -299,6 +304,7 @@ export function databasePlugin(app, config) {
 ## Log Output Examples
 
 ### Development (Pretty)
+
 ```
 [2026-02-15 10:23:45] INFO (task-manager): Entry-point startup initialization…
 [2026-02-15 10:23:45] INFO (server): Startup sequence completed
@@ -312,6 +318,7 @@ export function databasePlugin(app, config) {
 ```
 
 ### Production (JSON)
+
 ```json
 {"level":30,"time":1739615025000,"name":"task-manager","msg":"Entry-point startup initialization…"}
 {"level":30,"time":1739615025100,"name":"server","msg":"Startup sequence completed"}
@@ -320,6 +327,7 @@ export function databasePlugin(app, config) {
 ```
 
 ### HTTP Request Logging
+
 ```json
 {"level":30,"type":"http.request","method":"GET","pathname":"/api/tasks","reqId":"a1b2c3d4...","msg":"Request received"}
 {"level":30,"type":"http.response","method":"GET","pathname":"/api/tasks","status":200,"duration":15,"reqId":"a1b2c3d4...","msg":"Response sent"}
@@ -328,11 +336,13 @@ export function databasePlugin(app, config) {
 ## Testing Status
 
 ### Passing Tests (10/13)
+
 - ✅ Startup hook ordering (basic functionality)
 - ✅ Graceful shutdown (basic functionality)
 - ✅ Logger output verified in test runs
 
 ### Failing Tests (3/13)
+
 - ❌ startup-hook-ordering.test.js:115 - Mocks console.error instead of logger
 - ❌ graceful-shutdown.test.js:227 - Mocks console.warn instead of logger
 - ❌ graceful-shutdown.test.js:308 - Mocks console.error instead of logger

@@ -651,12 +651,12 @@ Factory function that creates a Pino logger instance.
 
 **Parameters**:
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `options.name` | `string` | `'app'` | Logger name for context and file naming |
-| `options.logLevel` | `string` | `'info'` or `LOG_LEVEL` env var | Minimum log level: trace\|debug\|info\|warn\|error\|fatal |
-| `options.logDir` | `string` | `process.cwd()/logs` | Directory for log files |
-| `options.enableFile` | `boolean` | `true` | Enable file logging in development mode |
+| Name                 | Type      | Default                         | Description                                               |
+| -------------------- | --------- | ------------------------------- | --------------------------------------------------------- |
+| `options.name`       | `string`  | `'app'`                         | Logger name for context and file naming                   |
+| `options.logLevel`   | `string`  | `'info'` or `LOG_LEVEL` env var | Minimum log level: trace\|debug\|info\|warn\|error\|fatal |
+| `options.logDir`     | `string`  | `process.cwd()/logs`            | Directory for log files                                   |
+| `options.enableFile` | `boolean` | `true`                          | Enable file logging in development mode                   |
 
 **Returns**: `pino.Logger` instance
 
@@ -681,8 +681,8 @@ Factory function that creates Express middleware for HTTP request/response loggi
 
 **Parameters**:
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name     | Type          | Description                        |
+| -------- | ------------- | ---------------------------------- |
 | `logger` | `pino.Logger` | Logger instance to use for logging |
 
 **Returns**: Express middleware function
@@ -761,6 +761,7 @@ const app = createApp(config);
 ```
 
 **Features:**
+
 - Automatic request ID generation (UUID) for each request
 - Request IDs available as `req.id` and in `x-request-id` response header
 - Logs method, path, status, duration, and request ID

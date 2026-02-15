@@ -79,10 +79,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Make a request before shutdown - should succeed (use index route)
-    await request(app)
-      .get('/')
-      .agent(agent)
-      .expect(200);
+    await request(app).get('/').agent(agent).expect(200);
 
     // Trigger shutdown
     process.emit('SIGTERM');
@@ -91,10 +88,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // New requests after shutdown should get 503
-    const afterShutdown = await request(app)
-      .get('/')
-      .agent(agent)
-      .expect(503);
+    const afterShutdown = await request(app).get('/').agent(agent).expect(503);
 
     expect(afterShutdown.body.error).toBe('Server is shutting down');
     expect(afterShutdown.headers.connection).toBe('close');
@@ -108,10 +102,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Readiness check before shutdown - should succeed
-    const beforeShutdown = await request(app)
-      .get('/readyz')
-      .agent(agent)
-      .expect(200);
+    const beforeShutdown = await request(app).get('/readyz').agent(agent).expect(200);
 
     expect(beforeShutdown.body.status).toBe('ready');
 
@@ -122,10 +113,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Readiness check during shutdown should fail
-    const afterShutdown = await request(app)
-      .get('/readyz')
-      .agent(agent)
-      .expect(503);
+    const afterShutdown = await request(app).get('/readyz').agent(agent).expect(503);
 
     expect(afterShutdown.body.status).toBe('not-ready');
     expect(afterShutdown.body.reason).toBe('shutdown in progress');
@@ -144,15 +132,9 @@ describe('Graceful Shutdown (P1)', () => {
 
     // Health endpoints should still respond with 200
     // (they run before shutdown middleware)
-    const healthz = await request(app)
-      .get('/healthz')
-      .agent(agent)
-      .expect(200);
+    const healthz = await request(app).get('/healthz').agent(agent).expect(200);
 
-    const livez = await request(app)
-      .get('/livez')
-      .agent(agent)
-      .expect(200);
+    const livez = await request(app).get('/livez').agent(agent).expect(200);
 
     expect(healthz.body.status).toBe('ok');
     expect(livez.body.status).toBe('alive');
@@ -180,9 +162,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Request initiated AFTER shutdown should be rejected
-    const response = await request(app)
-      .get('/slow-task')
-      .agent(agent);
+    const response = await request(app).get('/slow-task').agent(agent);
 
     expect(response.status).toBe(503);
     expect(response.body.error).toBe('Server is shutting down');
@@ -267,11 +247,7 @@ describe('Graceful Shutdown (P1)', () => {
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Verify execution order: app event, then hooks in FIFO
-    expect(executionOrder).toEqual([
-      'app-shutdown-listener',
-      'shutdown-hook-1',
-      'shutdown-hook-2',
-    ]);
+    expect(executionOrder).toEqual(['app-shutdown-listener', 'shutdown-hook-1', 'shutdown-hook-2']);
   }, 10000);
 
   it('should handle errors in shutdown hooks without blocking shutdown', async () => {
@@ -305,10 +281,7 @@ describe('Graceful Shutdown (P1)', () => {
 
     // All hooks should execute despite error in hook-2
     expect(executionOrder).toEqual(['hook-1', 'hook-2-error', 'hook-3']);
-    expect(consoleError).toHaveBeenCalledWith(
-      'Error in shutdown hook:',
-      'Shutdown hook failed',
-    );
+    expect(consoleError).toHaveBeenCalledWith('Error in shutdown hook:', 'Shutdown hook failed');
 
     consoleError.mockRestore();
   }, 10000);

@@ -1,7 +1,7 @@
 # Request Logging & Request ID Implementation
 
 **Status**: ✅ Complete  
-**Date**: 2026-02-15  
+**Date**: 2026-02-15
 
 ## Overview
 
@@ -45,14 +45,14 @@ Updated HTTP request/response logging middleware:
 ```javascript
 export function createRequestLogger(logger, options = {}) {
   const { generateRequestId = true } = options;
-  
+
   return (req, res, next) => {
     // Auto-generate request ID if enabled
     if (generateRequestId && !req.id) {
       req.id = req.headers['x-request-id'] || crypto.randomUUID();
       res.setHeader('x-request-id', req.id);
     }
-    
+
     // Log request and response...
   };
 }
@@ -160,9 +160,11 @@ app.use(createRequestIdMiddleware());
 
 // Add custom request logging
 const httpLogger = createLogger({ name: 'http', logLevel: 'debug' });
-app.use(createRequestLogger(httpLogger, {
-  generateRequestId: false, // Already handled by middleware above
-}));
+app.use(
+  createRequestLogger(httpLogger, {
+    generateRequestId: false, // Already handled by middleware above
+  }),
+);
 ```
 
 ### Accessing Request IDs in Routes
@@ -170,9 +172,9 @@ app.use(createRequestLogger(httpLogger, {
 ```javascript
 app.get('/api/tasks', (req, res) => {
   const requestId = req.id; // UUID automatically assigned
-  
+
   logger.info({ reqId: requestId }, 'Fetching tasks');
-  
+
   res.json({ tasks: [], requestId });
 });
 ```
@@ -194,7 +196,7 @@ app.get('/api/tasks', (req, res) => {
   method: "GET"
   pathname: "/api/tasks"
   reqId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-  
+
 [2026-02-15 19:43:05] INFO (task-manager): Response sent
   type: "http.response"
   method: "GET"
@@ -218,6 +220,7 @@ app.get('/api/tasks', (req, res) => {
 ### Why Request IDs are Always Generated
 
 Request IDs are fundamental for:
+
 - Debugging production issues
 - Distributed tracing
 - Correlating logs across services
@@ -228,6 +231,7 @@ Therefore, they're always enabled via `createRequestIdMiddleware()`.
 ### Why Request Logging is Enabled by Default
 
 Most applications benefit from request/response logging:
+
 - Development debugging
 - Production monitoring
 - Performance tracking
@@ -238,10 +242,12 @@ It can be disabled for specific use cases (e.g., very high-throughput APIs).
 ### Separation of Concerns
 
 **Two separate middlewares**:
+
 1. `createRequestIdMiddleware()` - Request ID generation only
 2. `createRequestLogger()` - HTTP logging with optional ID generation
 
 This allows:
+
 - Using request IDs without logging
 - Custom logging implementations
 - Third-party request ID systems (e.g., AWS X-Ray)
@@ -263,6 +269,7 @@ The implementation was tested with the app startup:
 ## Documentation Updates
 
 Updated documentation in:
+
 - [core/shared/README.md](../core/shared/README.md) - Request ID middleware section
 - [app/DEV_APP_README.md](../app/DEV_APP_README.md) - HTTP request logging configuration
 - [documentation/00-project-specs.md](../documentation/00-project-specs.md) - Request logging integration
@@ -285,15 +292,15 @@ Updated documentation in:
 
 ## File Changes Summary
 
-| File | Changes |
-|------|---------|
-| [core/shared/src/logger.js](../core/shared/src/logger.js) | Added `createRequestIdMiddleware()`, enhanced `createRequestLogger()` with `generateRequestId` option |
-| [core/shared/index.js](../core/shared/index.js) | Exported `createRequestIdMiddleware` |
-| [core/app/src/app-factory.js](../core/app/src/app-factory.js) | Integrated request ID and request logging middlewares with config support |
-| [core/app/index.js](../core/app/index.js) | Re-exported `createRequestIdMiddleware` |
-| [core/shared/README.md](../core/shared/README.md) | Documented request ID middleware |
-| [app/DEV_APP_README.md](../app/DEV_APP_README.md) | Documented request logging configuration |
-| [documentation/00-project-specs.md](../documentation/00-project-specs.md) | Added request logging section |
+| File                                                                      | Changes                                                                                               |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [core/shared/src/logger.js](../core/shared/src/logger.js)                 | Added `createRequestIdMiddleware()`, enhanced `createRequestLogger()` with `generateRequestId` option |
+| [core/shared/index.js](../core/shared/index.js)                           | Exported `createRequestIdMiddleware`                                                                  |
+| [core/app/src/app-factory.js](../core/app/src/app-factory.js)             | Integrated request ID and request logging middlewares with config support                             |
+| [core/app/index.js](../core/app/index.js)                                 | Re-exported `createRequestIdMiddleware`                                                               |
+| [core/shared/README.md](../core/shared/README.md)                         | Documented request ID middleware                                                                      |
+| [app/DEV_APP_README.md](../app/DEV_APP_README.md)                         | Documented request logging configuration                                                              |
+| [documentation/00-project-specs.md](../documentation/00-project-specs.md) | Added request logging section                                                                         |
 
 ---
 

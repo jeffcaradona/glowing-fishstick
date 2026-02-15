@@ -124,7 +124,7 @@ import { databasePlugin } from './plugins/database-plugin.js';
 import { cachePlugin } from './plugins/cache-plugin.js';
 
 const logger = createLogger({ name: 'my-app' });
-const config = createConfig({ logger, /* ... */ });
+const config = createConfig({ logger /* ... */ });
 const app = createApp(config, [databasePlugin, cachePlugin]);
 const { registerStartupHook, registerShutdownHook } = createServer(app, config);
 

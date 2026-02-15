@@ -64,12 +64,7 @@ import pino from 'pino';
  * logger.error({ err: new Error('failure') }, 'Operation failed');
  */
 export function createLogger(options = {}) {
-  const {
-    name = 'app',
-    logLevel,
-    logDir,
-    enableFile = true,
-  } = options;
+  const { name = 'app', logLevel, logDir, enableFile = true } = options;
 
   const isDevelopment = process.env.NODE_ENV === 'development';
   const level = logLevel || process.env.LOG_LEVEL || 'info';

@@ -298,9 +298,9 @@ import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({
   name: 'my-app',
-  logLevel: 'debug',      // trace|debug|info|warn|error|fatal
-  logDir: './logs',       // Custom log directory
-  enableFile: true,       // Enable file logging in development
+  logLevel: 'debug', // trace|debug|info|warn|error|fatal
+  logDir: './logs', // Custom log directory
+  enableFile: true, // Enable file logging in development
 });
 
 const config = createConfig({ ...appOverrides, logger });
@@ -338,13 +338,16 @@ const logger = createLogger({ name: 'http' });
 
 export function requestLoggingPlugin(app, config) {
   // Add HTTP request/response logging with custom options
-  app.use(createRequestLogger(logger, {
-    generateRequestId: false, // Use framework's request ID
-  }));
+  app.use(
+    createRequestLogger(logger, {
+      generateRequestId: false, // Use framework's request ID
+    }),
+  );
 }
 ```
 
 This logs:
+
 - Incoming requests: method, path, request ID
 - Outgoing responses: status code, duration, request ID
 

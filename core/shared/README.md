@@ -68,10 +68,10 @@ logger.error({ err: new Error('failure') }, 'Operation failed');
 
 ```js
 const logger = createLogger({
-  name: 'my-app',           // Logger name (default: 'app')
-  logLevel: 'debug',        // Min level: trace|debug|info|warn|error|fatal (default: 'info')
-  logDir: './logs',         // Log directory (default: process.cwd()/logs)
-  enableFile: true,         // Enable file logging in dev (default: true)
+  name: 'my-app', // Logger name (default: 'app')
+  logLevel: 'debug', // Min level: trace|debug|info|warn|error|fatal (default: 'info')
+  logDir: './logs', // Log directory (default: process.cwd()/logs)
+  enableFile: true, // Enable file logging in dev (default: true)
 });
 ```
 

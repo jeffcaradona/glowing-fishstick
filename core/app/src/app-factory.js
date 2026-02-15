@@ -99,11 +99,11 @@ export function createApp(config, plugins = []) {
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
   }
-  
+
   // ── Health routes (before shutdown middleware) ───────────────
   // Health checks need to respond with specific messages during shutdown
   app.use(healthRoutes(app));
-  
+
   // ── Request tracking + shutdown rejection middleware ─────────
   // Reject new requests during shutdown.
   // Requests that entered the middleware stack BEFORE shutdown began
