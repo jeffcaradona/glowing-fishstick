@@ -27,6 +27,30 @@
   </table>
   <% } %>
 
+  <% if (typeof publicDirs !== 'undefined' && publicDirs.app || publicDirs.core) { %>
+  <h3>Public Directories</h3>
+  <table class="config-table">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (publicDirs.app) { %>
+      <tr>
+        <td><code>publicDir (app)</code></td>
+        <td><%= publicDirs.app %></td>
+      </tr>
+      <% } %>
+      <tr>
+        <td><code>publicDir (core)</code></td>
+        <td><%= publicDirs.core %></td>
+      </tr>
+    </tbody>
+  </table>
+  <% } %>
+
   <h3>Other Configuration</h3>
   <table class="config-table">
     <thead>

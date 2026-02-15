@@ -15,7 +15,7 @@ export function taskRoutes(config) {
   const router = Router();
 
   router.get('/tasks', (_req, res) => {
-    res.render('tasks/list', { appName: config.appName });
+    res.render('tasks/list', { appName: config.appName, scripts: ['/js/tasks/list.js'] });
   });
 
   return router;

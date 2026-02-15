@@ -1,6 +1,6 @@
 /**
- * @module app/config/env
- * @description App-specific configuration overrides.
+ * @module config/env
+ * @description Application-specific configuration overrides.
  */
 
 import { fileURLToPath } from 'node:url';
@@ -8,16 +8,15 @@ import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-
-
 /**
  * Overrides merged into the core config via createConfig().
- * Points `viewsDir` at the app's own views directory so the app
- * can provide custom templates alongside the core views.
+ * Customize these values for your application.
  */
 export const appOverrides = {
-  appName: 'task_manager',
-  appVersion: '1.0.0',
+  appName: 'my-app',
+  appVersion: '0.0.1',
   viewsDir: path.join(__dirname, '..', 'views'),
   publicDir: path.join(__dirname, '..', 'public'),
+  // port: 3000,  // Optional: override default port
+  // environment: 'development',  // Optional: override environment
 };
