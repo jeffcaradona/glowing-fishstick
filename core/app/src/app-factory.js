@@ -41,6 +41,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp(config, plugins = []) {
   const app = express();
 
+  app.disable('x-powered-by');
+
   // ── Startup/shutdown hook registries ────────────────────────
   // Private registries for lifecycle management; exposed via methods.
   const startupRegistry = createHookRegistry();
