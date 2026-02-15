@@ -1,8 +1,8 @@
-# Demo Application — Local Development Guide
+# App — Local Development Guide
 
 > **Using the `app/` directory for local development and testing**
 
-This document explains how to use the `app/` directory to run a demo application locally, which demonstrates how a consuming application would use the `glowing-fishstick` module in production.
+This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `glowing-fishstick` module in production.
 
 ---
 
@@ -27,7 +27,7 @@ npm install glowing-fishstick
 import { createApp, createServer, createConfig } from '../../index.js';
 ```
 
-This allows you to develop and test the core module alongside a demo application without publishing to npm.
+This allows you to develop and test the core module alongside the app without publishing to npm.
 
 ---
 
@@ -36,12 +36,12 @@ This allows you to develop and test the core module alongside a demo application
 ```
 app/
 ├── DEV_APP_README.md          # This file
-├── package.json               # Demo app metadata (optional)
+├── package.json               # App metadata (optional)
 └── src/
     ├── server.js              # Entrypoint — composes & boots the app
-    ├── app.js                 # Demo plugin (custom routes/middleware)
+    ├── app.js                 # App plugin (custom routes/middleware)
     ├── config/
-    │   └── env.js             # Demo-specific config overrides
+    │   └── env.js             # App-specific config overrides
     ├── routes/
     │   └── router.js          # Task manager routes
     └── views/
@@ -50,7 +50,7 @@ app/
 
 ---
 
-## Running the Demo Application
+## Running the App
 
 ### 1. Install Dependencies
 
@@ -60,18 +60,18 @@ From the **repository root**:
 npm install
 ```
 
-### 2. Start the Demo Server
+### 2. Start the App Server
 
 **Option A: Standard mode**
 
 ```bash
-npm run start:demo
+npm run start:app
 ```
 
 **Option B: Development mode (with auto-restart)**
 
 ```bash
-npm run dev:demo
+npm run dev:app
 ```
 
 This runs:
@@ -88,7 +88,7 @@ Open your browser to:
 - **http://localhost:3000/healthz** — Health check
 - **http://localhost:3000/admin** — Admin dashboard
 - **http://localhost:3000/admin/config** — Configuration viewer
-- **http://localhost:3000/tasks** — Task manager (demo plugin)
+- **http://localhost:3000/tasks** — Task manager (app plugin)
 
 ---
 
@@ -101,12 +101,12 @@ This is the main file that composes the application:
 ```js
 import { createApp, createServer, createConfig } from '../../index.js';
 import { taskManagerApplicationPlugin } from './app.js';
-import { demoOverrides } from './config/env.js';
+import { appOverrides } from './config/env.js';
 
-// 1. Create configuration with demo overrides
-const config = createConfig(demoOverrides);
+// 1. Create configuration with app overrides
+const config = createConfig(appOverrides);
 
-// 2. Create Express app with demo plugin
+// 2. Create Express app with app plugin
 const app = createApp(config, [taskManagerApplicationPlugin]);
 
 // 3. Start HTTP server
@@ -118,13 +118,13 @@ export { server, close };
 **Key points:**
 
 1. Imports from the local module (`../../index.js`)
-2. Applies demo-specific configuration overrides
-3. Passes the demo plugin to `createApp()`
+2. Applies app-specific configuration overrides
+3. Passes the app plugin to `createApp()`
 4. Exports `server` and `close` for testing
 
 ---
 
-### Demo Plugin: `app/src/app.js`
+### App Plugin: `app/src/app.js`
 
 The plugin adds task manager functionality to the core application:
 
@@ -150,19 +150,19 @@ export function taskManagerApplicationPlugin(app, config) {
 
 ### Configuration Overrides: `app/src/config/env.js`
 
-Demo-specific configuration values:
+App-specific configuration values:
 
 ```js
-export const demoOverrides = {
-  appName: 'Task Manager Demo',
+export const appOverrides = {
+  appName: 'Task Manager',
   appVersion: '1.0.0',
-  // Add any demo-specific overrides here
+  // Add any app-specific overrides here
 };
 ```
 
 **Configuration priority** (highest wins):
 
-1. `demoOverrides` (this file)
+1. `appOverrides` (this file)
 2. Environment variables (`.env` or `process.env`)
 3. Built-in defaults from the core module
 
@@ -207,15 +207,15 @@ src/
 └── views/
 ```
 
-### 2. Test with Demo App
+### 2. Test with App
 
-Run the demo application to see your changes:
+Run the app to see your changes:
 
 ```bash
-npm run dev:demo
+npm run dev:app
 ```
 
-The demo app will automatically restart when you modify files (via `nodemon`).
+The app will automatically restart when you modify files (via `nodemon`).
 
 ### 3. Verify Changes
 
@@ -247,15 +247,15 @@ Create a `.env` file in the **repository root** (not in `app/`):
 ```env
 PORT=3000
 NODE_ENV=development
-APP_NAME=Task Manager Demo
+APP_NAME=Task Manager
 APP_VERSION=1.0.0
 ```
 
-The demo application will use these values when it calls `createConfig()`.
+The app will use these values when it calls `createConfig()`.
 
 ---
 
-## Adding New Demo Features
+## Adding New App Features
 
 ### Adding a New Route
 
@@ -355,7 +355,7 @@ const { server, close } = createServer(app, config);
 lsof -i :3000
 
 # Use a different port
-PORT=8080 npm run start:demo
+PORT=8080 npm run start:app
 ```
 
 ### Changes not reflected
@@ -363,7 +363,7 @@ PORT=8080 npm run start:demo
 **Make sure you're using dev mode:**
 
 ```bash
-npm run dev:demo  # Not start:demo
+npm run dev:app  # Not start:app
 ```
 
 **Check nodemon is watching the right files:**
@@ -377,21 +377,21 @@ npm run dev:demo  # Not start:demo
 **Check view paths:**
 
 - Core views: `src/views/`
-- Demo views: `app/src/views/`
+- App views: `app/src/views/`
 - Use relative includes: `<%- include('../../../src/views/layouts/header') %>`
 
 ---
 
-## Testing the Demo App
+## Testing the App
 
-You can test the demo application just like you would test any Express app:
+You can test the app just like you would test any Express app:
 
 ```js
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { server, close } from './app/src/server.js';
 
-describe('Demo App', () => {
+describe('App', () => {
   afterAll(async () => {
     await close();
   });
@@ -418,7 +418,7 @@ describe('Demo App', () => {
 
 ## Next Steps
 
-1. **Modify the demo plugin** to add your own features
+1. **Modify the app plugin** to add your own features
 2. **Create additional plugins** to test composition patterns
 3. **Add custom views** to test view overrides
 4. **Run the test suite** to ensure everything works

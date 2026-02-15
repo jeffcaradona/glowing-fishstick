@@ -1,11 +1,15 @@
 {
   "name": "glowing-fishstick",
   "version": "0.0.1",
-  "description": "A Demo on Replacing distributed Templates with a module",
+  "description": "An example of replacing distributed Express templates with a composable module",
   "keywords": [
     "template",
     "module",
-    "demo"
+    "app"
+  ],
+  "workspaces": [
+    "app",
+    "core/app"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {
@@ -21,18 +25,11 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "index.js",
-  "exports": {
-    ".": {
-      "import": "./index.js"
-    }
-  },
   "files": [
-    "index.js",
-    "src/"
+    
   ],
   "scripts": {
-    "start:dev-app": "node app/src/server.js",
+    "start:app": "node app/src/server.js",
     "dev:app": "nodemon --exec node app/src/server.js",
     "test": "vitest",
     "test:unit": "vitest run --reporter=verbose tests/unit",
@@ -42,11 +39,7 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "dependencies": {
-    "dotenv": "^17.2.4",
-    "ejs": "^4.0.1",
-    "express": "^5.2.1"
-  },
+  
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "cross-env": "^10.1.0",

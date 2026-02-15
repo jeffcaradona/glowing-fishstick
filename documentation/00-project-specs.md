@@ -225,18 +225,18 @@ glowing-fishstick/
 │       └── css/
 │           └── style.css            # Minimal shared styles
 │
-├── demo/                            # Example consuming application ("task_manager")
-│   ├── DEMO_README.md
-│   ├── package.json                 # Demo app npm package
+├── app/                            # Example consuming application ("task_manager")
+│   ├── DEV_APP_README.md
+│   ├── package.json                 # App package
 │   └── src/
 │       ├── app.js                   # task_managerPlugin — custom routes/middleware
 │       ├── server.js                # Thin entrypoint — composes & boots
 │       ├── config/
-│       │   └── env.js               # Demo-specific config overrides
-│       ├── controllers/             # Demo-specific controllers
-│       ├── models/                  # Demo-specific models
-│       ├── services/                # Demo-specific business logic
-│       └── views/                   # Demo-specific views
+│       │   └── env.js               # App-specific config overrides
+│       ├── controllers/             # App-specific controllers
+│       ├── models/                  # App-specific models
+│       ├── services/                # App-specific business logic
+│       └── views/                   # App-specific views
 │
 ├── tests/
 │   ├── unit/                        # Pure function & factory tests
@@ -438,8 +438,8 @@ The FP-first architecture directly supports testability:
 
 ```json
 {
-  "start:demo": "node demo/src/server.js",
-  "dev:demo": "nodemon --exec node demo/src/server.js",
+  "start:app": "node app/src/server.js",
+  "dev:app": "nodemon --exec node app/src/server.js",
   "test": "vitest",
   "test:unit": "vitest run --reporter=verbose tests/unit",
   "test:integration": "vitest run --reporter=verbose tests/integration",
@@ -450,9 +450,9 @@ The FP-first architecture directly supports testability:
 }
 ```
 
-**Demo (`demo/package.json`):**
+**App (`app/package.json`):**
 
-The demo app has its own `package.json` and can be run/tested independently.
+The app has its own `package.json` and can be run/tested independently.
 
 ---
 
@@ -468,14 +468,14 @@ The `close()` function returned by `createServer` can also be called programmati
 
 ---
 
-## 16. Demo Application ("task_manager")
+## 16. App Example ("task_manager")
 
-The `demo/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
+The `app/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
 
-**Demo entrypoint:**
+**App entrypoint:**
 
 ```js
-// demo/src/server.js
+// app/src/server.js
 import { createApp, createServer, createConfig } from '../../index.js';
 import { task_managerPlugin } from './app.js';
 
@@ -488,10 +488,10 @@ const app = createApp(config, [task_managerPlugin]);
 const { server, close } = createServer(app, config);
 ```
 
-**Demo plugin (custom routes):**
+**App plugin (custom routes):**
 
 ```js
-// demo/src/app.js
+// app/src/app.js
 export function task_managerPlugin(app, config) {
   app.get('/tasks', (req, res) => {
     res.render('tasks/list', { appName: config.appName });
@@ -501,7 +501,7 @@ export function task_managerPlugin(app, config) {
 
 **In production:**
 
-The demo's `package.json` would depend on:
+The app's `package.json` would depend on:
 
 ```json
 {

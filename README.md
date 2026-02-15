@@ -495,7 +495,7 @@ Request → Body Parsers → Static Files → Core Routes → Plugins → 404 Ha
 
 ## Development
 
-See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running the demo application for local development.
+See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running the app for local development.
 
 ---
 
@@ -516,4 +516,4 @@ MIT © Jeff Caradona
 ## Related Documentation
 
 - [Project Specification](documentation/00-project-specs.md) — Detailed architectural decisions and design principles
-- [Demo Application README](app/DEV_APP_README.md) — How to use the `app/` directory for local development
+- [App Development README](app/DEV_APP_README.md) — How to use the `app/` directory for local development
