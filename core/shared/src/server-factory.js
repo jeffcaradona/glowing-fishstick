@@ -13,11 +13,17 @@ import { getRegistries } from './registry-store.js';
  *
  * @param {import('express').Express} app    - Configured Express app from createApp().
  * @param {object}                    config - Config object (reads `port`, `shutdownTimeout`).
- * @returns {{ server: http.Server, close: () => Promise<void>, registerStartupHook: (hook: () => Promise<void>) => void, registerShutdownHook: (hook: () => Promise<void>) => void }}
+ * @returns {object} Object with `server`, `close`, `registerStartupHook`, and
+ *   `registerShutdownHook` properties. `close()` returns a Promise<void> for graceful
+ *   shutdown; hooks receive and return Promise<void>.
+ *
+ * @description On SIGTERM/SIGINT, the app emits a 'shutdown' event that built-in and
+ *   custom middleware, plugins, and routes can listen to via `app.on('shutdown', callback)`.
  */
 export function createServer(app, config) {
   const port = config.port || 3000;
   const shutdownTimeout = config.shutdownTimeout ?? 30000; // 30 seconds default
+  const allowProcessExit = config.allowProcessExit ?? true; // Disable in tests
   const server = http.createServer(app);
 
   // ── Connection tracking for graceful draining ────────────────
@@ -106,14 +112,15 @@ export function createServer(app, config) {
   // ── Kubernetes / container lifecycle signals ─────────────────
   let shuttingDown = false;
   const shutdown = async () => {
-    if (shuttingDown) return;
+    if (shuttingDown) {
+      return;
+    }
     shuttingDown = true;
 
     console.log('Shutdown signal received — closing server…');
 
-    // Signal to app that we're entering shutdown mode
-    // (middleware can use this to reject new requests)
-    app.locals.shuttingdown = true;
+    // Emit shutdown event — middleware and plugins listen and react.
+    app.emit('shutdown');
 
     try {
       // 1. Run all registered shutdown hooks (FIFO order)
@@ -125,20 +132,20 @@ export function createServer(app, config) {
         }
       }
 
-      // 2. Drain keep-alive connections by sending Connection: close header
-      //    on all active sockets (for future requests)
-      for (const socket of activeConnections) {
-        socket.setHeader?.('Connection', 'close');
-      }
-
-      // 3. Close server (stops accepting new connections, waits for in-flight requests)
+      // 2. Close server (stops accepting new connections, waits for in-flight requests)
+      //    App middleware sends Connection: close header on HTTP responses during shutdown.
+      //    (See app-factory.js shutdown rejection middleware)
       await close();
 
       console.log('Server closed successfully.');
-      process.exit(0);
+      if (allowProcessExit) {
+        process.exit(0);
+      }
     } catch (err) {
       console.error('Error during shutdown:', err.message);
-      process.exit(1);
+      if (allowProcessExit) {
+        process.exit(1);
+      }
     }
   };
 
