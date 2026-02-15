@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import express from 'express';
 
+import { createHookRegistry } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
@@ -35,9 +36,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp(config, plugins = []) {
   const app = express();
 
-  // ── Startup hooks registry ──────────────────────────────────
-  // Plugins can register async initialization functions here.
-  app.startupHooks = [];
+  // ── Startup/shutdown hook registries ────────────────────────
+  // Private registries for lifecycle management; exposed via methods.
+  const startupRegistry = createHookRegistry();
+  const shutdownRegistry = createHookRegistry();
+
+  // Register hook methods on app object
+  app.registerStartupHook = (hook) => startupRegistry.register(hook);
+  app.registerShutdownHook = (hook) => shutdownRegistry.register(hook);
+
+  // Store registries on app for access by server-factory
+  app._startupRegistry = startupRegistry;
+  app._shutdownRegistry = shutdownRegistry;
 
   // ── View engine ──────────────────────────────────────────────
   app.set('view engine', 'ejs');
@@ -53,12 +63,6 @@ export function createApp(config, plugins = []) {
 
   // ── App locals ───────────────────────────────────────────────
   app.locals.shuttingdown = false; // Used by health route to signal graceful shutdown mode.
-
-  // ── Shutdown hooks registry ──────────────────────────────────
-  // Plugins can register async cleanup functions here.
-  app.shutdownHooks = [];
-
-  // ── Navigation links (mutable — plugins may append) ─────────
   app.locals.navLinks = [
     { label: 'Home', url: '/' },
     { label: 'Admin', url: '/admin' },

@@ -95,30 +95,14 @@ export function createServer(app, config) {
     shutdownHooks.push(hook);
   };
 
-  // Register app's startup hooks (if any exist)
-  if (Array.isArray(app.startupHooks)) {
-    registerStartupHook(async () => {
-      for (const hook of app.startupHooks) {
-        try {
-          await hook();
-        } catch (err) {
-          console.error('Error in app startup hook:', err.message);
-        }
-      }
-    });
+  // Register app's startup registry (if any hooks registered)
+  if (app._startupRegistry) {
+    registerStartupHook(() => app._startupRegistry.execute());
   }
 
-  // Register app's shutdown hooks (if any exist)
-  if (Array.isArray(app.shutdownHooks)) {
-    registerShutdownHook(async () => {
-      for (const hook of app.shutdownHooks) {
-        try {
-          await hook();
-        } catch (err) {
-          console.error('Error in app shutdown hook:', err.message);
-        }
-      }
-    });
+  // Register app's shutdown registry (if any hooks registered)
+  if (app._shutdownRegistry) {
+    registerShutdownHook(() => app._shutdownRegistry.execute());
   }
 
 
