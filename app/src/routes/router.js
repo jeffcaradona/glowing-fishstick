@@ -18,6 +18,5 @@ export function taskRoutes(config) {
     res.render('tasks/list', { appName: config.appName });
   });
 
-
   return router;
 }

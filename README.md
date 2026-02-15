@@ -12,6 +12,7 @@
 ### Problem Statement
 
 Traditional template systems for Express.js applications suffer from:
+
 - **Template drift** — manual updates across multiple projects
 - **Coupling** — app-specific code mixed with core template logic
 - **Difficult upgrades** — no semantic versioning, no dependency management
@@ -19,6 +20,7 @@ Traditional template systems for Express.js applications suffer from:
 ### Solution
 
 This module provides:
+
 - ✅ **Factory functions** for creating Express apps and HTTP servers
 - ✅ **Plugin contract** for adding custom routes, middleware, and views
 - ✅ **Built-in routes** for health checks, admin dashboard, and landing page
@@ -35,6 +37,7 @@ npm install glowing-fishstick
 ```
 
 **Requirements:**
+
 - Node.js >= 22
 - ES Modules support (`"type": "module"` in package.json)
 
@@ -64,6 +67,7 @@ node server.js
 ```
 
 Visit `http://localhost:3000` to see your application running with built-in routes:
+
 - `/` — Landing page
 - `/healthz` — Kubernetes health check
 - `/admin` — Admin dashboard
@@ -86,11 +90,13 @@ Factory function that builds and returns a configured Express application.
 **Returns:** `Express` — Configured Express app instance
 
 **Example:**
+
 ```js
 const app = createApp(config, [myPlugin]);
 ```
 
 **Built-in features:**
+
 - EJS view engine with layouts
 - JSON and URL-encoded body parsing
 - Static file serving from `src/public/`
@@ -116,6 +122,7 @@ Factory function that starts an HTTP server and sets up graceful shutdown handle
 | `close` | `() => Promise<void>` | Graceful shutdown function |
 
 **Example:**
+
 ```js
 const { server, close } = createServer(app, config);
 
@@ -145,6 +152,7 @@ Pure factory function that builds a frozen configuration object from environment
 | `appVersion` | `'0.0.0'` | `APP_VERSION` |
 
 **Example:**
+
 ```js
 const config = createConfig({
   appName: 'task-manager',
@@ -167,6 +175,7 @@ Pure function that returns a shallow copy of the config object with sensitive ke
 **Returns:** `object` — Config with sensitive keys removed
 
 **Filtered patterns (case-insensitive):**
+
 - `SECRET`
 - `KEY`
 - `PASSWORD`
@@ -174,6 +183,7 @@ Pure function that returns a shallow copy of the config object with sensitive ke
 - `CREDENTIAL`
 
 **Example:**
+
 ```js
 const safeConfig = filterSensitiveKeys(config);
 // { appName: 'my-app', port: 3000 }
@@ -189,6 +199,7 @@ const safeConfig = filterSensitiveKeys(config);
 Creates an operational application error.
 
 **Example:**
+
 ```js
 import { createAppError } from 'glowing-fishstick';
 
@@ -200,6 +211,7 @@ throw createAppError('INVALID_INPUT', 'Missing required field: email', 400);
 Creates a 404 Not Found error.
 
 **Example:**
+
 ```js
 throw createNotFoundError('User not found');
 ```
@@ -209,6 +221,7 @@ throw createNotFoundError('User not found');
 Creates a 400 Bad Request validation error.
 
 **Example:**
+
 ```js
 throw createValidationError('Email format is invalid');
 ```
@@ -262,12 +275,14 @@ const app = createApp(config, [myPlugin, analyticsPlugin]);
 ```
 
 **Plugin execution order:**
+
 1. Built-in middleware (body parsers, static files)
 2. Core routes (health, admin, landing)
 3. **Your plugins** (in array order)
 4. Error handling middleware (404 + error handler)
 
 **Plugin best practices:**
+
 - ✅ Add new routes and middleware
 - ✅ Read config values
 - ✅ Mount sub-applications
@@ -281,24 +296,24 @@ const app = createApp(config, [myPlugin, analyticsPlugin]);
 
 ### Health Checks (Kubernetes-ready)
 
-| Route | Method | Response | Purpose |
-|---|---|---|---|
-| `/healthz` | GET | `{ status: "ok" }` | Basic health check |
-| `/readyz` | GET | `{ status: "ready" }` | Readiness probe |
-| `/livez` | GET | `{ status: "alive" }` | Liveness probe |
+| Route      | Method | Response              | Purpose            |
+| ---------- | ------ | --------------------- | ------------------ |
+| `/healthz` | GET    | `{ status: "ok" }`    | Basic health check |
+| `/readyz`  | GET    | `{ status: "ready" }` | Readiness probe    |
+| `/livez`   | GET    | `{ status: "alive" }` | Liveness probe     |
 
 ### Landing Page
 
-| Route | Method | Response |
-|---|---|---|
-| `/` | GET | Rendered HTML page |
+| Route | Method | Response           |
+| ----- | ------ | ------------------ |
+| `/`   | GET    | Rendered HTML page |
 
 ### Admin Dashboard
 
-| Route | Method | Response | Purpose |
-|---|---|---|---|
-| `/admin` | GET | Rendered HTML | Dashboard with app info |
-| `/admin/config` | GET | Rendered HTML | Configuration viewer (sensitive keys filtered) |
+| Route           | Method | Response      | Purpose                                        |
+| --------------- | ------ | ------------- | ---------------------------------------------- |
+| `/admin`        | GET    | Rendered HTML | Dashboard with app info                        |
+| `/admin/config` | GET    | Rendered HTML | Configuration viewer (sensitive keys filtered) |
 
 ---
 
@@ -385,7 +400,7 @@ describe('Health endpoints', () => {
   it('should respond to /healthz', async () => {
     const config = createConfig();
     const app = createApp(config);
-    
+
     const response = await request(app).get('/healthz');
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok' });
@@ -404,7 +419,7 @@ describe('Server lifecycle', () => {
     const config = createConfig({ port: 0 }); // random port
     const app = createApp(config);
     const { server, close } = createServer(app, config);
-    
+
     await close(); // Graceful shutdown
   });
 });
@@ -465,6 +480,7 @@ This module follows functional programming principles:
 - ✅ **Immutability** (frozen config objects)
 
 **Why functional?**
+
 - Easier to test (no mocks or stubs needed for pure functions)
 - Better composability (plugins as plain functions)
 - Simpler reasoning (no hidden state)

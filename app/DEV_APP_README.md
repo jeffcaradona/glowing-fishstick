@@ -16,11 +16,13 @@ The `app/` directory simulates a real-world consumer application (like a "Task M
 - ✅ How a thin `server.js` entrypoint boots the composed application
 
 **In production**, a consumer would install `glowing-fishstick` via npm:
+
 ```bash
 npm install glowing-fishstick
 ```
 
 **For local development**, the `app/` directory imports directly from the source:
+
 ```js
 import { createApp, createServer, createConfig } from '../../index.js';
 ```
@@ -61,16 +63,19 @@ npm install
 ### 2. Start the Demo Server
 
 **Option A: Standard mode**
+
 ```bash
 npm run start:demo
 ```
 
 **Option B: Development mode (with auto-restart)**
+
 ```bash
 npm run dev:demo
 ```
 
 This runs:
+
 ```bash
 nodemon --exec node app/src/server.js
 ```
@@ -78,6 +83,7 @@ nodemon --exec node app/src/server.js
 ### 3. Access the Application
 
 Open your browser to:
+
 - **http://localhost:3000** — Landing page
 - **http://localhost:3000/healthz** — Health check
 - **http://localhost:3000/admin** — Admin dashboard
@@ -110,6 +116,7 @@ export { server, close };
 ```
 
 **Key points:**
+
 1. Imports from the local module (`../../index.js`)
 2. Applies demo-specific configuration overrides
 3. Passes the demo plugin to `createApp()`
@@ -134,6 +141,7 @@ export function taskManagerApplicationPlugin(app, config) {
 ```
 
 **What it does:**
+
 - Adds a "Tasks" link to the navigation
 - Mounts custom routes at `/tasks`
 - Follows the plugin contract: `(app, config) => void`
@@ -153,6 +161,7 @@ export const demoOverrides = {
 ```
 
 **Configuration priority** (highest wins):
+
 1. `demoOverrides` (this file)
 2. Environment variables (`.env` or `process.env`)
 3. Built-in defaults from the core module
@@ -187,6 +196,7 @@ export function taskRoutes(config) {
 ### 1. Make Changes to Core Module
 
 Edit files in the `src/` directory (core module):
+
 ```
 src/
 ├── app-factory.js
@@ -200,6 +210,7 @@ src/
 ### 2. Test with Demo App
 
 Run the demo application to see your changes:
+
 ```bash
 npm run dev:demo
 ```
@@ -249,6 +260,7 @@ The demo application will use these values when it calls `createConfig()`.
 ### Adding a New Route
 
 1. **Create the route** in `app/src/routes/router.js`:
+
 ```js
 router.get('/tasks/:id', (req, res) => {
   res.render('tasks/detail', { taskId: req.params.id });
@@ -256,6 +268,7 @@ router.get('/tasks/:id', (req, res) => {
 ```
 
 2. **Create the view** in `app/src/views/tasks/detail.ejs`:
+
 ```ejs
 <%- include('../../../src/views/layouts/header') %>
   <h1>Task Details</h1>
@@ -268,6 +281,7 @@ router.get('/tasks/:id', (req, res) => {
 ### Adding a New Plugin
 
 1. **Create a plugin file** in `app/src/plugins/`:
+
 ```js
 // app/src/plugins/analytics.js
 export function analyticsPlugin(app, config) {
@@ -279,13 +293,11 @@ export function analyticsPlugin(app, config) {
 ```
 
 2. **Add it to `server.js`**:
+
 ```js
 import { analyticsPlugin } from './plugins/analytics.js';
 
-const app = createApp(config, [
-  taskManagerApplicationPlugin,
-  analyticsPlugin,
-]);
+const app = createApp(config, [taskManagerApplicationPlugin, analyticsPlugin]);
 ```
 
 ---
@@ -297,6 +309,7 @@ The `app/` directory structure mirrors how a real application would consume the 
 **Production scenario:**
 
 1. **Install the module** via npm:
+
 ```json
 {
   "dependencies": {
@@ -306,11 +319,13 @@ The `app/` directory structure mirrors how a real application would consume the 
 ```
 
 2. **Import from the module**:
+
 ```js
 import { createApp, createServer, createConfig } from 'glowing-fishstick';
 ```
 
 3. **Create a plugin**:
+
 ```js
 export function myPlugin(app, config) {
   app.get('/my-route', (req, res) => {
@@ -320,6 +335,7 @@ export function myPlugin(app, config) {
 ```
 
 4. **Compose and boot**:
+
 ```js
 const config = createConfig({ appName: 'My App' });
 const app = createApp(config, [myPlugin]);
@@ -333,6 +349,7 @@ const { server, close } = createServer(app, config);
 ### Server won't start
 
 **Check the port:**
+
 ```bash
 # See if something is already running on port 3000
 lsof -i :3000
@@ -344,11 +361,13 @@ PORT=8080 npm run start:demo
 ### Changes not reflected
 
 **Make sure you're using dev mode:**
+
 ```bash
 npm run dev:demo  # Not start:demo
 ```
 
 **Check nodemon is watching the right files:**
+
 ```bash
 # Manually restart by typing 'rs' in the terminal
 ```
@@ -356,6 +375,7 @@ npm run dev:demo  # Not start:demo
 ### Views not rendering
 
 **Check view paths:**
+
 - Core views: `src/views/`
 - Demo views: `app/src/views/`
 - Use relative includes: `<%- include('../../../src/views/layouts/header') %>`
@@ -387,12 +407,12 @@ describe('Demo App', () => {
 
 ## Comparing Local Dev vs Production
 
-| Aspect | Local Dev (`app/`) | Production |
-|---|---|---|
-| **Module source** | Local import `../../index.js` | npm package `glowing-fishstick` |
-| **Configuration** | `.env` in repo root | Environment variables or config service |
-| **Dependencies** | Shared `node_modules` | App's own `package.json` |
-| **Purpose** | Development and testing | Real application deployment |
+| Aspect            | Local Dev (`app/`)            | Production                              |
+| ----------------- | ----------------------------- | --------------------------------------- |
+| **Module source** | Local import `../../index.js` | npm package `glowing-fishstick`         |
+| **Configuration** | `.env` in repo root           | Environment variables or config service |
+| **Dependencies**  | Shared `node_modules`         | App's own `package.json`                |
+| **Purpose**       | Development and testing       | Real application deployment             |
 
 ---
 
@@ -416,6 +436,7 @@ describe('Demo App', () => {
 ## Questions?
 
 If you're building a consuming application:
+
 1. Review the `app/` directory structure as a template
 2. Follow the patterns in `app/src/server.js` and `app/src/app.js`
 3. Refer to the [Plugin System](../README.md#plugin-system) documentation

@@ -57,7 +57,5 @@ export function createConfig(overrides = {}, env = process.env) {
  * @returns {object} A new object with sensitive keys removed.
  */
 export function filterSensitiveKeys(config) {
-  return Object.fromEntries(
-    Object.entries(config).filter(([key]) => !SENSITIVE_PATTERN.test(key)),
-  );
+  return Object.fromEntries(Object.entries(config).filter(([key]) => !SENSITIVE_PATTERN.test(key)));
 }
