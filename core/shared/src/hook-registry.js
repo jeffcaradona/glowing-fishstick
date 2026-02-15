@@ -44,7 +44,6 @@ export function createHookRegistry() {
           logger.error({ err }, 'Hook execution error');
         } else {
           // Fallback to console if no logger provided
-          // eslint-disable-next-line no-console
           console.error('Hook execution error:', err.message);
         }
       }

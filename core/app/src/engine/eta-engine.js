@@ -45,7 +45,9 @@ export function createEtaEngine(viewDirs) {
       }
     }
     // Fallback to default resolution (throws if not found)
-    if (_origResolvePath) return _origResolvePath(templatePath);
+    if (_origResolvePath) {
+      return _origResolvePath(templatePath);
+    }
     throw new Error(`Template not found: ${templatePath}`);
   };
 

@@ -56,7 +56,7 @@ export function createServer(app, config) {
       const timeoutId = setTimeout(() => {
         logger.warn(
           { shutdownTimeout, remainingConnections: activeConnections.size },
-          `Shutdown timeout (${shutdownTimeout}ms) exceeded; forcing ${activeConnections.size} remaining connections closed.`,
+          'Shutdown timeout exceeded; forcing remaining connections closed.',
         );
         // Destroy all remaining sockets
         for (const socket of activeConnections) {

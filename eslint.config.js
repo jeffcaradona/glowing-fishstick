@@ -39,7 +39,7 @@ const commonRules = {
   'prefer-arrow-callback': 'warn',
   'no-param-reassign': [
     'error',
-    { props: true, ignorePropertyModificationsFor: ['req', 'res', 'next'] },
+    { props: true, ignorePropertyModificationsFor: ['req', 'res', 'next', 'app'] },
   ],
   eqeqeq: ['error', 'always'],
   curly: ['error', 'all'],

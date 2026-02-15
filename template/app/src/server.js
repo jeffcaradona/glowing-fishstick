@@ -16,7 +16,7 @@ const { server, close, registerStartupHook, registerShutdownHook } = createServe
 // Use for entry-point-specific initialization (e.g., deployment-specific setup).
 // This runs before the server begins listening.
 registerStartupHook(async () => {
-  console.log('Server startup initialization…');
+  console.warn('Server startup initialization…');
   // Perform deployment-specific initialization tasks
 });
 
@@ -24,7 +24,7 @@ registerStartupHook(async () => {
 // Use for entry-point-specific cleanup (e.g., graceful resource release).
 // This runs during graceful shutdown, before closing connections.
 registerShutdownHook(async () => {
-  console.log('Server shutdown cleanup…');
+  console.warn('Server shutdown cleanup…');
   // Perform deployment-specific cleanup tasks
 });
 

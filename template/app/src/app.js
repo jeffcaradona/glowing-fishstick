@@ -13,7 +13,6 @@ import { myRoutes } from './routes/router.js';
  * @param {object}                    config - Frozen config object
  */
 export function myApplicationPlugin(app, config) {
-  // Optional: Register app nav link
   app.locals.navLinks = app.locals.navLinks || [];
   app.locals.navLinks.push({ label: 'My App', url: '/my-feature' });
 
@@ -23,14 +22,14 @@ export function myApplicationPlugin(app, config) {
   // ── Optional: Register startup hook for initialization ─────────────
   // Use app.registerStartupHook() to add async initialization tasks:
   app.registerStartupHook(async () => {
-    console.log('Initializing application resources…');
+    console.warn('Initializing application resources…');
     // Connect to databases, initialize caches, etc.
   });
 
   // ── Optional: Register shutdown hook for cleanup ──────────────────
   // Use app.registerShutdownHook() to add async cleanup tasks:
   app.registerShutdownHook(async () => {
-    console.log('Cleaning up application resources…');
+    console.warn('Cleaning up application resources…');
     // Close database connections, clear caches, etc.
   });
 }
