@@ -219,7 +219,6 @@ glowing-fishstick/
 │   │   ├── package.json
 │   │   └── src/
 │   │       ├── app-factory.js  # createApp() factory
-│   │       ├── server-factory.js # createServer() factory
 │   │       ├── config/
 │   │       │   └── env.js      # createConfig(), filterSensitiveKeys()
 │   │       ├── errors/
@@ -244,7 +243,9 @@ glowing-fishstick/
 │   │               ├── footer.ejs
 │   │               └── header.ejs
 │   └── shared/
-│       └── README.md
+│       ├── README.md
+│       └── src/
+│           └── server-factory.js # createServer() factory
 │
 ├── documentation/
 │   └── 00-project-specs.md

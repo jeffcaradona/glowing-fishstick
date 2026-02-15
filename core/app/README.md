@@ -23,16 +23,21 @@ Install via npm (when published):
 npm install @glowing-fishstick/app
 ```
 
-Import and compose your app:
+Import and compose your app.
+
+Recommended (explicit) imports:
 
 ```js
-import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createApp, createConfig } from '@glowing-fishstick/app';
+import { createServer } from '@glowing-fishstick/shared';
 import { myPlugin } from './my-plugin.js';
 
 const config = createConfig({ appName: 'my-app' });
 const app = createApp(config, [myPlugin]);
 const { server, close } = createServer(app, config);
 ```
+
+Note: `createServer` is implemented in `@glowing-fishstick/shared` and is re-exported by `@glowing-fishstick/app` for convenience; either import path is acceptable depending on how you want to reference the server factory.
 
 ## API Reference
 
