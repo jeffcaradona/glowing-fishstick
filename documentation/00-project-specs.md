@@ -53,10 +53,10 @@ The codebase leans toward functional programming paradigms. Pragmatic exceptions
 
 ## 4. Public API Surface
 
-The npm package entry point (`index.js`) re-exports the following:
+The app package public entry point is `core/app/index.js` and re-exports the following:
 
 ```js
-// index.js
+// core/app/index.js
 export { createApp } from './src/app-factory.js';
 export { createServer } from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
@@ -67,7 +67,14 @@ export {
 } from './src/errors/appError.js';
 ```
 
-Source-of-truth file mapping for this public surface:
+`createServer` is re-exported through the shared package boundary:
+
+```js
+// core/shared/index.js
+export { createServer } from './src/server-factory.js';
+```
+
+Source-of-truth file mapping for this public API surface:
 
 - `createApp` → `core/app/src/app-factory.js`
 - `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
