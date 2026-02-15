@@ -2,6 +2,14 @@
 
 > **A composable Express.js application framework distributed as an npm module**
 
+> **Modular Structure:**
+>
+> - The root package provides documentation, development scripts, and a monorepo structure.
+> - The main application logic is in [`core/app`](core/app), distributed as `@glowing-fishstick/app`.
+> - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared`.
+>
+> See the individual module READMEs for usage details.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
 

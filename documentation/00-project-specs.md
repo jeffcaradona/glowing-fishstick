@@ -190,49 +190,67 @@ export function task_managerPlugin(app, config) {
 
 ```
 glowing-fishstick/
-├── index.js                         # Package entry point — re-exports public API
-├── package.json                     # Root npm package (core module)
-├── .env                             # Local dev environment variables
+├── jsconfig.json
 ├── LICENSE
+├── package.json                # Root package
 ├── README.md
 │
-├── src/                             # Core module (the "template" / npm package)
-│   ├── app.js                       # createApp() factory
-│   ├── server.js                    # createServer() factory
-│   ├── config/
-│   │   └── env.js                   # createConfig(), filterSensitiveKeys()
-│   ├── errors/
-│   │   └── appError.js              # AppError class + factory functions
-│   ├── routes/
-│   │   ├── health.js                # /healthz, /readyz, /livez
-│   │   ├── index.js                 # GET / (landing page)
-│   │   └── admin.js                 # GET /admin, GET /admin/config
-│   ├── middlewares/
-│   │   └── errorHandler.js          # notFoundHandler(), errorHandler()
-│   ├── models/                      # Data models / types
-│   ├── services/                    # Business logic / utilities
-│   ├── views/
-│   │   ├── layouts/
-│   │   │   ├── header.ejs           # Shared header partial
-│   │   │   └── footer.ejs           # Shared footer partial
-│   │   ├── index.ejs                # Landing page
-│   │   ├── admin/
-│   │   │   ├── dashboard.ejs        # Admin dashboard
-│   │   │   └── config.ejs           # Config viewer
-│   │   └── errors/
-│   │       └── 404.ejs              # Not-found page
-│   └── public/
-│       └── css/
-│           └── style.css            # Minimal shared styles
-│
-├── app/                            # Example consuming application ("task_manager")
+├── app/                        # Example consuming application ("task_manager")
 │   ├── DEV_APP_README.md
-│   ├── package.json                 # App package
+│   ├── package.json            # App package
 │   └── src/
-│       ├── app.js                   # task_managerPlugin — custom routes/middleware
-│       ├── server.js                # Thin entrypoint — composes & boots
+│       ├── app.js              # task_managerPlugin — custom routes/middleware
+│       ├── server.js           # Thin entrypoint — composes & boots
 │       ├── config/
-│       │   └── env.js               # App-specific config overrides
+│       │   └── env.js          # App-specific config overrides
+│       ├── controllers/
+│       ├── models/
+│       ├── routes/
+│       │   └── router.js
+│       ├── utils/
+│       └── views/
+│           ├── index.ejs
+│           └── tasks/
+│               └── list.ejs
+│
+├── core/
+│   ├── app/
+│   │   ├── index.js            # Core module entry
+│   │   ├── package.json
+│   │   └── src/
+│   │       ├── app-factory.js  # createApp() factory
+│   │       ├── server-factory.js # createServer() factory
+│   │       ├── config/
+│   │       │   └── env.js      # createConfig(), filterSensitiveKeys()
+│   │       ├── errors/
+│   │       │   └── appError.js # AppError class + factory functions
+│   │       ├── middlewares/
+│   │       │   └── errorHandler.js # notFoundHandler(), errorHandler()
+│   │       ├── public/
+│   │       │   └── css/
+│   │       │       └── style.css
+│   │       ├── routes/
+│   │       │   ├── admin.js
+│   │       │   ├── health.js
+│   │       │   └── index.js
+│   │       └── views/
+│   │           ├── index.ejs
+│   │           ├── admin/
+│   │           │   ├── config.ejs
+│   │           │   └── dashboard.ejs
+│   │           ├── errors/
+│   │           │   └── 404.ejs
+│   │           └── layouts/
+│   │               ├── footer.ejs
+│   │               └── header.ejs
+│   └── shared/
+│       └── README.md
+│
+├── documentation/
+│   └── 00-project-specs.md
+│
+└── scripts/
+```
 │       ├── controllers/             # App-specific controllers
 │       ├── models/                  # App-specific models
 │       ├── services/                # App-specific business logic
