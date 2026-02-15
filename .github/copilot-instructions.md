@@ -35,3 +35,5 @@ Before finishing:
 - rg --files
 - rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md app/DEV_APP_README.md documentation/\*.md
 - npm pack --dry-run (when installation/publish docs changed)
+- npm run lint
+- npm run format
