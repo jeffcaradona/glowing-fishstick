@@ -68,6 +68,7 @@ export function createApp(config, plugins = []) {
 
   // ── Graceful shutdown state (closure-based, not polluting app.locals) ───
   let isShuttingDown = false;
+
   app.on('shutdown', () => {
     isShuttingDown = true;
   });
@@ -79,21 +80,30 @@ export function createApp(config, plugins = []) {
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
   }
-  // ── Shutdown rejection middleware ────────────────────────────
-  // Return 503 Service Unavailable for new requests during shutdown.
+  
+  // ── Health routes (before shutdown middleware) ───────────────
+  // Health checks need to respond with specific messages during shutdown
+  app.use(healthRoutes(app));
+  
+  // ── Request tracking + shutdown rejection middleware ─────────
+  // Reject new requests during shutdown.
+  // Requests that entered the middleware stack BEFORE shutdown began 
+  // are allowed to complete (shutdown check happens first).
   app.use((req, res, next) => {
+    // Check if shutdown has started
     if (isShuttingDown) {
+      // New request during shutdown - reject with 503
       res.status(503).set('Connection', 'close').json({
         error: 'Server is shutting down',
         message: 'Please retry your request',
       });
       return;
     }
+
     next();
   });
 
   // ── Core routes ──────────────────────────────────────────────
-  app.use(healthRoutes(app));
   app.use(indexRoutes(config));
   app.use(adminRoutes(config));
 

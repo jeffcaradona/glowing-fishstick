@@ -23,6 +23,7 @@ import { getRegistries } from './registry-store.js';
 export function createServer(app, config) {
   const port = config.port || 3000;
   const shutdownTimeout = config.shutdownTimeout ?? 30000; // 30 seconds default
+  const allowProcessExit = config.allowProcessExit ?? true; // Disable in tests
   const server = http.createServer(app);
 
   // ── Connection tracking for graceful draining ────────────────
@@ -137,10 +138,14 @@ export function createServer(app, config) {
       await close();
 
       console.log('Server closed successfully.');
-      process.exit(0);
+      if (allowProcessExit) {
+        process.exit(0);
+      }
     } catch (err) {
       console.error('Error during shutdown:', err.message);
-      process.exit(1);
+      if (allowProcessExit) {
+        process.exit(1);
+      }
     }
   };
 

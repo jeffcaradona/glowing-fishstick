@@ -44,10 +44,16 @@ app.use((req, res, next) => {
 **Graceful shutdown flow:**
 
 1. ✅ `app.emit('shutdown')` signals shutdown mode to all listeners
-2. ✅ Middleware sets internal flag and rejects new requests with 503 + `Connection: close`
-3. ✅ `server.close()` stops accepting new connections
-4. ✅ In-flight requests complete gracefully
-5. ✅ Timeout handler forcefully destroys remaining sockets if needed
+2. ✅ Shutdown rejection middleware sets internal flag
+3. ✅ New requests (including on keep-alive connections) get 503 + `Connection: close`
+4. ✅ Requests already in the middleware pipeline (past the shutdown check) complete normally
+5. ✅ `server.close()` stops accepting new TCP connections
+6. ✅ server.close() waits for in-flight requests to complete
+7. ✅ Timeout handler forcefully destroys remaining sockets if needed
+
+**Important behavioral note:**
+
+Requests are considered "in-flight" if they have already passed the shutdown check middleware when SIGTERM is received. Requests that arrive after shutdown begins (even on existing keep-alive connections) are immediately rejected with 503. This is correct Kubernetes behavior - once the pod receives SIGTERM, it should not accept new work.
 
 **For plugins/custom code:**
 
