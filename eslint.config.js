@@ -37,7 +37,10 @@ const commonRules = {
   'no-var': 'error',
   'prefer-const': 'error',
   'prefer-arrow-callback': 'warn',
-  'no-param-reassign': ['error', { props: true }],
+  'no-param-reassign': [
+    'error',
+    { props: true, ignorePropertyModificationsFor: ['req', 'res', 'next', 'app'] },
+  ],
   eqeqeq: ['error', 'always'],
   curly: ['error', 'all'],
   'brace-style': ['error', '1tbs'],
@@ -100,7 +103,11 @@ export default [
     },
   },
   {
-    files: ['**/src/**-factory.js', 'core/app/src/app-factory.js', 'core/shared/src/server-factory.js'],
+    files: [
+      '**/src/**-factory.js',
+      'core/app/src/app-factory.js',
+      'core/shared/src/server-factory.js',
+    ],
     rules: {
       'no-param-reassign': 'off',
     },

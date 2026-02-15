@@ -65,12 +65,14 @@ Entry-point hooks are registered at the server level via `registerStartupHook()`
 ```javascript
 // plugins/database-plugin.js
 export function databasePlugin(app, config) {
+  const logger = config.logger;
+
   // Initialize the pool
   const pool = new DatabasePool(config.databaseUrl);
 
   // Register startup hook for app-level infrastructure
   app.registerStartupHook(async () => {
-    console.log('Connecting to database…');
+    logger.info('Connecting to database…');
     await pool.connect();
     // Make pool available to routes
     app.locals.db = pool;
@@ -78,7 +80,7 @@ export function databasePlugin(app, config) {
 
   // Register shutdown hook for cleanup
   app.registerShutdownHook(async () => {
-    console.log('Closing database connection…');
+    logger.info('Closing database connection…');
     await pool.close();
   });
 
@@ -94,16 +96,17 @@ export function databasePlugin(app, config) {
 ```javascript
 // plugins/cache-plugin.js
 export function cachePlugin(app, config) {
+  const logger = config.logger;
   const cache = new CacheService(config.redisUrl);
 
   app.registerStartupHook(async () => {
-    console.log('Initializing cache…');
+    logger.info('Initializing cache…');
     await cache.connect();
     app.locals.cache = cache;
   });
 
   app.registerShutdownHook(async () => {
-    console.log('Flushing and closing cache…');
+    logger.info('Flushing and closing cache…');
     await cache.flush();
     await cache.close();
   });
@@ -116,13 +119,12 @@ export function cachePlugin(app, config) {
 
 ```javascript
 // server.js
-import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createApp, createServer, createConfig, createLogger } from '@glowing-fishstick/app';
 import { databasePlugin } from './plugins/database-plugin.js';
 import { cachePlugin } from './plugins/cache-plugin.js';
 
-const config = createConfig({
-  /* ... */
-});
+const logger = createLogger({ name: 'my-app' });
+const config = createConfig({ logger /* ... */ });
 const app = createApp(config, [databasePlugin, cachePlugin]);
 const { registerStartupHook, registerShutdownHook } = createServer(app, config);
 
@@ -132,7 +134,7 @@ const { registerStartupHook, registerShutdownHook } = createServer(app, config);
  * because app-level plugin hooks already executed.
  */
 registerStartupHook(async () => {
-  console.log('Initializing monitoring…');
+  logger.info('Initializing monitoring…');
 
   // Safe to access app resources
   const db = app.locals.db;
@@ -144,7 +146,7 @@ registerStartupHook(async () => {
 });
 
 registerShutdownHook(async () => {
-  console.log('Graceful shutdown cleanup…');
+  logger.info('Graceful shutdown cleanup…');
   // Any final deployment-specific cleanup
 });
 ```
@@ -212,11 +214,12 @@ Errors in individual hooks are logged but do not prevent subsequent hooks from e
 ```javascript
 app.registerStartupHook(async () => {
   throw new Error('Optional service failed');
-  // Logged as error, but other hooks still run
+  // Logged as error by framework logger, but other hooks still run
 });
 
 app.registerStartupHook(async () => {
-  console.log('This still runs even if previous hook failed');
+  const logger = config.logger;
+  logger.info('This still runs even if previous hook failed');
 });
 ```
 

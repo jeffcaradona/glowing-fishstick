@@ -8,7 +8,12 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import express from 'express';
 
-import { createHookRegistry, storeRegistries } from '@glowing-fishstick/shared';
+import {
+  createHookRegistry,
+  storeRegistries,
+  createRequestIdMiddleware,
+  createRequestLogger,
+} from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
@@ -35,6 +40,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 export function createApp(config, plugins = []) {
   const app = express();
+
+  app.disable('x-powered-by');
 
   // ── Startup/shutdown hook registries ────────────────────────
   // Private registries for lifecycle management; exposed via methods.
@@ -66,6 +73,11 @@ export function createApp(config, plugins = []) {
     { label: 'Admin', url: '/admin' },
   ];
 
+  // Pass logger to app.locals for middleware access (e.g., errorHandler)
+  if (config.logger) {
+    app.locals.logger = config.logger;
+  }
+
   // ── Graceful shutdown state (closure-based, not polluting app.locals) ───
   let isShuttingDown = false;
 
@@ -74,20 +86,29 @@ export function createApp(config, plugins = []) {
   });
 
   // ── Built-in middleware ──────────────────────────────────────
+  // Request ID generation (always enabled for tracing)
+  app.use(createRequestIdMiddleware());
+
+  // Request logging (configurable, default: enabled)
+  const enableRequestLogging = config.enableRequestLogging ?? true;
+  if (enableRequestLogging && config.logger) {
+    app.use(createRequestLogger(config.logger, { generateRequestId: false }));
+  }
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(express.static(path.join(__dirname, 'public')));
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
   }
-  
+
   // ── Health routes (before shutdown middleware) ───────────────
   // Health checks need to respond with specific messages during shutdown
   app.use(healthRoutes(app));
-  
+
   // ── Request tracking + shutdown rejection middleware ─────────
   // Reject new requests during shutdown.
-  // Requests that entered the middleware stack BEFORE shutdown began 
+  // Requests that entered the middleware stack BEFORE shutdown began
   // are allowed to complete (shutdown check happens first).
   app.use((req, res, next) => {
     // Check if shutdown has started

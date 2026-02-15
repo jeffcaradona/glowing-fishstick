@@ -32,14 +32,20 @@ export function createHookRegistry() {
    * Errors in individual hooks are caught and logged but do not prevent
    * subsequent hooks from running.
    *
+   * @param {object} [logger] - Optional logger instance for error reporting
    * @returns {Promise<void>}
    */
-  const execute = async () => {
+  const execute = async (logger) => {
     for (const hook of hooks) {
       try {
         await hook();
       } catch (err) {
-        console.error('Hook execution error:', err.message);
+        if (logger && typeof logger.error === 'function') {
+          logger.error({ err }, 'Hook execution error');
+        } else {
+          // Fallback to console if no logger provided
+          console.error('Hook execution error:', err.message);
+        }
       }
     }
   };

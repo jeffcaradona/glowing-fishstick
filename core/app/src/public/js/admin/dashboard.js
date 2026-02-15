@@ -1,16 +1,16 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const healthCheckBtn = document.getElementById('healthCheckBtn');
   const healthCheckResult = document.getElementById('healthCheckResult');
 
   if (healthCheckBtn) {
-    healthCheckBtn.addEventListener('click', async function () {
+    healthCheckBtn.addEventListener('click', async () => {
       try {
         healthCheckBtn.disabled = true;
         healthCheckResult.textContent = 'Checking...';
         healthCheckResult.style.color = 'blue';
 
         const response = await fetch('/healthz');
-        const data = await response.json();
+        await response.json();
 
         if (response.ok) {
           healthCheckResult.textContent = '✓ Healthy';

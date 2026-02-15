@@ -76,6 +76,7 @@ app.on('shutdown', async () => {
 The graceful shutdown behavior is covered by integration tests in [tests/integration/startup-hook-ordering.test.js](tests/integration/startup-hook-ordering.test.js).
 
 Verify that:
+
 1. Shutdown middleware correctly rejects new requests with 503 status
 2. In-flight requests complete before timeout
 3. Socket timeout enforcement works after shutdown timeout expires
