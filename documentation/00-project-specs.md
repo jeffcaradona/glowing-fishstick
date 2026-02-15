@@ -71,8 +71,8 @@ Source-of-truth file mapping for this public surface:
 
 - `createApp` → `core/app/src/app-factory.js`
 - `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
-- Error factories (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
-- `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via `@glowing-fishstick/shared` boundary)
+- `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
+- `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 
 ### 4.1 `createApp(config, plugins = [])`
 
