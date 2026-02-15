@@ -10,7 +10,7 @@
 
 We have a template system at work that is an Express.js application with batteries-included middleware, routes, views, and configuration. Updates to this template are painful because implementation-specific routes and customizations are added directly by developers into the template source. This coupling means the template is distributed manually as a download rather than as a versioned npm package.
 
-**Goal:** Turn the template into a proper, versioned npm module (e.g. `core-frontend` or `core-api`) that exports a composable factory. Consuming applications (e.g. `task_manager`) depend on it via `npm install`, provide their own routes/middleware/views/config through a plugin contract, and ship a thin `server.js` entrypoint that boots the composed app.
+**Goal:** Turn the template into a proper, versioned npm module (e.g. `@glowing-fishstick/app`) that exports a composable factory. Consuming applications (e.g. `task_manager`) depend on it via `npm install`, provide their own routes/middleware/views/config through a plugin contract, and ship a thin `server.js` entrypoint that boots the composed app.
 
 This eliminates template drift:
 
@@ -58,7 +58,7 @@ The npm package entry point (`index.js`) re-exports the following:
 ```js
 // index.js
 export { createApp } from './src/app-factory.js';
-export { createServer } from '@glowing-fishstick/shared/src/server-factory.js';
+export { createServer } from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,
@@ -66,6 +66,13 @@ export {
   createValidationError,
 } from './src/errors/appError.js';
 ```
+
+Source-of-truth file mapping for this public surface:
+
+- `createApp` → `core/app/src/app-factory.js`
+- `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
+- Error factories (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
+- `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via `@glowing-fishstick/shared` boundary)
 
 ### 4.1 `createApp(config, plugins = [])`
 
@@ -495,7 +502,7 @@ The `app/` directory simulates how a consuming application would use the core mo
 
 ```js
 // app/src/server.js
-import { createApp, createServer, createConfig } from '../../index.js';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { task_managerPlugin } from './app.js';
 
 const config = createConfig({
@@ -525,7 +532,7 @@ The app's `package.json` would depend on:
 ```json
 {
   "dependencies": {
-    "core-frontend": "^1.0.0"
+    "@glowing-fishstick/app": "^0.0.1"
   }
 }
 ```
@@ -533,7 +540,7 @@ The app's `package.json` would depend on:
 And the import would be:
 
 ```js
-import { createApp, createServer, createConfig } from 'core-frontend';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
 ---
