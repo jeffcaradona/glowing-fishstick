@@ -19,6 +19,5 @@ export const appOverrides = {
   appName: 'task_manager',
   appVersion: '1.0.0',
   viewsDir: path.join(__dirname, '..', 'views'),
-  //TODO: Add  publicDir
   publicDir: path.join(__dirname, '..', 'public'),
 };

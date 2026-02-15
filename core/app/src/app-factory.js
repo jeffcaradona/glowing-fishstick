@@ -71,7 +71,7 @@ export function createApp(config, plugins = []) {
   // ── Built-in middleware ──────────────────────────────────────
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.static(path.join(__dirname, 'public'))); // TODO: Consumer public take priority; core public is the fallback.
+  app.use(express.static(path.join(__dirname, 'public')));
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
   }
