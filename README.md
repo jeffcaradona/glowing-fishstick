@@ -41,7 +41,7 @@ This module provides:
 ## Installation
 
 ```bash
-npm install glowing-fishstick
+npm install @glowing-fishstick/app
 ```
 
 **Requirements:**
@@ -57,7 +57,7 @@ npm install glowing-fishstick
 
 ```js
 // server.js
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 const config = createConfig({
   appName: 'my-app',
