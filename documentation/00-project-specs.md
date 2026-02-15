@@ -119,12 +119,44 @@ Factory function that starts the Express app listening and returns a server cont
 | `app`    | `Express app` | The app instance from `createApp()`. |
 | `config` | `object`      | Config object (reads `port`).        |
 
-**Returns:** `{ server, close }`
+**Returns:** `{ server, close, registerStartupHook, registerShutdownHook }`
 
-| Property | Type                  | Description                                                                   |
-| -------- | --------------------- | ----------------------------------------------------------------------------- |
-| `server` | `http.Server`         | The underlying Node.js HTTP server.                                           |
-| `close`  | `() => Promise<void>` | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle. |
+| Property               | Type                                      | Description                                                                                                                  |
+| ---------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `server`               | `http.Server`                             | The underlying Node.js HTTP server.                                                                                          |
+| `close`                | `() => Promise<void>`                     | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle.                                               |
+| `registerStartupHook`  | `(hook: () => Promise<void>) => void`     | Register an async hook to run during startup, before the server begins listening. Hooks run sequentially in FIFO order.     |
+| `registerShutdownHook` | `(hook: () => Promise<void>) => void`     | Register an async hook to run during graceful shutdown, before the server closes. Hooks run sequentially in FIFO order.    |
+
+**Startup Hook Lifecycle:**
+
+Startup hooks are executed **sequentially in FIFO order** after `createServer()` returns, before the server binds to the port. This allows consumers to:
+
+1. Call `createServer(app, config)`
+2. Register startup hooks synchronously via `registerStartupHook()`
+3. Hooks execute in background (non-blocking), and server starts listening once all hooks complete
+4. Any hook errors are logged but do not block subsequent hooks
+
+**Shutdown Hook Lifecycle:**
+
+Shutdown hooks are executed **sequentially in FIFO order** when the process receives `SIGTERM` or `SIGINT`, before the server closes connections.
+
+**Example:**
+
+```js
+const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
+
+// Register hooks AFTER createServer() returns, before startup begins
+registerStartupHook(async () => {
+  console.log('Connecting to database…');
+  // await db.connect();
+});
+
+registerShutdownHook(async () => {
+  console.log('Closing database connection…');
+  // await db.close();
+});
+```
 
 ### 4.3 `createConfig(overrides = {}, env = process.env)`
 

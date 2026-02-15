@@ -150,7 +150,11 @@ export function createServer(app, config) {
   process.on('SIGINT', shutdown);
 
   // ── Run startup hooks before listening ────────────────────────
-  (async () => {
+  // Defer startup execution to the next event loop iteration via setImmediate().
+  // This allows consumer code to register startup hooks synchronously after
+  // createServer() returns, before the startup sequence begins.
+  // Ref: P0 issue — startup hook ordering race condition fix.
+  setImmediate(async () => {
     try {
       for (const hook of startupHooks) {
         try {
@@ -169,7 +173,7 @@ export function createServer(app, config) {
       console.error('Startup failed:', err.message);
       process.exit(1);
     }
-  })();
+  });
 
   return { server, close, registerStartupHook, registerShutdownHook };
 }
