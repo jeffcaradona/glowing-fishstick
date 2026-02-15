@@ -12,7 +12,7 @@ This document tracks potential server composability features and architectural g
 
 **Description**: Moved `app.startupHooks` and `app.shutdownHooks` from mutable `app.locals` arrays to encapsulated closures. Exposed via `app.registerStartupHook()` and `app.registerShutdownHook()` methods. Fixed race-prone startup hook ordering by deferring hook execution via `setImmediate()`. Enforced true registry privacy via WeakMap-based storage, preventing external mutation through underscore fields.
 
-**Rationale**: `app.locals` should be reserved for state (like `shuttingdown` flag). Lifecycle registries should be private and immutable to prevent accidental mutation or overwriting by plugins. Consumer hooks must be registerable synchronously after `createServer()` returns, before the startup sequence begins.
+**Rationale**: Lifecycle registries should be private and immutable to prevent accidental mutation or overwriting by plugins. Consumer hooks must be registerable synchronously after `createServer()` returns, before the startup sequence begins. Internal state (like graceful shutdown) uses events, not `app.locals`.
 
 **Changes Implemented**:
 

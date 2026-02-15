@@ -61,11 +61,16 @@ export function createApp(config, plugins = []) {
   }
 
   // ── App locals ───────────────────────────────────────────────
-  app.locals.shuttingdown = false; // Used by health route to signal graceful shutdown mode.
   app.locals.navLinks = [
     { label: 'Home', url: '/' },
     { label: 'Admin', url: '/admin' },
   ];
+
+  // ── Graceful shutdown state (closure-based, not polluting app.locals) ───
+  let isShuttingDown = false;
+  app.on('shutdown', () => {
+    isShuttingDown = true;
+  });
 
   // ── Built-in middleware ──────────────────────────────────────
   app.use(express.json());
@@ -77,7 +82,7 @@ export function createApp(config, plugins = []) {
   // ── Shutdown rejection middleware ────────────────────────────
   // Return 503 Service Unavailable for new requests during shutdown.
   app.use((req, res, next) => {
-    if (app.locals.shuttingdown) {
+    if (isShuttingDown) {
       res.status(503).set('Connection', 'close').json({
         error: 'Server is shutting down',
         message: 'Please retry your request',
@@ -88,7 +93,7 @@ export function createApp(config, plugins = []) {
   });
 
   // ── Core routes ──────────────────────────────────────────────
-  app.use(healthRoutes());
+  app.use(healthRoutes(app));
   app.use(indexRoutes(config));
   app.use(adminRoutes(config));
 

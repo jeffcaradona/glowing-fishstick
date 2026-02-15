@@ -99,4 +99,10 @@ export default [
       sourceType: 'module',
     },
   },
+  {
+    files: ['**/src/**-factory.js', 'core/app/src/app-factory.js', 'core/shared/src/server-factory.js'],
+    rules: {
+      'no-param-reassign': 'off',
+    },
+  },
 ];
