@@ -8,18 +8,23 @@ This document tracks potential server composability features and architectural g
 
 ### Refactor: Migrate Startup/Shutdown Hooks from `app.locals` to Closures
 
-**Status**: Partially implemented; finalize encapsulation + startup ordering semantics
+**Status**: ✓ Complete — Encapsulation implemented, startup ordering race fixed
 
-**Description**: Move `app.startupHooks` and `app.shutdownHooks` from mutable `app.locals` arrays to encapsulated closures. Expose via `app.registerStartupHook()` and `app.registerShutdownHook()` methods.
+**Description**: Moved `app.startupHooks` and `app.shutdownHooks` from mutable `app.locals` arrays to encapsulated closures. Exposed via `app.registerStartupHook()` and `app.registerShutdownHook()` methods. Fixed race-prone startup hook ordering by deferring hook execution via `setImmediate()`.
 
-**Rationale**: `app.locals` should be reserved for state (like `shuttingdown` flag). Lifecycle registries should be private and immutable to prevent accidental mutation or overwriting by plugins.
+**Rationale**: `app.locals` should be reserved for state (like `shuttingdown` flag). Lifecycle registries should be private and immutable to prevent accidental mutation or overwriting by plugins. Consumer hooks must be registerable synchronously after `createServer()` returns, before the startup sequence begins.
 
-**Changes Required**:
-- [app-factory.js](../core/app/src/app-factory.js): Create private hook registries in closure; expose register methods on app object
-- [server-factory.js](../core/shared/src/server-factory.js): Update to call `app.registerStartupHook()` / `app.registerShutdownHook()` instead of accessing arrays
-- [app.js](../app/src/app.js): Update plugin examples to use `app.registerStartupHook()` / `app.registerShutdownHook()`
+**Changes Implemented**:
+- [app-factory.js](../core/app/src/app-factory.js): Create private hook registries in closure; expose register methods on app object ✓
+- [server-factory.js](../core/shared/src/server-factory.js): Call `app.registerStartupHook()` / `app.registerShutdownHook()` instead of accessing arrays; defer startup execution via `setImmediate()` to allow consumer hook registration ✓
+- [app.js](../app/src/app.js): Plugin examples use `app.registerStartupHook()` / `app.registerShutdownHook()` ✓
 
-**Benefit**: Cleaner API contract, prevents plugin bugs, keeps `app.locals` focused on observable state.
+**Fix Details (P0 — Startup Hook Ordering)**:
+- **Issue**: `createServer()` IIFE executed synchronously during factory call, before consumer code could register hooks.
+- **Solution**: Wrap startup sequence in `setImmediate()` to defer to next event loop tick, guaranteeing consumer hook registration happens first.
+- **Impact**: Lifecycle API contract now reliable; plugins and consumers can depend on hook registration order without race conditions.
+
+**Benefit**: Cleaner API contract, prevents plugin bugs, keeps `app.locals` focused on observable state, reliable startup hook execution order.
 
 ---
 
@@ -120,8 +125,8 @@ This document tracks potential server composability features and architectural g
 
 ## Prioritization Notes
 
-**In Progress / High Priority**:
-- Migrate Startup/Shutdown Hooks to Closures — Partially implemented; finalize encapsulation + startup ordering semantics
+**✓ Completed**:
+- Migrate Startup/Shutdown Hooks to Closures — Encapsulation and startup ordering semantics finalized
 
 **High Priority** (near-term):
 - Dependency Injection / Service Container (#2)
