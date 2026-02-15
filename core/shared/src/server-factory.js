@@ -6,6 +6,8 @@
 
 import http from 'node:http';
 
+import { getRegistries } from './registry-store.js';
+
 /**
  * Start an HTTP server for the given Express app.
  *
@@ -34,7 +36,6 @@ export function createServer(app, config) {
   // ── Shutdown hooks registry ──────────────────────────────────
   const shutdownHooks = [];
 
-
   /**
    * Gracefully close the server — stop accepting new connections,
    * wait for in-flight requests to finish, then resolve.
@@ -47,7 +48,7 @@ export function createServer(app, config) {
       const timeoutId = setTimeout(() => {
         console.warn(
           `Shutdown timeout (${shutdownTimeout}ms) exceeded; ` +
-          `forcing ${activeConnections.size} remaining connections closed.`
+            `forcing ${activeConnections.size} remaining connections closed.`,
         );
         // Destroy all remaining sockets
         for (const socket of activeConnections) {
@@ -95,16 +96,12 @@ export function createServer(app, config) {
     shutdownHooks.push(hook);
   };
 
-  // Register app's startup registry (if any hooks registered)
-  if (app._startupRegistry) {
-    registerStartupHook(() => app._startupRegistry.execute());
+  // Register app's startup and shutdown registries (if any)
+  const appRegistries = getRegistries(app);
+  if (appRegistries) {
+    registerStartupHook(() => appRegistries.startupRegistry.execute());
+    registerShutdownHook(() => appRegistries.shutdownRegistry.execute());
   }
-
-  // Register app's shutdown registry (if any hooks registered)
-  if (app._shutdownRegistry) {
-    registerShutdownHook(() => app._shutdownRegistry.execute());
-  }
-
 
   // ── Kubernetes / container lifecycle signals ─────────────────
   let shuttingDown = false;
@@ -145,7 +142,6 @@ export function createServer(app, config) {
     }
   };
 
-  
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
 

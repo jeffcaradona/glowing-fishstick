@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const healthCheckBtn = document.getElementById('healthCheckBtn');
   const healthCheckResult = document.getElementById('healthCheckResult');
 
   if (healthCheckBtn) {
-    healthCheckBtn.addEventListener('click', async function() {
+    healthCheckBtn.addEventListener('click', async function () {
       try {
         healthCheckBtn.disabled = true;
         healthCheckResult.textContent = 'Checking...';

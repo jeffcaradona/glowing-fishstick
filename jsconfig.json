@@ -6,12 +6,6 @@
       "@glowing-fishstick/shared": ["core/shared/index.js"]
     }
   },
-  "include": [
-    "app/src/**/*.js",
-    "core/app/src/**/*.js",
-    "core/shared/src/**/*.js"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["app/src/**/*.js", "core/app/src/**/*.js", "core/shared/src/**/*.js"],
+  "exclude": ["node_modules"]
 }

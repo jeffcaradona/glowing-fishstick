@@ -1,2 +1,3 @@
 export { createServer } from './src/server-factory.js';
-export { createHookRegistry } from './src/hook-registry.js'
+export { createHookRegistry } from './src/hook-registry.js';
+export { storeRegistries } from './src/registry-store.js';

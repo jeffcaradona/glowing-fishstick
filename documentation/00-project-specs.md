@@ -72,6 +72,8 @@ export {
 ```js
 // core/shared/index.js
 export { createServer } from './src/server-factory.js';
+export { createHookRegistry } from './src/hook-registry.js';
+export { storeRegistries } from './src/registry-store.js';
 ```
 
 Source-of-truth file mapping for this public API surface:
@@ -121,12 +123,12 @@ Factory function that starts the Express app listening and returns a server cont
 
 **Returns:** `{ server, close, registerStartupHook, registerShutdownHook }`
 
-| Property               | Type                                      | Description                                                                                                                  |
-| ---------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `server`               | `http.Server`                             | The underlying Node.js HTTP server.                                                                                          |
-| `close`                | `() => Promise<void>`                     | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle.                                               |
-| `registerStartupHook`  | `(hook: () => Promise<void>) => void`     | Register an async hook to run during startup, before the server begins listening. Hooks run sequentially in FIFO order.     |
-| `registerShutdownHook` | `(hook: () => Promise<void>) => void`     | Register an async hook to run during graceful shutdown, before the server closes. Hooks run sequentially in FIFO order.    |
+| Property               | Type                                  | Description                                                                                                             |
+| ---------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `server`               | `http.Server`                         | The underlying Node.js HTTP server.                                                                                     |
+| `close`                | `() => Promise<void>`                 | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle.                                           |
+| `registerStartupHook`  | `(hook: () => Promise<void>) => void` | Register an async hook to run during startup, before the server begins listening. Hooks run sequentially in FIFO order. |
+| `registerShutdownHook` | `(hook: () => Promise<void>) => void` | Register an async hook to run during graceful shutdown, before the server closes. Hooks run sequentially in FIFO order. |
 
 **Startup Hook Lifecycle:**
 
@@ -136,6 +138,36 @@ Startup hooks are executed **sequentially in FIFO order** after `createServer()`
 2. Register startup hooks synchronously via `registerStartupHook()`
 3. Hooks execute in background (non-blocking), and server starts listening once all hooks complete
 4. Any hook errors are logged but do not block subsequent hooks
+
+**Two-Level Hook Architecture:**
+
+Startup hooks come from two sources and execute in a defined sequence:
+
+| Level              | Source                                     | Registered By                                         | Purpose                                                                              | Examples                                                             |
+| ------------------ | ------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| **1. App-level**   | Plugins (via `app.registerStartupHook()`)  | `createApp(config, [plugin1, plugin2, ...])`          | Infrastructure initialization — database connections, cache warming, service clients | DB pool setup, cache initialization, external API clients            |
+| **2. Entry-point** | Server-level (via `registerStartupHook()`) | `createServer(app, config)` → `registerStartupHook()` | Deployment-specific setup that depends on app being initialized                      | Config finalization, monitoring bootstrap, deployment-specific tasks |
+
+**Execution Order Example:**
+
+```
+createApp()
+  ├─ plugin1.registerStartupHook(() => init database)        ← App-level hook #1
+  └─ plugin2.registerStartupHook(() => init cache)           ← App-level hook #2
+
+createServer(app, config)
+  ├─ [internally] wraps app-level registry                   ← Queued first
+  └─ registerStartupHook(() => setup monitoring)             ← Entry-point hook
+
+setImmediate() fires:
+  1. app-level hooks execute (FIFO order)
+  2. entry-point hooks execute (FIFO order)
+  3. server.listen(port)
+```
+
+**Why This Order?**
+
+Entry-point hooks can safely depend on app resources that plugin hooks initialized. This creates a clear dependency chain: infrastructure (app) → orchestration (entry-point).
 
 **Shutdown Hook Lifecycle:**
 
@@ -298,20 +330,22 @@ glowing-fishstick/
 │
 └── scripts/
 ```
-│       ├── controllers/             # App-specific controllers
-│       ├── models/                  # App-specific models
-│       ├── services/                # App-specific business logic
-│       └── views/                   # App-specific views
+
+│ ├── controllers/ # App-specific controllers
+│ ├── models/ # App-specific models
+│ ├── services/ # App-specific business logic
+│ └── views/ # App-specific views
 │
 ├── tests/
-│   ├── unit/                        # Pure function & factory tests
-│   ├── integration/                 # supertest against createApp()
-│   ├── smoke/                       # Boot createServer(), hit endpoints, shut down
-│   └── stress/                      # Load testing (autocannon or similar)
+│ ├── unit/ # Pure function & factory tests
+│ ├── integration/ # supertest against createApp()
+│ ├── smoke/ # Boot createServer(), hit endpoints, shut down
+│ └── stress/ # Load testing (autocannon or similar)
 │
 └── documentation/
-    └── 00-project-specs.md          # This file
-```
+└── 00-project-specs.md # This file
+
+````
 
 ---
 
@@ -377,7 +411,7 @@ EJS does not have a built-in layout/block system. We use `<%- include() %>` part
 <%- include('../layouts/header') %>
   <!-- page-specific content -->
 <%- include('../layouts/footer') %>
-```
+````
 
 ### 9.2 View Inventory
 

@@ -13,11 +13,13 @@ npm install
 ### 2. Start the Server
 
 **Development mode** (with auto-restart):
+
 ```bash
 npm run dev
 ```
 
 **Production mode**:
+
 ```bash
 npm run start
 ```
@@ -54,9 +56,10 @@ Visit your app route: **http://localhost:3000/my-feature**
 ### 1. Update Application Name
 
 Edit `src/config/env.js`:
+
 ```javascript
 export const appOverrides = {
-  appName: 'your-app-name',  // Change this
+  appName: 'your-app-name', // Change this
   appVersion: '0.0.1',
   // ... other config
 };
@@ -65,6 +68,7 @@ export const appOverrides = {
 ### 2. Add Routes
 
 Edit `src/routes/router.js` to add your own routes:
+
 ```javascript
 router.get('/your-path', (_req, res) => {
   res.render('your-page', { appName: config.appName });
@@ -76,6 +80,7 @@ router.get('/your-path', (_req, res) => {
 Add `.ejs` templates in `src/views/` and render them from routes.
 
 Layout files are provided by the core module and can be included:
+
 ```ejs
 <%- include('layouts/header', { appName }) %>
   <!-- Your content -->
@@ -85,6 +90,7 @@ Layout files are provided by the core module and can be included:
 ### 4. Add Startup/Shutdown Hooks
 
 Edit `src/app.js` to register initialization and cleanup tasks:
+
 ```javascript
 app.registerStartupHook(async () => {
   // Initialize resources (database, cache, etc.)
@@ -130,11 +136,13 @@ PORT=3000
 When ready for production:
 
 1. Install production dependencies only:
+
    ```bash
    npm install --production
    ```
 
 2. Start the server:
+
    ```bash
    npm run start
    ```

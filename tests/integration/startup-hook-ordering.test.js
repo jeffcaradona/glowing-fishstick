@@ -1,14 +1,14 @@
 /**
  * @file tests/integration/startup-hook-ordering.test.js
  * @description Integration test for P0 startup hook ordering fix.
- * 
+ *
  * Verifies that the race condition between createServer() and
  * registerStartupHook() is fixed via setImmediate() deferral.
- * 
+ *
  * Issue: createServer() previously executed startup hooks synchronously
  * during factory call. Consumer code registered hooks AFTER the factory
  * returned, causing hooks to be skipped or run too late.
- * 
+ *
  * Fix: Wrap startup IIFE in setImmediate() to defer execution to next
  * event loop tick, guaranteeing consumer hook registration happens first.
  */
@@ -58,7 +58,7 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
 
     // Give the deferred startup sequence time to complete
     // (typically < 1ms, this is generous)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Verify hooks executed in order
     expect(executionOrder).toEqual(['hook-1', 'hook-2', 'hook-3']);
@@ -79,7 +79,7 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
     });
 
     // Wait for deferred startup
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Hook should have been executed despite being registered after factory call
     expect(hookExecuted).toHaveBeenCalledTimes(1);
@@ -108,7 +108,7 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
     });
 
     // Wait for deferred startup
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // All hooks should have executed despite hook-2 throwing
     expect(executionOrder).toEqual(['hook-1', 'hook-2', 'hook-3']);
@@ -134,7 +134,7 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
     });
 
     // Wait for deferred startup (app hook is wrapped by server)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // App hook should execute (wrapped by server), then server hook
     expect(executionOrder).toContain('app-hook');

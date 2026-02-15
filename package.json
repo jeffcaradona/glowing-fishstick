@@ -26,9 +26,7 @@
   "engines": {
     "node": ">=22"
   },
-  "files": [
-    
-  ],
+  "files": [],
   "scripts": {
     "start:app": "node app/src/server.js",
     "dev:app": "nodemon --exec node app/src/server.js",
@@ -40,7 +38,6 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "cross-env": "^10.1.0",
