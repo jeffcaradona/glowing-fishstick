@@ -32,7 +32,9 @@ When consuming via `@glowing-fishstick/app`, `createServer` is re-exported from 
 
 ## Contents
 
-- Shared utility functions
+- `server-factory.js` — HTTP server factory with graceful shutdown and lifecycle hooks
+- `hook-registry.js` — Generic hook registry for sequential async lifecycle execution
+- `registry-store.js` — WeakMap-based private storage for app lifecycle registries
 - Common type definitions
 - Reusable helpers for core/app and downstream modules
 

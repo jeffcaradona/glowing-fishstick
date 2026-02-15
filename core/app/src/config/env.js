@@ -31,7 +31,10 @@ const REPO_ROOT = (() => {
       const pkgPath = path.join(current, 'package.json');
       if (existsSync(pkgPath)) {
         const content = readFileSync(pkgPath, 'utf8');
-        if (content.includes('"name"') && (content.includes('glowing-fishstick') || content.includes('"type": "module"'))) {
+        if (
+          content.includes('"name"') &&
+          (content.includes('glowing-fishstick') || content.includes('"type": "module"'))
+        ) {
           // Check if core/ subdirectory exists to confirm repo root
           if (existsSync(path.join(current, 'core'))) {
             return current;
@@ -113,6 +116,6 @@ export function filterSensitiveKeys(config) {
           }
         }
         return [key, value];
-      })
+      }),
   );
 }

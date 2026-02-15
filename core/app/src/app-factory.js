@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import express from 'express';
 
-import { createHookRegistry } from '@glowing-fishstick/shared';
+import { createHookRegistry, storeRegistries } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
@@ -45,9 +45,8 @@ export function createApp(config, plugins = []) {
   app.registerStartupHook = (hook) => startupRegistry.register(hook);
   app.registerShutdownHook = (hook) => shutdownRegistry.register(hook);
 
-  // Store registries on app for access by server-factory
-  app._startupRegistry = startupRegistry;
-  app._shutdownRegistry = shutdownRegistry;
+  // Store registries using WeakMap for private access by server-factory
+  storeRegistries(app, startupRegistry, shutdownRegistry);
 
   // ── View engine ──────────────────────────────────────────────
   app.set('view engine', 'ejs');

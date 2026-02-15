@@ -9,11 +9,13 @@
 The startup hook lifecycle had a critical race condition that made the lifecycle API contract unreliable:
 
 ### Root Cause
+
 - `createServer()` factory executed startup hooks **immediately** during function execution (via IIFE)
 - Consumer code called `registerStartupHook()` **after** `createServer()` returned
 - This ordering guaranteed that consumer hooks would either be skipped or race with startup execution
 
 ### Code Flow (Before Fix)
+
 ```
 Consumer Call Stack:
   1. createServer(app, config)     // Call begins
@@ -23,6 +25,7 @@ Consumer Call Stack:
 ```
 
 ### Impact
+
 - Entry-point specific startup hooks (database connections, cache warming, feature flags) could not reliably run
 - Plugins' startup hooks ran, but consumer app hooks often missed their window
 - Unpredictable behavior made the lifecycle API unreliable for production use
@@ -32,6 +35,7 @@ Consumer Call Stack:
 ## Solution
 
 ### Implementation
+
 Wrapped the startup IIFE in `setImmediate()` to defer execution to the **next event loop iteration**:
 
 **File:** [core/shared/src/server-factory.js](../core/shared/src/server-factory.js#L149-L172)
@@ -50,7 +54,7 @@ setImmediate(async () => {
       }
     }
     console.log('Startup sequence completed.');
-    
+
     server.listen(port, () => {
       console.log(`${config.appName ?? 'app'} listening on http://localhost:${port}`);
     });
@@ -62,6 +66,7 @@ setImmediate(async () => {
 ```
 
 ### How It Works
+
 1. `createServer(app, config)` schedules startup via `setImmediate()`
 2. Function returns immediately
 3. Consumer code runs synchronously and calls `registerStartupHook()`
@@ -75,15 +80,18 @@ setImmediate(async () => {
 ## Verification
 
 ### Test Coverage
+
 Created comprehensive integration tests: [tests/integration/startup-hook-ordering.test.js](../tests/integration/startup-hook-ordering.test.js)
 
 ✅ **Test Results (All Passing):**
+
 - ✓ Consumer hooks execute in FIFO order before server listens
 - ✓ No hooks are skipped due to timing
 - ✓ Hook errors don't block subsequent hooks
 - ✓ App-level and server-level hooks mix correctly
 
 ### End-to-End Verification
+
 Consumer app (`app/src/server.js`) startup confirms fix:
 
 ```
@@ -102,6 +110,7 @@ task_manager listening on http://localhost:3000
 **Returns:** `{ server, close, registerStartupHook, registerShutdownHook }`
 
 **Startup Hook Lifecycle (NEW BEHAVIOR):**
+
 ```
 1. createServer() called
 2. Returns with hook registration methods
@@ -112,6 +121,7 @@ task_manager listening on http://localhost:3000
 ```
 
 **Example Usage:**
+
 ```javascript
 const { registerStartupHook } = createServer(app, config);
 
@@ -155,6 +165,7 @@ This fix leverages Node.js event loop scheduling:
 - **`process.nextTick()`** → Would execute too early (before consumer registration)
 
 Using `setImmediate()` ensures:
+
 - Consumer registration code runs synchronously
 - Then event loop continues
 - Then deferred startup sequence begins with complete hook registry
@@ -164,6 +175,7 @@ Using `setImmediate()` ensures:
 ## Testing & Stability
 
 ✅ **Tests All Passing:**
+
 ```
 Test Files  1 passed (1)
 Tests       4 passed (4)
@@ -183,3 +195,4 @@ Duration    831ms
 - **Root Cause:** Synchronous startup execution vs. asynchronous hook registration
 - **Solution Pattern:** setImmediate() deferral for event loop serialization
 - **Impact:** Lifecycle API now reliable for production use
+- **Follow-up:** [P1 — Private Lifecycle Registries via WeakMap](./P1-PRIVATE-LIFECYCLE-REGISTRITES.md) — replaced underscore field exposure with language-enforced privacy
