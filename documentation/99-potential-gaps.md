@@ -8,7 +8,7 @@ This document tracks potential server composability features and architectural g
 
 ### Refactor: Migrate Startup/Shutdown Hooks from `app.locals` to Closures
 
-**Status**: Planned / High Priority
+**Status**: Partially implemented; finalize encapsulation + startup ordering semantics
 
 **Description**: Move `app.startupHooks` and `app.shutdownHooks` from mutable `app.locals` arrays to encapsulated closures. Expose via `app.registerStartupHook()` and `app.registerShutdownHook()` methods.
 
@@ -121,7 +121,7 @@ This document tracks potential server composability features and architectural g
 ## Prioritization Notes
 
 **In Progress / High Priority**:
-- Migrate Startup/Shutdown Hooks to Closures (closure-based system for hook registries)
+- Migrate Startup/Shutdown Hooks to Closures — Partially implemented; finalize encapsulation + startup ordering semantics
 
 **High Priority** (near-term):
 - Dependency Injection / Service Container (#2)
