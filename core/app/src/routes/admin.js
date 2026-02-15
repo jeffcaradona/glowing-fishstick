@@ -3,8 +3,12 @@
  * @description Admin dashboard and config viewer routes.
  */
 
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { Router } from 'express';
 import { filterSensitiveKeys } from '../config/env.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Create a router for admin pages.
@@ -29,8 +33,16 @@ export function adminRoutes(config) {
 
   /** Config viewer — non-sensitive values only. */
   router.get('/admin/config', (_req, res) => {
+    const coreViewsDir = path.join(__dirname, '..', 'views');
+    const coreViewsDirRelative = path.relative(process.cwd(), coreViewsDir).replace(/\\/g, '/');
+    const appViewsDirRelative = config.viewsDir ? path.relative(process.cwd(), config.viewsDir).replace(/\\/g, '/') : null;
+    
     res.render('admin/config', {
       config: filterSensitiveKeys(config),
+      viewsDirs: {
+        app: appViewsDirRelative,
+        core: coreViewsDirRelative,
+      },
     });
   });
 

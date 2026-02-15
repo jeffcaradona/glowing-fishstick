@@ -3,6 +3,31 @@
   <h1>Configuration</h1>
   <p>Sensitive keys (SECRET, KEY, PASSWORD, TOKEN, CREDENTIAL) are hidden.</p>
 
+  <% if (typeof viewsDirs !== 'undefined' && viewsDirs.app || viewsDirs.core) { %>
+  <h3>View Directories</h3>
+  <table class="config-table">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (viewsDirs.app) { %>
+      <tr>
+        <td><code>viewsDir (app)</code></td>
+        <td><%= viewsDirs.app %></td>
+      </tr>
+      <% } %>
+      <tr>
+        <td><code>viewsDir (core)</code></td>
+        <td><%= viewsDirs.core %></td>
+      </tr>
+    </tbody>
+  </table>
+  <% } %>
+
+  <h3>Other Configuration</h3>
   <table class="config-table">
     <thead>
       <tr>
@@ -12,10 +37,12 @@
     </thead>
     <tbody>
       <% Object.entries(config).forEach(([key, value]) => { %>
+        <% if (key !== 'viewsDir') { %>
         <tr>
           <td><code><%= key %></code></td>
           <td><%= JSON.stringify(value) %></td>
         </tr>
+        <% } %>
       <% }) %>
     </tbody>
   </table>
