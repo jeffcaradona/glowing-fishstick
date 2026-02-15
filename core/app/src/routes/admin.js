@@ -37,11 +37,19 @@ export function adminRoutes(config) {
     const coreViewsDirRelative = path.relative(process.cwd(), coreViewsDir).replace(/\\/g, '/');
     const appViewsDirRelative = config.viewsDir ? path.relative(process.cwd(), config.viewsDir).replace(/\\/g, '/') : null;
     
+    const corePublicDir = path.join(__dirname, '..', 'public');
+    const corePublicDirRelative = path.relative(process.cwd(), corePublicDir).replace(/\\/g, '/');
+    const appPublicDirRelative = config.publicDir ? path.relative(process.cwd(), config.publicDir).replace(/\\/g, '/') : null;
+    
     res.render('admin/config', {
       config: filterSensitiveKeys(config),
       viewsDirs: {
         app: appViewsDirRelative,
         core: coreViewsDirRelative,
+      },
+      publicDirs: {
+        app: appPublicDirRelative,
+        core: corePublicDirRelative,
       },
     });
   });

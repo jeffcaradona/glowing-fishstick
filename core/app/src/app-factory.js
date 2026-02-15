@@ -71,8 +71,10 @@ export function createApp(config, plugins = []) {
   // ── Built-in middleware ──────────────────────────────────────
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.static(path.join(__dirname, 'public')));
-
+  app.use(express.static(path.join(__dirname, 'public'))); // TODO: Consumer public take priority; core public is the fallback.
+  if (config.publicDir) {
+    app.use(express.static(config.publicDir));
+  }
   // ── Shutdown rejection middleware ────────────────────────────
   // Return 503 Service Unavailable for new requests during shutdown.
   app.use((req, res, next) => {
