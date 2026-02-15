@@ -17,4 +17,20 @@ export function taskManagerApplicationPlugin(app, config) {
   app.locals.navLinks.push({ label: 'Tasks', url: '/tasks' });
 
   app.use(taskRoutes(config));
+
+  // ── Optional: Register startup hooks for initialization ─────────────
+  // Push async functions to app.startupHooks for initialization tasks:
+   app.startupHooks.push(async () => {
+     console.log('Initializing task manager resources…');
+     // Connect to databases, initialize caches, etc.
+   });
+
+
+  // ── Optional: Register shutdown hooks for cleanup ─────────────
+  // Push async functions to app.shutdownHooks for cleanup tasks:
+   app.shutdownHooks.push(async () => {
+     console.log('Cleaning up task manager resources…');
+     // Close database connections, clear caches, etc.
+   });
 }
+

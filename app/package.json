@@ -1,5 +1,6 @@
 {
   "name": "glowing-fishstick-tasks",
+  "description": "A local development apoplication to help build the core modules",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
