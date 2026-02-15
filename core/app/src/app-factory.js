@@ -35,6 +35,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp(config, plugins = []) {
   const app = express();
 
+  // ── Startup hooks registry ──────────────────────────────────
+  // Plugins can register async initialization functions here.
+  app.startupHooks = [];
+
   // ── View engine ──────────────────────────────────────────────
   app.set('view engine', 'ejs');
 
@@ -47,6 +51,13 @@ export function createApp(config, plugins = []) {
     app.set('views', coreViewsDir);
   }
 
+  // ── App locals ───────────────────────────────────────────────
+  app.locals.shuttingdown = false; // Used by health route to signal graceful shutdown mode.
+
+  // ── Shutdown hooks registry ──────────────────────────────────
+  // Plugins can register async cleanup functions here.
+  app.shutdownHooks = [];
+
   // ── Navigation links (mutable — plugins may append) ─────────
   app.locals.navLinks = [
     { label: 'Home', url: '/' },
@@ -57,6 +68,19 @@ export function createApp(config, plugins = []) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // ── Shutdown rejection middleware ────────────────────────────
+  // Return 503 Service Unavailable for new requests during shutdown.
+  app.use((req, res, next) => {
+    if (app.locals.shuttingdown) {
+      res.status(503).set('Connection', 'close').json({
+        error: 'Server is shutting down',
+        message: 'Please retry your request',
+      });
+      return;
+    }
+    next();
+  });
 
   // ── Core routes ──────────────────────────────────────────────
   app.use(healthRoutes());
