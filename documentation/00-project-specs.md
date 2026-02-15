@@ -26,14 +26,14 @@ This eliminates template drift:
 
 The codebase leans toward functional programming paradigms. Pragmatic exceptions are made where JavaScript's runtime semantics demand it (e.g. custom errors extending `Error`).
 
-| Guideline | Rationale |
-| --- | --- |
-| **Factories over classes** | `createApp()`, `createServer()`, `createConfig()` — all return plain objects or Express instances, not class instances. |
-| **Contracts as shapes** | A "plugin" is any function matching `(app, config) => void`. A "config" is a plain frozen object with documented keys. No interfaces to implement, just shapes to conform to — documented via JSDoc `@typedef`. |
-| **Custom errors extend `Error`** | The one pragmatic exception. JS error handling (`instanceof`, stack traces, `catch` semantics) requires class extension. A factory `createAppError()` wraps construction so consumers never use `new` directly. |
-| **Pure functions where possible** | Config validation, env loading, health-check logic, config filtering — all pure functions that take input and return output with no side effects. |
-| **Dependency injection via arguments** | Middleware, route handlers, and plugins receive their dependencies (config, logger, etc.) as function arguments — no module-level singletons. |
-| **Composition over middleware chaining** | Build the middleware stack as a composable array of functions applied in order — each testable in isolation, easy to reorder or replace in consuming apps. |
+| Guideline                                | Rationale                                                                                                                                                                                                       |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Factories over classes**               | `createApp()`, `createServer()`, `createConfig()` — all return plain objects or Express instances, not class instances.                                                                                         |
+| **Contracts as shapes**                  | A "plugin" is any function matching `(app, config) => void`. A "config" is a plain frozen object with documented keys. No interfaces to implement, just shapes to conform to — documented via JSDoc `@typedef`. |
+| **Custom errors extend `Error`**         | The one pragmatic exception. JS error handling (`instanceof`, stack traces, `catch` semantics) requires class extension. A factory `createAppError()` wraps construction so consumers never use `new` directly. |
+| **Pure functions where possible**        | Config validation, env loading, health-check logic, config filtering — all pure functions that take input and return output with no side effects.                                                               |
+| **Dependency injection via arguments**   | Middleware, route handlers, and plugins receive their dependencies (config, logger, etc.) as function arguments — no module-level singletons.                                                                   |
+| **Composition over middleware chaining** | Build the middleware stack as a composable array of functions applied in order — each testable in isolation, easy to reorder or replace in consuming apps.                                                      |
 
 ### 2.2 Why Not Pure OOP
 
@@ -60,7 +60,11 @@ The npm package entry point (`index.js`) re-exports the following:
 export { createApp } from './src/app.js';
 export { createServer } from './src/server.js';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
-export { createAppError, createNotFoundError, createValidationError } from './src/errors/appError.js';
+export {
+  createAppError,
+  createNotFoundError,
+  createValidationError,
+} from './src/errors/appError.js';
 ```
 
 ### 4.1 `createApp(config, plugins = [])`
@@ -69,10 +73,10 @@ Factory function that builds and returns a configured Express `app` instance.
 
 **Parameters:**
 
-| Name | Type | Description |
-|---|---|---|
-| `config` | `object` | Frozen config object from `createConfig()`. |
-| `plugins` | `Array<(app, config) => void>` | Plugin functions applied after core setup. |
+| Name      | Type                           | Description                                 |
+| --------- | ------------------------------ | ------------------------------------------- |
+| `config`  | `object`                       | Frozen config object from `createConfig()`. |
+| `plugins` | `Array<(app, config) => void>` | Plugin functions applied after core setup.  |
 
 **Behavior:**
 
@@ -86,8 +90,8 @@ Factory function that builds and returns a configured Express `app` instance.
 
 **Overridable options (via config):**
 
-| Key | Default | Description |
-|---|---|---|
+| Key        | Default                                   | Description                                  |
+| ---------- | ----------------------------------------- | -------------------------------------------- |
 | `viewsDir` | `src/views/` (resolved from package root) | Path to additional/override views directory. |
 
 ### 4.2 `createServer(app, config)`
@@ -96,17 +100,17 @@ Factory function that starts the Express app listening and returns a server cont
 
 **Parameters:**
 
-| Name | Type | Description |
-|---|---|---|
-| `app` | `Express app` | The app instance from `createApp()`. |
-| `config` | `object` | Config object (reads `port`). |
+| Name     | Type          | Description                          |
+| -------- | ------------- | ------------------------------------ |
+| `app`    | `Express app` | The app instance from `createApp()`. |
+| `config` | `object`      | Config object (reads `port`).        |
 
 **Returns:** `{ server, close }`
 
-| Property | Type | Description |
-|---|---|---|
-| `server` | `http.Server` | The underlying Node.js HTTP server. |
-| `close` | `() => Promise<void>` | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle. |
+| Property | Type                  | Description                                                                   |
+| -------- | --------------------- | ----------------------------------------------------------------------------- |
+| `server` | `http.Server`         | The underlying Node.js HTTP server.                                           |
+| `close`  | `() => Promise<void>` | Graceful shutdown function. Handles `SIGTERM`/`SIGINT` for K8s pod lifecycle. |
 
 ### 4.3 `createConfig(overrides = {}, env = process.env)`
 
@@ -114,19 +118,19 @@ Pure factory function that builds a frozen configuration object.
 
 **Parameters:**
 
-| Name | Type | Description |
-|---|---|---|
-| `overrides` | `object` | Consumer-provided config values merged on top of env + defaults. |
-| `env` | `object` | Environment variable source. Defaults to `process.env`. Accepts a plain object for testing. |
+| Name        | Type     | Description                                                                                 |
+| ----------- | -------- | ------------------------------------------------------------------------------------------- |
+| `overrides` | `object` | Consumer-provided config values merged on top of env + defaults.                            |
+| `env`       | `object` | Environment variable source. Defaults to `process.env`. Accepts a plain object for testing. |
 
 **Defaults:**
 
-| Key | Default | Env Var |
-|---|---|---|
-| `port` | `3000` | `PORT` |
-| `nodeEnv` | `'development'` | `NODE_ENV` |
-| `appName` | `'app'` | `APP_NAME` |
-| `appVersion` | `'0.0.0'` | `APP_VERSION` |
+| Key          | Default         | Env Var       |
+| ------------ | --------------- | ------------- |
+| `port`       | `3000`          | `PORT`        |
+| `nodeEnv`    | `'development'` | `NODE_ENV`    |
+| `appName`    | `'app'`         | `APP_NAME`    |
+| `appVersion` | `'0.0.0'`       | `APP_VERSION` |
 
 **Returns:** A `Object.freeze()`'d plain object. Throws if required validation fails.
 
@@ -137,9 +141,9 @@ Pure function that returns a shallow copy of `config` with keys matching `SECRET
 ### 4.5 Error Factories
 
 ```js
-createAppError(code, message, statusCode)  // → AppError instance
-createNotFoundError(message)               // → AppError with status 404
-createValidationError(message)             // → AppError with status 400
+createAppError(code, message, statusCode); // → AppError instance
+createNotFoundError(message); // → AppError with status 404
+createValidationError(message); // → AppError with status 400
 ```
 
 `AppError extends Error` is the single class in the codebase. The factories wrap construction so consumers never call `new` directly.
@@ -221,18 +225,18 @@ glowing-fishstick/
 │       └── css/
 │           └── style.css            # Minimal shared styles
 │
-├── demo/                            # Example consuming application ("task_manager")
-│   ├── DEMO_README.md
-│   ├── package.json                 # Demo app npm package
+├── app/                            # Example consuming application ("task_manager")
+│   ├── DEV_APP_README.md
+│   ├── package.json                 # App package
 │   └── src/
 │       ├── app.js                   # task_managerPlugin — custom routes/middleware
 │       ├── server.js                # Thin entrypoint — composes & boots
 │       ├── config/
-│       │   └── env.js               # Demo-specific config overrides
-│       ├── controllers/             # Demo-specific controllers
-│       ├── models/                  # Demo-specific models
-│       ├── services/                # Demo-specific business logic
-│       └── views/                   # Demo-specific views
+│       │   └── env.js               # App-specific config overrides
+│       ├── controllers/             # App-specific controllers
+│       ├── models/                  # App-specific models
+│       ├── services/                # App-specific business logic
+│       └── views/                   # App-specific views
 │
 ├── tests/
 │   ├── unit/                        # Pure function & factory tests
@@ -250,38 +254,38 @@ glowing-fishstick/
 
 ### 7.1 Kubernetes Health Probes
 
-| Route | Method | Response | Purpose |
-|---|---|---|---|
-| `/healthz` | GET | `{ status: "ok" }` | Basic liveness check. |
-| `/readyz` | GET | `{ status: "ready" }` | Readiness check. Extensible to verify DB, cache, etc. |
-| `/livez` | GET | `{ status: "alive" }` | Liveness check. Extensible for deep health verification. |
+| Route      | Method | Response              | Purpose                                                  |
+| ---------- | ------ | --------------------- | -------------------------------------------------------- |
+| `/healthz` | GET    | `{ status: "ok" }`    | Basic liveness check.                                    |
+| `/readyz`  | GET    | `{ status: "ready" }` | Readiness check. Extensible to verify DB, cache, etc.    |
+| `/livez`   | GET    | `{ status: "alive" }` | Liveness check. Extensible for deep health verification. |
 
 All return HTTP 200 with `Content-Type: application/json`.
 
 ### 7.2 Landing Page
 
-| Route | Method | Response | Purpose |
-|---|---|---|---|
-| `/` | GET | Rendered EJS view | Default index page with app name, welcome message, links. |
+| Route | Method | Response          | Purpose                                                   |
+| ----- | ------ | ----------------- | --------------------------------------------------------- |
+| `/`   | GET    | Rendered EJS view | Default index page with app name, welcome message, links. |
 
 ### 7.3 Admin
 
-| Route | Method | Response | Purpose |
-|---|---|---|---|
-| `/admin` | GET | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, memory usage, placeholder cards. |
-| `/admin/config` | GET | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`). |
+| Route           | Method | Response          | Purpose                                                                                   |
+| --------------- | ------ | ----------------- | ----------------------------------------------------------------------------------------- |
+| `/admin`        | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, memory usage, placeholder cards.   |
+| `/admin/config` | GET    | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`). |
 
 ---
 
 ## 8. Built-in Middleware
 
-| Middleware | Source | Behavior |
-|---|---|---|
-| `express.json()` | Express built-in | Parses JSON request bodies. |
-| `express.urlencoded({ extended: true })` | Express built-in | Parses URL-encoded form data. |
-| `express.static()` | Express built-in | Serves static files from `src/public/`. |
-| `notFoundHandler()` | `src/middlewares/errorHandler.js` | Catches unmatched routes, creates a 404 `AppError`, forwards to error handler. |
-| `errorHandler()` | `src/middlewares/errorHandler.js` | Express 4-arg error middleware. Content-negotiates: renders EJS error view for `text/html`, returns JSON for `application/json`. |
+| Middleware                               | Source                            | Behavior                                                                                                                         |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `express.json()`                         | Express built-in                  | Parses JSON request bodies.                                                                                                      |
+| `express.urlencoded({ extended: true })` | Express built-in                  | Parses URL-encoded form data.                                                                                                    |
+| `express.static()`                       | Express built-in                  | Serves static files from `src/public/`.                                                                                          |
+| `notFoundHandler()`                      | `src/middlewares/errorHandler.js` | Catches unmatched routes, creates a 404 `AppError`, forwards to error handler.                                                   |
+| `errorHandler()`                         | `src/middlewares/errorHandler.js` | Express 4-arg error middleware. Content-negotiates: renders EJS error view for `text/html`, returns JSON for `application/json`. |
 
 Middleware is applied in this order:
 
@@ -312,14 +316,14 @@ EJS does not have a built-in layout/block system. We use `<%- include() %>` part
 
 ### 9.2 View Inventory
 
-| View | Path | Data |
-|---|---|---|
-| Layout header | `layouts/header.ejs` | `appName`, `navLinks` |
-| Layout footer | `layouts/footer.ejs` | — |
-| Landing page | `index.ejs` | `appName`, `welcomeMessage` |
+| View            | Path                  | Data                                                            |
+| --------------- | --------------------- | --------------------------------------------------------------- |
+| Layout header   | `layouts/header.ejs`  | `appName`, `navLinks`                                           |
+| Layout footer   | `layouts/footer.ejs`  | —                                                               |
+| Landing page    | `index.ejs`           | `appName`, `welcomeMessage`                                     |
 | Admin dashboard | `admin/dashboard.ejs` | `appName`, `appVersion`, `uptime`, `nodeVersion`, `memoryUsage` |
-| Admin config | `admin/config.ejs` | `config` (filtered) |
-| 404 error | `errors/404.ejs` | `message`, `statusCode` |
+| Admin config    | `admin/config.ejs`    | `config` (filtered)                                             |
+| 404 error       | `errors/404.ejs`      | `message`, `statusCode`                                         |
 
 ---
 
@@ -362,20 +366,20 @@ This is used by the `/admin/config` route to prevent accidental exposure.
 class AppError extends Error {
   constructor(code, message, statusCode) {
     super(message);
-    this.code = code;           // e.g. 'NOT_FOUND', 'VALIDATION_ERROR'
+    this.code = code; // e.g. 'NOT_FOUND', 'VALIDATION_ERROR'
     this.statusCode = statusCode; // e.g. 404, 400
-    this.isOperational = true;  // Distinguishes expected errors from bugs
+    this.isOperational = true; // Distinguishes expected errors from bugs
   }
 }
 ```
 
 ### 11.2 Error Factories
 
-| Factory | Code | Status |
-|---|---|---|
-| `createAppError(code, message, statusCode)` | caller-defined | caller-defined |
-| `createNotFoundError(message)` | `'NOT_FOUND'` | `404` |
-| `createValidationError(message)` | `'VALIDATION_ERROR'` | `400` |
+| Factory                                     | Code                 | Status         |
+| ------------------------------------------- | -------------------- | -------------- |
+| `createAppError(code, message, statusCode)` | caller-defined       | caller-defined |
+| `createNotFoundError(message)`              | `'NOT_FOUND'`        | `404`          |
+| `createValidationError(message)`            | `'VALIDATION_ERROR'` | `400`          |
 
 ### 11.3 Error Middleware Behavior
 
@@ -389,12 +393,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level | Directory | What's Tested | Tools |
-|---|---|---|---|
-| **Unit** | `tests/unit/` | Pure functions, factories, error constructors, config validation, `filterSensitiveKeys`, route handler logic (extracted as functions). | `vitest` or `node:test` |
-| **Integration** | `tests/integration/` | `createApp()` composed with test config + `supertest` — full HTTP request/response cycle without a running server. | `supertest`, test runner |
-| **Smoke** | `tests/smoke/` | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown. | test runner, `fetch` or `supertest` |
-| **Stress** | `tests/stress/` | Load testing against a running instance. Validates performance and stability under concurrency. | `autocannon` or similar |
+| Level           | Directory            | What's Tested                                                                                                                          | Tools                               |
+| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Unit**        | `tests/unit/`        | Pure functions, factories, error constructors, config validation, `filterSensitiveKeys`, route handler logic (extracted as functions). | `vitest` or `node:test`             |
+| **Integration** | `tests/integration/` | `createApp()` composed with test config + `supertest` — full HTTP request/response cycle without a running server.                     | `supertest`, test runner            |
+| **Smoke**       | `tests/smoke/`       | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.                                  | test runner, `fetch` or `supertest` |
+| **Stress**      | `tests/stress/`      | Load testing against a running instance. Validates performance and stability under concurrency.                                        | `autocannon` or similar             |
 
 ### 12.2 Testability by Design
 
@@ -412,19 +416,19 @@ The FP-first architecture directly supports testability:
 
 ### 13.1 Production
 
-| Package | Purpose |
-|---|---|
-| `express` | HTTP framework |
-| `ejs` | View/template engine |
-| `dotenv` | `.env` file loading |
+| Package   | Purpose              |
+| --------- | -------------------- |
+| `express` | HTTP framework       |
+| `ejs`     | View/template engine |
+| `dotenv`  | `.env` file loading  |
 
 ### 13.2 Development
 
-| Package | Purpose |
-|---|---|
-| `vitest` (or `node:test`) | Test runner |
-| `supertest` | HTTP assertions for integration tests |
-| `nodemon` | Auto-restart during development |
+| Package                   | Purpose                               |
+| ------------------------- | ------------------------------------- |
+| `vitest` (or `node:test`) | Test runner                           |
+| `supertest`               | HTTP assertions for integration tests |
+| `nodemon`                 | Auto-restart during development       |
 
 ---
 
@@ -434,8 +438,8 @@ The FP-first architecture directly supports testability:
 
 ```json
 {
-  "start:demo": "node demo/src/server.js",
-  "dev:demo": "nodemon --exec node demo/src/server.js",
+  "start:app": "node app/src/server.js",
+  "dev:app": "nodemon --exec node app/src/server.js",
   "test": "vitest",
   "test:unit": "vitest run --reporter=verbose tests/unit",
   "test:integration": "vitest run --reporter=verbose tests/integration",
@@ -446,9 +450,9 @@ The FP-first architecture directly supports testability:
 }
 ```
 
-**Demo (`demo/package.json`):**
+**App (`app/package.json`):**
 
-The demo app has its own `package.json` and can be run/tested independently.
+The app has its own `package.json` and can be run/tested independently.
 
 ---
 
@@ -464,14 +468,14 @@ The `close()` function returned by `createServer` can also be called programmati
 
 ---
 
-## 16. Demo Application ("task_manager")
+## 16. App Example ("task_manager")
 
-The `demo/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
+The `app/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
 
-**Demo entrypoint:**
+**App entrypoint:**
 
 ```js
-// demo/src/server.js
+// app/src/server.js
 import { createApp, createServer, createConfig } from '../../index.js';
 import { task_managerPlugin } from './app.js';
 
@@ -484,10 +488,10 @@ const app = createApp(config, [task_managerPlugin]);
 const { server, close } = createServer(app, config);
 ```
 
-**Demo plugin (custom routes):**
+**App plugin (custom routes):**
 
 ```js
-// demo/src/app.js
+// app/src/app.js
 export function task_managerPlugin(app, config) {
   app.get('/tasks', (req, res) => {
     res.render('tasks/list', { appName: config.appName });
@@ -497,7 +501,7 @@ export function task_managerPlugin(app, config) {
 
 **In production:**
 
-The demo's `package.json` would depend on:
+The app's `package.json` would depend on:
 
 ```json
 {

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@glowing-fishstick/app": ["core/app/index.js"],
+      "@glowing-fishstick/*": ["core/app/src/*"]
+    }
+  },
+  "include": ["core/app/src/**/*.js"],
+  "exclude": ["node_modules"]
+}

@@ -14,9 +14,9 @@ coverage/
 .env
 .env.*.local
 
-# Documentation & demo
+# Documentation & app
 documentation/
-demo/
+app/
 *.md
 
 # CI/CD

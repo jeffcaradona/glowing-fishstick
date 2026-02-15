@@ -1,6 +1,6 @@
 /**
- * @module demo/routes/router
- * @description Demo-specific routes for the task_manager application.
+ * @module app/routes/router
+ * @description App-specific routes for the task_manager application.
  */
 
 import { Router } from 'express';
@@ -17,7 +17,6 @@ export function taskRoutes(config) {
   router.get('/tasks', (_req, res) => {
     res.render('tasks/list', { appName: config.appName });
   });
-
 
   return router;
 }

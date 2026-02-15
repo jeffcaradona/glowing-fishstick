@@ -1,4 +1,16 @@
 {
-    "name": "glowing-fishstick-tasks",
-    "type": "module"
+  "name": "glowing-fishstick-tasks",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "@glowing-fishstick/app": "file:../core/app",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
 }
