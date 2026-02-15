@@ -100,10 +100,12 @@ This is the main file that composes the application. The actual entrypoint impor
 
 ```js
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createLogger } from '@glowing-fishstick/shared';
 import { taskManagerApplicationPlugin } from './app.js';
 import { appOverrides } from './config/env.js';
 
-const config = createConfig(appOverrides);
+const logger = createLogger({ name: 'task-manager' });
+const config = createConfig({ ...appOverrides, logger });
 const app = createApp(config, [taskManagerApplicationPlugin]);
 const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
 
@@ -240,6 +242,137 @@ npm run test:smoke
 
 ---
 
+## Using the Logger
+
+The framework provides a Pino-based logger that's automatically available via configuration. The logger supports environment-aware formatting:
+
+- **Development**: Pretty console output + JSON file logs in `logs/` directory
+- **Production**: JSON-formatted logs to stdout for container log collection
+
+### Basic Logger Usage
+
+The logger is passed through the config and is available in all plugins:
+
+```js
+export function myPlugin(app, config) {
+  const logger = config.logger;
+
+  app.registerStartupHook(async () => {
+    logger.info('Plugin initializing...');
+    // Initialization code
+  });
+
+  app.registerShutdownHook(async () => {
+    logger.info('Plugin shutting down...');
+    // Cleanup code
+  });
+}
+```
+
+### Structured Logging
+
+Pino supports structured logging with metadata objects:
+
+```js
+// Log with metadata
+logger.info({ userId: 123, action: 'login' }, 'User logged in');
+
+// Log errors with context
+logger.error({ err: new Error('DB connection failed'), dbHost: 'localhost' }, 'Database error');
+
+// Different log levels
+logger.trace('Detailed trace info');
+logger.debug('Debug info');
+logger.info('Informational message');
+logger.warn({ threshold: 100, current: 150 }, 'Threshold exceeded');
+logger.error('Error occurred');
+logger.fatal('Fatal error - service unavailable');
+```
+
+### Custom Logger Configuration
+
+You can create a custom logger with specific options:
+
+```js
+import { createLogger } from '@glowing-fishstick/shared';
+
+const logger = createLogger({
+  name: 'my-app',
+  logLevel: 'debug',      // trace|debug|info|warn|error|fatal
+  logDir: './logs',       // Custom log directory
+  enableFile: true,       // Enable file logging in development
+});
+
+const config = createConfig({ ...appOverrides, logger });
+```
+
+### HTTP Request Logging
+
+Request logging is **enabled by default** when you provide a logger via config. The framework automatically:
+
+1. Generates unique request IDs (UUIDs) for each request
+2. Logs incoming requests and outgoing responses
+3. Tracks request duration and status codes
+
+**To disable request logging:**
+
+```js
+import { createLogger, createConfig } from '@glowing-fishstick/app';
+
+const logger = createLogger({ name: 'my-app' });
+const config = createConfig({
+  ...appOverrides,
+  logger,
+  enableRequestLogging: false, // Disable HTTP logging
+});
+```
+
+**Manual request logging middleware:**
+
+If you want more control, disable the built-in logging and add it manually:
+
+```js
+import { createLogger, createRequestLogger } from '@glowing-fishstick/shared';
+
+const logger = createLogger({ name: 'http' });
+
+export function requestLoggingPlugin(app, config) {
+  // Add HTTP request/response logging with custom options
+  app.use(createRequestLogger(logger, {
+    generateRequestId: false, // Use framework's request ID
+  }));
+}
+```
+
+This logs:
+- Incoming requests: method, path, request ID
+- Outgoing responses: status code, duration, request ID
+
+**Request IDs:**
+
+Every request automatically gets a unique UUID attached as `req.id` and returned in the `x-request-id` response header. This enables distributed tracing across services.
+
+### Log Output Examples
+
+**Development (pretty-printed):**
+
+```
+[2026-02-15 10:23:45] INFO (task-manager): Entry-point startup initialization…
+[2026-02-15 10:23:45] INFO (server): Startup sequence completed
+[2026-02-15 10:23:45] INFO (server): app listening on http://localhost:3000
+  port: 3000
+```
+
+**Production (JSON):**
+
+```json
+{"level":30,"time":1739615025000,"name":"task-manager","msg":"Entry-point startup initialization…"}
+{"level":30,"time":1739615025100,"name":"server","msg":"Startup sequence completed"}
+{"level":30,"time":1739615025200,"name":"server","port":3000,"msg":"app listening on http://localhost:3000"}
+```
+
+---
+
 ## Environment Variables
 
 Create a `.env` file in the **repository root** (not in `app/`):
@@ -285,8 +418,10 @@ router.get('/tasks/:id', (req, res) => {
 ```js
 // app/src/plugins/analytics.js
 export function analyticsPlugin(app, config) {
+  const logger = config.logger;
+
   app.use((req, res, next) => {
-    console.log(`[Analytics] ${req.method} ${req.path}`);
+    logger?.info({ method: req.method, path: req.path }, 'Request received');
     next();
   });
 }

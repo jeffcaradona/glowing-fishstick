@@ -7,6 +7,7 @@
 import http from 'node:http';
 
 import { getRegistries } from './registry-store.js';
+import { createLogger } from './logger.js';
 
 /**
  * Start an HTTP server for the given Express app.
@@ -24,6 +25,7 @@ export function createServer(app, config) {
   const port = config.port || 3000;
   const shutdownTimeout = config.shutdownTimeout ?? 30000; // 30 seconds default
   const allowProcessExit = config.allowProcessExit ?? true; // Disable in tests
+  const logger = config.logger || createLogger({ name: 'server' });
   const server = http.createServer(app);
 
   // ── Connection tracking for graceful draining ────────────────
@@ -52,9 +54,9 @@ export function createServer(app, config) {
   const close = () =>
     new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        console.warn(
-          `Shutdown timeout (${shutdownTimeout}ms) exceeded; ` +
-            `forcing ${activeConnections.size} remaining connections closed.`,
+        logger.warn(
+          { shutdownTimeout, remainingConnections: activeConnections.size },
+          `Shutdown timeout (${shutdownTimeout}ms) exceeded; forcing ${activeConnections.size} remaining connections closed.`,
         );
         // Destroy all remaining sockets
         for (const socket of activeConnections) {
@@ -105,8 +107,8 @@ export function createServer(app, config) {
   // Register app's startup and shutdown registries (if any)
   const appRegistries = getRegistries(app);
   if (appRegistries) {
-    registerStartupHook(() => appRegistries.startupRegistry.execute());
-    registerShutdownHook(() => appRegistries.shutdownRegistry.execute());
+    registerStartupHook(() => appRegistries.startupRegistry.execute(logger));
+    registerShutdownHook(() => appRegistries.shutdownRegistry.execute(logger));
   }
 
   // ── Kubernetes / container lifecycle signals ─────────────────
@@ -117,7 +119,7 @@ export function createServer(app, config) {
     }
     shuttingDown = true;
 
-    console.log('Shutdown signal received — closing server…');
+    logger.info('Shutdown signal received — closing server…');
 
     // Emit shutdown event — middleware and plugins listen and react.
     app.emit('shutdown');
@@ -128,7 +130,7 @@ export function createServer(app, config) {
         try {
           await hook();
         } catch (err) {
-          console.error('Error in shutdown hook:', err.message);
+          logger.error({ err }, 'Error in shutdown hook');
         }
       }
 
@@ -137,12 +139,12 @@ export function createServer(app, config) {
       //    (See app-factory.js shutdown rejection middleware)
       await close();
 
-      console.log('Server closed successfully.');
+      logger.info('Server closed successfully.');
       if (allowProcessExit) {
         process.exit(0);
       }
     } catch (err) {
-      console.error('Error during shutdown:', err.message);
+      logger.error({ err }, 'Error during shutdown');
       if (allowProcessExit) {
         process.exit(1);
       }
@@ -163,17 +165,17 @@ export function createServer(app, config) {
         try {
           await hook();
         } catch (err) {
-          console.error('Error in startup hook:', err.message);
+          logger.error({ err }, 'Error in startup hook');
         }
       }
-      console.log('Startup sequence completed.');
+      logger.info('Startup sequence completed.');
 
       // Start listening only after initialization succeeds
       server.listen(port, () => {
-        console.log(`${config.appName ?? 'app'} listening on http://localhost:${port}`);
+        logger.info({ port }, `${config.appName ?? 'app'} listening on http://localhost:${port}`);
       });
     } catch (err) {
-      console.error('Startup failed:', err.message);
+      logger.error({ err }, 'Startup failed');
       process.exit(1);
     }
   });

@@ -5,7 +5,12 @@
  */
 
 export { createApp } from './src/app-factory.js';
-export { createServer } from '@glowing-fishstick/shared';
+export {
+  createServer,
+  createLogger,
+  createRequestLogger,
+  createRequestIdMiddleware,
+} from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,

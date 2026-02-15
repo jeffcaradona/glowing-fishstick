@@ -58,7 +58,7 @@ The app package public entry point is `core/app/index.js` and re-exports the fol
 ```js
 // core/app/index.js
 export { createApp } from './src/app-factory.js';
-export { createServer } from '@glowing-fishstick/shared';
+export { createServer, createLogger, createRequestLogger } from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,
@@ -67,13 +67,14 @@ export {
 } from './src/errors/appError.js';
 ```
 
-`createServer` is re-exported through the shared package boundary:
+`createServer` and logger utilities are re-exported through the shared package boundary:
 
 ```js
 // core/shared/index.js
 export { createServer } from './src/server-factory.js';
 export { createHookRegistry } from './src/hook-registry.js';
 export { storeRegistries } from './src/registry-store.js';
+export { createLogger, createRequestLogger } from './src/logger.js';
 ```
 
 Source-of-truth file mapping for this public API surface:
@@ -82,6 +83,7 @@ Source-of-truth file mapping for this public API surface:
 - `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
 - `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
 - `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+- `createLogger` / `createRequestLogger` → `core/shared/src/logger.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 
 ### 4.1 `createApp(config, plugins = [])`
 
@@ -621,8 +623,190 @@ import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ## 17. Future Considerations
 
 - **Authentication/authorization middleware** as a core plugin or opt-in module.
-- **Logger abstraction** (e.g. `pino`) injected via config, replacing `console`.
 - **Database connection factory** following the same pattern — `createDb(config)` returns `{ pool, close }`.
 - **CLI scaffolding tool** — `npx create-core-app task_manager` to generate the consumer boilerplate.
 - **OpenAPI/Swagger** auto-generation from route metadata.
 - **Asset pipeline** for frontend builds (Vite, esbuild) as an optional plugin.
+
+## 18. Logger Implementation
+
+**Status**: ✅ Implemented (P3-LOGGER-IMPLEMENTATION)
+
+The framework includes a Pino-based logger with environment-aware formatting and optional HTTP request logging middleware.
+
+### Features
+
+- **Development mode**: Pretty-printed console output + JSON file logs
+- **Production mode**: JSON-formatted logs to stdout for container log collection
+- **Automatic directory creation**: Creates `logs/` in consumer app root (process.cwd())
+- **Structured logging**: Metadata objects for rich contextual logging
+- **Optional injection**: Accepts `config.logger` or creates sensible default
+- **Pluggable middleware**: Optional HTTP request/response logging
+
+### API
+
+#### `createLogger(options)`
+
+Factory function that creates a Pino logger instance.
+
+**Parameters**:
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `options.name` | `string` | `'app'` | Logger name for context and file naming |
+| `options.logLevel` | `string` | `'info'` or `LOG_LEVEL` env var | Minimum log level: trace\|debug\|info\|warn\|error\|fatal |
+| `options.logDir` | `string` | `process.cwd()/logs` | Directory for log files |
+| `options.enableFile` | `boolean` | `true` | Enable file logging in development mode |
+
+**Returns**: `pino.Logger` instance
+
+**Example**:
+
+```js
+import { createLogger } from '@glowing-fishstick/app';
+
+const logger = createLogger({
+  name: 'my-service',
+  logLevel: 'debug',
+  logDir: './logs',
+});
+
+logger.info('Server starting');
+logger.error({ err: new Error('failure'), userId: 123 }, 'Operation failed');
+```
+
+#### `createRequestLogger(logger)`
+
+Factory function that creates Express middleware for HTTP request/response logging.
+
+**Parameters**:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `logger` | `pino.Logger` | Logger instance to use for logging |
+
+**Returns**: Express middleware function
+
+**Example**:
+
+```js
+import { createLogger, createRequestLogger } from '@glowing-fishstick/app';
+
+const logger = createLogger({ name: 'http' });
+app.use(createRequestLogger(logger));
+```
+
+### Usage in Consumer Apps
+
+**Basic (auto-created logger)**:
+
+```js
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+
+const config = createConfig({ port: 3000 });
+const app = createApp(config);
+const { server } = createServer(app, config);
+// Logger automatically created with sensible defaults
+```
+
+**Custom logger**:
+
+```js
+import { createApp, createServer, createConfig, createLogger } from '@glowing-fishstick/app';
+
+const logger = createLogger({ name: 'my-app', logLevel: 'debug' });
+const config = createConfig({ port: 3000, logger });
+const app = createApp(config);
+const { server } = createServer(app, config);
+```
+
+**In plugins**:
+
+```js
+export function myPlugin(app, config) {
+  const logger = config.logger;
+
+  app.registerStartupHook(async () => {
+    logger.info('Plugin initializing...');
+    // Initialization code
+  });
+
+  app.registerShutdownHook(async () => {
+    logger.info('Plugin shutting down...');
+    // Cleanup code
+  });
+}
+```
+
+### Integration Points
+
+The logger is injected via `config.logger` and used throughout the framework:
+
+- **server-factory.js**: Startup/shutdown lifecycle logging
+- **hook-registry.js**: Hook execution error logging
+- **errorHandler.js**: Unexpected HTTP error logging
+- **app-factory.js**: Request ID generation (always enabled) and HTTP request logging (enabled by default)
+- **Consumer plugins**: Available via `config.logger` in all plugin functions
+- **Consumer entrypoints**: Available for app-specific logging
+
+### Request Logging
+
+HTTP request/response logging is **enabled by default** when a logger is provided:
+
+```js
+const logger = createLogger({ name: 'my-app' });
+const config = createConfig({ logger, port: 3000 });
+const app = createApp(config);
+// Request logging automatically enabled
+```
+
+**Features:**
+- Automatic request ID generation (UUID) for each request
+- Request IDs available as `req.id` and in `x-request-id` response header
+- Logs method, path, status, duration, and request ID
+- Configurable via `config.enableRequestLogging` (default: `true`)
+
+**To disable:**
+
+```js
+const config = createConfig({
+  logger,
+  enableRequestLogging: false, // Disable HTTP logging
+});
+```
+
+**Standalone usage:**
+
+```js
+import { createRequestIdMiddleware, createRequestLogger } from '@glowing-fishstick/app';
+
+// Request ID generation (always recommended)
+app.use(createRequestIdMiddleware());
+
+// HTTP logging with custom logger
+const httpLogger = createLogger({ name: 'http', logLevel: 'debug' });
+app.use(createRequestLogger(httpLogger, { generateRequestId: false }));
+```
+
+### Log Output Examples
+
+**Development (pretty-printed)**:
+
+```
+[2026-02-15 10:23:45] INFO (server): Startup sequence completed
+[2026-02-15 10:23:45] INFO (server): app listening on http://localhost:3000
+  port: 3000
+[2026-02-15 10:23:47] ERROR (server): Error in startup hook
+  err: {
+    "type": "Error",
+    "message": "Connection refused"
+  }
+```
+
+**Production (JSON)**:
+
+```json
+{"level":30,"time":1739615025000,"name":"server","msg":"Startup sequence completed"}
+{"level":30,"time":1739615025100,"name":"server","port":3000,"msg":"app listening on http://localhost:3000"}
+{"level":50,"time":1739615027000,"name":"server","err":{"type":"Error","message":"Connection refused"},"msg":"Error in startup hook"}
+```

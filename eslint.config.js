@@ -37,7 +37,10 @@ const commonRules = {
   'no-var': 'error',
   'prefer-const': 'error',
   'prefer-arrow-callback': 'warn',
-  'no-param-reassign': ['error', { props: true }],
+  'no-param-reassign': [
+    'error',
+    { props: true, ignorePropertyModificationsFor: ['req', 'res', 'next'] },
+  ],
   eqeqeq: ['error', 'always'],
   curly: ['error', 'all'],
   'brace-style': ['error', '1tbs'],

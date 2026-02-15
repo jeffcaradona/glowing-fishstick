@@ -5,6 +5,7 @@
  */
 
 import { createNotFoundError } from '../errors/appError.js';
+import { createLogger } from '@glowing-fishstick/shared';
 
 /**
  * Catch-all middleware that creates a 404 AppError for any unmatched
@@ -35,9 +36,18 @@ export function errorHandler(err, req, res, _next) {
   const statusCode = err.statusCode || 500;
   const code = err.code || 'INTERNAL_ERROR';
   const message = err.isOperational ? err.message : 'Internal server error';
+  const logger = req.app?.locals?.logger || createLogger({ name: 'error-handler' });
 
   if (!err.isOperational) {
-    console.error('Unexpected error:', err);
+    logger.error(
+      {
+        err,
+        method: req.method,
+        path: req.path,
+        reqId: req.id || req.headers['x-request-id'],
+      },
+      'Unexpected error',
+    );
   }
 
   res.status(statusCode);
