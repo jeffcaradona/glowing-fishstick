@@ -1,0 +1,23 @@
+{
+  "name": "@glowing-fishstick/api",
+  "version": "0.0.1",
+  "description": "Core API factory and route composition module",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@glowing-fishstick/shared": "0.0.1",
+    "express": "^5.2.1"
+  }
+}

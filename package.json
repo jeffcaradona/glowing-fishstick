@@ -8,10 +8,13 @@
     "app"
   ],
   "workspaces": [
+    "api",
     "app",
     "core/app",
     "core/api",
-    "core/shared"
+    "core/shared",
+    "template/app",
+    "template/api"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {
@@ -29,8 +32,8 @@
   },
   "files": [],
   "scripts": {
-    "start:app": "node app/src/server.js",
-    "dev:app": "nodemon --exec node app/src/server.js",
+    "start:app": "npm run start --workspace app",
+    "dev:app": "npm run dev --workspace app",
     "test": "vitest",
     "test:unit": "vitest run --reporter=verbose tests/unit",
     "test:integration": "vitest run --reporter=verbose tests/integration",

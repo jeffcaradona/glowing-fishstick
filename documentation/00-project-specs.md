@@ -571,8 +571,8 @@ The FP-first architecture directly supports testability:
 
 ```json
 {
-  "start:app": "node app/src/server.js",
-  "dev:app": "nodemon --exec node app/src/server.js",
+  "start:app": "npm run start --workspace app",
+  "dev:app": "npm run dev --workspace app",
   "test": "vitest",
   "test:unit": "vitest run --reporter=verbose tests/unit",
   "test:integration": "vitest run --reporter=verbose tests/integration",
