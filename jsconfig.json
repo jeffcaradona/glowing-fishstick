@@ -2,10 +2,23 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@glowing-fishstick/app": ["core/app/index.js"],
-      "@glowing-fishstick/shared": ["core/shared/index.js"]
+      "@glowing-fishstick/shared": [
+        "core/shared/index.js"
+      ],
+      "@glowing-fishstick/app": [
+        "core/app/index.js"
+      ],
+      "@glowing-fishstick/api": [
+        "core/api/index.js"
+      ]
     }
   },
-  "include": ["app/src/**/*.js", "core/app/src/**/*.js", "core/shared/src/**/*.js"],
-  "exclude": ["node_modules"]
+  "include": [
+    "app/src/**/*.js",
+    "core/app/src/**/*.js",
+    "core/shared/src/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -10,6 +10,7 @@
   "workspaces": [
     "app",
     "core/app",
+    "core/api",
     "core/shared"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
