@@ -24,13 +24,23 @@ describe('Admin Routes Integration', () => {
 
     it('displays formatted uptime (not raw seconds)', async () => {
       const response = await request(app).get('/admin').expect(200);
+      const tokens = response.text.split(/[^0-9a-zA-Z]+/).filter(Boolean);
 
       // Should NOT contain patterns like "86400s" (raw large seconds)
-      expect(response.text).not.toMatch(/\d{5,}s\b/);
+      const hasLargeRawSeconds = tokens.some((token) => token.endsWith('s') && Number.isInteger(Number(token.slice(0, -1))) && Number(token.slice(0, -1)) >= 10000);
+      expect(hasLargeRawSeconds).toBe(false);
 
       // Should contain formatted patterns like "5m", "2h", "3d", or just "Xs"
       // (exact value depends on process uptime, so we check for format patterns)
-      expect(response.text).toMatch(/\d+[smhd]/);
+      const hasFormattedUptimeToken = tokens.some((token) => {
+        if (token.length < 2) {
+          return false;
+        }
+        const unit = token[token.length - 1];
+        const value = token.slice(0, -1);
+        return ['s', 'm', 'h', 'd'].includes(unit) && Number.isInteger(Number(value)) && value.length > 0;
+      });
+      expect(hasFormattedUptimeToken).toBe(true);
     });
 
     it('displays memory usage', async () => {
