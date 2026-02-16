@@ -1,8 +1,8 @@
 # Project Specification — glowing-fishstick
 
 > **Version:** 0.0.1  
-> **Last Updated:** 2026-02-11  
-> **Status:** Pre-implementation
+> **Last Updated:** 2026-02-16  
+> **Status:** Active implementation (core packages and app workspace are in use)
 
 ---
 
@@ -217,6 +217,38 @@ Pure factory function that builds a frozen configuration object.
 ### 4.4 `filterSensitiveKeys(config)`
 
 Pure function that returns a shallow copy of `config` with keys matching `SECRET|KEY|PASSWORD|TOKEN|CREDENTIAL` (case-insensitive) removed. Used by the admin config viewer.
+
+### 4.4.1 `formatUptime(seconds)`
+
+**Module:** `@glowing-fishstick/shared`
+**File:** `core/shared/src/utils/formatters.js`
+
+Pure function that formats duration in seconds into human-readable format. Automatically selects appropriate time units based on duration.
+
+**Signature:**
+
+```js
+formatUptime(seconds: number): string
+```
+
+**Unit selection logic:**
+
+- `< 60s`: Seconds only ("45s")
+- `60s - 3599s`: Minutes and seconds ("5m 23s")
+- `3600s - 86399s`: Hours and minutes ("2h 15m")
+- `≥ 86400s`: Days, hours, and minutes ("3d 5h 30m")
+
+**Edge cases:** Returns `"0s"` for negative, `NaN`, `Infinity`, or non-number inputs. Floors decimal values.
+
+**Example usage:**
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+const uptime = formatUptime(process.uptime());
+// After 1 hour: "1h 0m"
+// After 2 days: "2d 0h 0m"
+```
 
 ### 4.5 Error Factories
 
@@ -494,12 +526,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level           | Directory            | What's Tested                                                                                                                          | Tools                               |
-| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Unit**        | `tests/unit/`        | Pure functions, factories, error constructors, config validation, `filterSensitiveKeys`, route handler logic (extracted as functions). | `vitest` or `node:test`             |
-| **Integration** | `tests/integration/` | `createApp()` composed with test config + `supertest` — full HTTP request/response cycle without a running server.                     | `supertest`, test runner            |
-| **Smoke**       | `tests/smoke/`       | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.                                  | test runner, `fetch` or `supertest` |
-| **Stress**      | `tests/stress/`      | Load testing against a running instance. Validates performance and stability under concurrency.                                        | `autocannon` or similar             |
+| Level           | Directory                       | What's Tested                                                                                                  | Tools                               |
+| --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Unit**        | `core/shared/tests/unit/`       | Pure shared utilities and helper functions (e.g., formatters).                                                 | `vitest` or `node:test`             |
+| **Integration** | `core/app/tests/integration/`   | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, test runner            |
+| **Smoke**       | `core/app/tests/smoke/`         | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.          | test runner, `fetch` or `supertest` |
+| **Stress**      | `tests/stress/` (optional root) | Cross-module load testing against a running instance. Validates performance and stability under concurrency.   | `autocannon` or similar             |
 
 ### 12.2 Testability by Design
 
@@ -539,13 +571,13 @@ The FP-first architecture directly supports testability:
 
 ```json
 {
-  "start:app": "node app/src/server.js",
-  "dev:app": "nodemon --exec node app/src/server.js",
-  "test": "vitest",
-  "test:unit": "vitest run --reporter=verbose tests/unit",
-  "test:integration": "vitest run --reporter=verbose tests/integration",
-  "test:smoke": "vitest run --reporter=verbose tests/smoke",
-  "test:all": "vitest run --reporter=verbose",
+  "start:app": "npm run start --workspace app",
+  "dev:app": "npm run dev --workspace app",
+  "test": "npm run test:all",
+  "test:unit": "npm run test:unit --workspace core/shared",
+  "test:integration": "npm run test:integration --workspace core/app",
+  "test:smoke": "npm run test:smoke --workspace core/app",
+  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app",
   "lint": "eslint .",
   "format": "prettier --write ."
 }

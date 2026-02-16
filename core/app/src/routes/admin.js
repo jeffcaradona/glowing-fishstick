@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { Router } from 'express';
 import { filterSensitiveKeys } from '../config/env.js';
+import { formatUptime } from '@glowing-fishstick/shared';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +25,7 @@ export function adminRoutes(config) {
     res.render('admin/dashboard', {
       appName: config.appName,
       appVersion: config.appVersion,
-      uptime: process.uptime(),
+      uptime: formatUptime(process.uptime()),
       nodeVersion: process.version,
       memoryUsage: process.memoryUsage(),
       scripts: ['/js/admin/dashboard.js'],

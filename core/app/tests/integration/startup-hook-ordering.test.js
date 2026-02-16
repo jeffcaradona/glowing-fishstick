@@ -1,5 +1,5 @@
 /**
- * @file tests/integration/startup-hook-ordering.test.js
+ * @file core/app/tests/integration/startup-hook-ordering.test.js
  * @description Integration test for P0 startup hook ordering fix.
  *
  * Verifies that the race condition between createServer() and
@@ -14,15 +14,21 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createApp, createServer, createConfig } from '../../index.js';
 
 describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
   let app;
   let config;
+  let logger;
   let portCounter = 12000; // Use ports > 10000 to avoid permission issues
 
   beforeEach(() => {
-    config = createConfig({ port: portCounter++ });
+    logger = {
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    config = createConfig({ port: portCounter++, logger });
     app = createApp(config, []);
   });
 
@@ -90,7 +96,6 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
 
   it('should handle errors in hooks without skipping subsequent hooks', async () => {
     const executionOrder = [];
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { registerStartupHook, close } = createServer(app, config);
 
@@ -112,9 +117,12 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
 
     // All hooks should have executed despite hook-2 throwing
     expect(executionOrder).toEqual(['hook-1', 'hook-2', 'hook-3']);
-    expect(consoleError).toHaveBeenCalledWith('Error in startup hook:', 'Hook 2 failed');
-
-    consoleError.mockRestore();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: expect.objectContaining({ message: 'Hook 2 failed' }),
+      }),
+      'Error in startup hook',
+    );
     await close();
   });
 

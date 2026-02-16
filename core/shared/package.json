@@ -9,6 +9,10 @@
       "import": "./index.js"
     }
   },
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "vitest run --reporter=verbose tests/unit"
+  },
   "files": [
     "index.js",
     "src/"

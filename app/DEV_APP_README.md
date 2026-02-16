@@ -2,23 +2,23 @@
 
 > **Using the `app/` directory for local development and testing**
 
-This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `glowing-fishstick` module in production.
+This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
 
 ---
 
 ## Overview
 
-The `app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `glowing-fishstick` module. It demonstrates:
+The `app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `@glowing-fishstick/app` package. It demonstrates:
 
 - ✅ How to compose the core module with custom plugins
 - ✅ How to provide application-specific routes and views
 - ✅ How to override or extend configuration
 - ✅ How a thin `server.js` entrypoint boots the composed application
 
-**In production**, a consumer would install `glowing-fishstick` via npm:
+**In production**, a consumer would install the published packages via npm:
 
 ```bash
-npm install glowing-fishstick
+npm install @glowing-fishstick/app @glowing-fishstick/shared
 ```
 
 **For local development**, the `app/` directory simulates a consumer importing the package by name:
@@ -27,7 +27,7 @@ npm install glowing-fishstick
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
-In this repository the package name is resolved via workspace package linkage (or `npm link`/monorepo tooling). You can still import directly from the local source (e.g. `../../index.js`) if you prefer, but the examples use the package name to mirror a real consumer app.
+In this repository the package name is resolved via workspace package linkage (or `npm link`/monorepo tooling). Consumer-facing examples should continue to import by package name to mirror real usage boundaries.
 
 ---
 
@@ -376,6 +376,36 @@ Every request automatically gets a unique UUID attached as `req.id` and returned
 
 ---
 
+## Using Formatting Utilities
+
+The framework provides utility functions for common formatting needs. These are exported from `@glowing-fishstick/shared`.
+
+### Formatting Process Uptime
+
+The `formatUptime` function converts seconds into human-readable duration strings:
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+// In a route handler
+app.get('/status', (req, res) => {
+  res.json({
+    uptime: formatUptime(process.uptime()),
+    // Other status metrics...
+  });
+});
+
+// Example outputs:
+formatUptime(45); // "45s"
+formatUptime(323); // "5m 23s"
+formatUptime(8130); // "2h 15m"
+formatUptime(277530); // "3d 5h 30m"
+```
+
+The formatter automatically selects appropriate time units based on duration, making it ideal for displaying server uptime, session duration, or any time-based metrics.
+
+---
+
 ## Environment Variables
 
 Create a `.env` file in the **repository root** (not in `app/`):
@@ -451,7 +481,8 @@ The `app/` directory structure mirrors how a real application would consume the 
 ```json
 {
   "dependencies": {
-    "glowing-fishstick": "^0.0.1"
+    "@glowing-fishstick/app": "^0.0.1",
+    "@glowing-fishstick/shared": "^0.0.1"
   }
 }
 ```
@@ -459,7 +490,7 @@ The `app/` directory structure mirrors how a real application would consume the 
 2. **Import from the module**:
 
 ```js
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
 3. **Create a plugin**:
@@ -545,12 +576,12 @@ describe('App', () => {
 
 ## Comparing Local Dev vs Production
 
-| Aspect            | Local Dev (`app/`)            | Production                              |
-| ----------------- | ----------------------------- | --------------------------------------- |
-| **Module source** | Local import `../../index.js` | npm package `glowing-fishstick`         |
-| **Configuration** | `.env` in repo root           | Environment variables or config service |
-| **Dependencies**  | Shared `node_modules`         | App's own `package.json`                |
-| **Purpose**       | Development and testing       | Real application deployment             |
+| Aspect            | Local Dev (`app/`)                                   | Production                              |
+| ----------------- | ---------------------------------------------------- | --------------------------------------- |
+| **Module source** | Workspace package linkage (`@glowing-fishstick/app`) | npm package (`@glowing-fishstick/app`)  |
+| **Configuration** | `.env` in repo root                                  | Environment variables or config service |
+| **Dependencies**  | Shared `node_modules`                                | App's own `package.json`                |
+| **Purpose**       | Development and testing                              | Real application deployment             |
 
 ---
 

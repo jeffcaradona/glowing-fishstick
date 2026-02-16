@@ -1,5 +1,5 @@
 /**
- * @file tests/integration/graceful-shutdown.test.js
+ * @file core/app/tests/integration/graceful-shutdown.test.js
  * @description Integration test for P1 graceful shutdown behavior.
  *
  * Verifies that graceful shutdown:
@@ -14,21 +14,28 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createApp, createServer, createConfig } from '../../index.js';
 import request from 'supertest';
 import http from 'node:http';
 
 describe('Graceful Shutdown (P1)', () => {
   let app;
   let config;
+  let logger;
   let portCounter = 13000; // Use ports > 10000 to avoid permission issues
   let server;
   let agent;
 
   beforeEach(() => {
+    logger = {
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
     config = createConfig({
       port: portCounter++,
       allowProcessExit: false, // Disable process.exit for tests
+      logger,
     });
     app = createApp(config, []);
     agent = new http.Agent({ keepAlive: true });
@@ -192,9 +199,6 @@ describe('Graceful Shutdown (P1)', () => {
     // Wait for connection to establish
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // Mock console.warn to capture timeout warning
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     // Trigger shutdown
     process.emit('SIGTERM');
 
@@ -204,15 +208,12 @@ describe('Graceful Shutdown (P1)', () => {
     // The setTimeout in close() should have triggered and logged warning
     // Note: Since server.close() waits for connections, and we have a lingering
     // socket, the timeout should eventually fire and force-destroy it.
-    expect(consoleWarn).toHaveBeenCalled();
-
-    const warnings = consoleWarn.mock.calls.map((call) => call.join(' '));
-    const hasTimeoutWarning = warnings.some(
-      (msg) => msg.includes('Shutdown timeout') || msg.includes('forcing'),
+    expect(logger.warn).toHaveBeenCalled();
+    const warningCalls = logger.warn.mock.calls.map((call) => call[1] ?? '');
+    const hasTimeoutWarning = warningCalls.some(
+      (msg) => msg.includes('Shutdown timeout') || msg.includes('forcing remaining connections'),
     );
     expect(hasTimeoutWarning).toBe(true);
-
-    consoleWarn.mockRestore();
 
     // Clean up socket
     socket.destroy();
@@ -251,7 +252,6 @@ describe('Graceful Shutdown (P1)', () => {
   }, 10000);
 
   it('should handle errors in shutdown hooks without blocking shutdown', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     const executionOrder = [];
 
     const { server: srv, registerShutdownHook } = createServer(app, config);
@@ -281,9 +281,12 @@ describe('Graceful Shutdown (P1)', () => {
 
     // All hooks should execute despite error in hook-2
     expect(executionOrder).toEqual(['hook-1', 'hook-2-error', 'hook-3']);
-    expect(consoleError).toHaveBeenCalledWith('Error in shutdown hook:', 'Shutdown hook failed');
-
-    consoleError.mockRestore();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: expect.objectContaining({ message: 'Shutdown hook failed' }),
+      }),
+      'Error in shutdown hook',
+    );
   }, 10000);
 
   it('should not process duplicate shutdown signals', async () => {

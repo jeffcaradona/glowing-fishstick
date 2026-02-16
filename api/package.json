@@ -1,5 +1,5 @@
 {
-  "name": "glowing-fishstick-tasks",
+  "name": "glowing-fishstick-tasks-api",
   "description": "A local development application to help build the core modules",
   "type": "module",
   "main": "src/server.js",
@@ -8,7 +8,7 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/app": "0.0.1",
+    "@glowing-fishstick/api": "0.0.1",
     "express": "^5.2.1"
   },
   "devDependencies": {

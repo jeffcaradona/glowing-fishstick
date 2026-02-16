@@ -52,7 +52,7 @@ npm install @glowing-fishstick/app
 Note on repository layout and installs
 
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` (Option A: workspace is the source; consumers install the package).
-- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. You may also import directly from the local source (`../../index.js`) for quick experiments, but examples and docs use the package name to mirror real-world consumption.
+- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 
 ---
 
@@ -205,6 +205,44 @@ const safeConfig = filterSensitiveKeys(config);
 
 ---
 
+### `formatUptime(seconds)`
+
+Pure function that formats duration in seconds into a human-readable uptime string. Automatically selects appropriate time units based on duration.
+
+**Parameters:**
+| Name | Type | Description |
+|---|---|---|
+| `seconds` | `number` | Duration in seconds (e.g., from `process.uptime()`) |
+
+**Returns:** `string` — Formatted string with automatic unit selection
+
+**Format patterns:**
+
+- `< 60s`: Seconds only ("45s")
+- `60s - 3599s`: Minutes and seconds ("5m 23s")
+- `3600s - 86399s`: Hours and minutes ("2h 15m")
+- `≥ 86400s`: Days, hours, and minutes ("3d 5h 30m")
+
+**Example:**
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+console.log(formatUptime(45)); // "45s"
+console.log(formatUptime(323)); // "5m 23s"
+console.log(formatUptime(8130)); // "2h 15m"
+console.log(formatUptime(277530)); // "3d 5h 30m"
+
+// Use with process uptime
+app.get('/status', (req, res) => {
+  res.json({ uptime: formatUptime(process.uptime()) });
+});
+```
+
+**Edge cases:** Returns `"0s"` for negative numbers, `NaN`, `Infinity`, or non-number inputs.
+
+---
+
 ### Error Factories
 
 #### `createAppError(code, message, statusCode)`
@@ -214,7 +252,7 @@ Creates an operational application error.
 **Example:**
 
 ```js
-import { createAppError } from 'glowing-fishstick';
+import { createAppError } from '@glowing-fishstick/app';
 
 throw createAppError('INVALID_INPUT', 'Missing required field: email', 400);
 ```
@@ -279,7 +317,7 @@ export function myPlugin(app, config) {
 ### Using Plugins
 
 ```js
-import { createApp, createConfig } from 'glowing-fishstick';
+import { createApp, createConfig } from '@glowing-fishstick/app';
 import { myPlugin } from './my-plugin.js';
 import { analyticsPlugin } from './analytics-plugin.js';
 
@@ -345,7 +383,7 @@ Load it in your application:
 
 ```js
 import 'dotenv/config';
-import { createConfig } from 'glowing-fishstick';
+import { createConfig } from '@glowing-fishstick/app';
 
 const config = createConfig();
 ```
@@ -399,7 +437,7 @@ The functional architecture makes testing straightforward:
 
 ```js
 import { describe, it, expect } from 'vitest';
-import { createConfig, filterSensitiveKeys } from 'glowing-fishstick';
+import { createConfig, filterSensitiveKeys } from '@glowing-fishstick/app';
 
 describe('createConfig', () => {
   it('should merge overrides with defaults', () => {
@@ -415,7 +453,7 @@ describe('createConfig', () => {
 ```js
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { createApp, createConfig } from 'glowing-fishstick';
+import { createApp, createConfig } from '@glowing-fishstick/app';
 
 describe('Health endpoints', () => {
   it('should respond to /healthz', async () => {
@@ -433,7 +471,7 @@ describe('Health endpoints', () => {
 
 ```js
 import { describe, it, expect, afterAll } from 'vitest';
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 describe('Server lifecycle', () => {
   it('should start and stop gracefully', async () => {
@@ -455,7 +493,7 @@ describe('Server lifecycle', () => {
 ```js
 // server.js
 import 'dotenv/config';
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { taskManagerPlugin } from './plugins/task-manager.js';
 
 const config = createConfig({

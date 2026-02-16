@@ -121,27 +121,6 @@ export function createLogger(options = {}) {
 }
 
 /**
- * Create a request ID middleware.
- * Generates a unique UUID for each request and attaches it to req.id.
- * If a request already has an x-request-id header, uses that instead.
- *
- * @returns {Function} Express middleware
- *
- * @example
- * import { createRequestIdMiddleware } from '@glowing-fishstick/shared';
- * app.use(createRequestIdMiddleware());
- */
-export function createRequestIdMiddleware() {
-  return (req, res, next) => {
-    // Use existing x-request-id header if present, otherwise generate new UUID
-    req.id = req.headers['x-request-id'] || crypto.randomUUID();
-    // Set response header for client tracking
-    res.setHeader('x-request-id', req.id);
-    next();
-  };
-}
-
-/**
  * Create an HTTP request/response logging middleware.
  * Logs incoming requests and outgoing responses with timing and status.
  * Automatically generates request IDs if not already present.
@@ -158,6 +137,7 @@ export function createRequestIdMiddleware() {
  *
  * @example
  * // Disable automatic request ID generation (if using separate middleware)
+ * import { createRequestIdMiddleware } from '@glowing-fishstick/shared';
  * app.use(createRequestIdMiddleware());
  * app.use(createRequestLogger(logger, { generateRequestId: false }));
  *

@@ -15,16 +15,19 @@
       <h3>Runtime</h3>
       <table>
         <tr><td>Node.js</td><td><%= nodeVersion %></td></tr>
-        <tr><td>Uptime</td><td><%= Math.floor(uptime) %>s</td></tr>
+        <tr><td>Uptime</td><td><%= uptime %></td></tr>
       </table>
     </div>
 
     <div class="card">
       <h3>Memory Usage</h3>      
       <table>
+        <thead><tr><th>Type</th><th>Usage</th></tr></thead>
+        <tbody>
         <tr><td>RSS</td><td><%= (memoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td></tr>
         <tr><td>Heap Used</td><td><%= (memoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td></tr>
         <tr><td>Heap Total</td><td><%= (memoryUsage.heapTotal / 1024 / 1024).toFixed(2) %> MB</td></tr>
+        </tbody>
       </table>
     </div>
 
