@@ -72,6 +72,7 @@ Before finishing any documentation update:
 In any code that can run per request (routes, middleware, renderers, hooks used during traffic):
 
 **Do not use:**
+
 - `fs.*Sync` methods
 - `child_process.*Sync` methods
 - `zlib.*Sync` methods
@@ -79,11 +80,13 @@ In any code that can run per request (routes, middleware, renderers, hooks used 
 - Long tight loops
 
 **Preferred alternatives:**
+
 - Use async/promise APIs
 - Use bounded work units
 - Delegate heavy work to async services/workers
 
 **Allowed exceptions (must be documented):**
+
 - Startup-only initialization before server begins accepting traffic
 - One-time build/dev scripts that are not runtime code
 
