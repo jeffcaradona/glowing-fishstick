@@ -7,4 +7,4 @@ coverage
 .env
 .env.local
 .env.*.local
-.github\instructions\snyk_rules.instructions.md
+.github/instructions/snyk_rules.instructions.md
