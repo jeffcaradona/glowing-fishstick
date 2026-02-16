@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatUptime } from '../../core/shared/src/utils/formatters.js';
+import { formatUptime } from '../../src/utils/formatters.js';
 
 describe('formatUptime', () => {
   describe('seconds only (< 60s)', () => {

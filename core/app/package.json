@@ -9,6 +9,11 @@
       "import": "./index.js"
     }
   },
+  "scripts": {
+    "test": "npm run test:integration",
+    "test:integration": "vitest run --reporter=verbose tests/integration",
+    "test:smoke": "vitest run --reporter=verbose tests/smoke --passWithNoTests"
+  },
   "files": [
     "index.js",
     "src/"

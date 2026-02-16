@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { createApp, createConfig } from '../../core/app/index.js';
+import { createApp, createConfig } from '../../index.js';
 
 describe('Admin Routes Integration', () => {
   let app;

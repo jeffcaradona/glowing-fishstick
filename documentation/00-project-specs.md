@@ -526,12 +526,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level           | Directory            | What's Tested                                                                                                                          | Tools                               |
-| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Unit**        | `tests/unit/`        | Pure functions, factories, error constructors, config validation, `filterSensitiveKeys`, route handler logic (extracted as functions). | `vitest` or `node:test`             |
-| **Integration** | `tests/integration/` | `createApp()` composed with test config + `supertest` — full HTTP request/response cycle without a running server.                     | `supertest`, test runner            |
-| **Smoke**       | `tests/smoke/`       | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.                                  | test runner, `fetch` or `supertest` |
-| **Stress**      | `tests/stress/`      | Load testing against a running instance. Validates performance and stability under concurrency.                                        | `autocannon` or similar             |
+| Level           | Directory                          | What's Tested                                                                                                                          | Tools                               |
+| --------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Unit**        | `core/shared/tests/unit/`          | Pure shared utilities and helper functions (e.g., formatters).                                                                        | `vitest` or `node:test`             |
+| **Integration** | `core/app/tests/integration/`      | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle.                       | `supertest`, test runner            |
+| **Smoke**       | `core/app/tests/smoke/`            | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.                                  | test runner, `fetch` or `supertest` |
+| **Stress**      | `tests/stress/` (optional root)    | Cross-module load testing against a running instance. Validates performance and stability under concurrency.                           | `autocannon` or similar             |
 
 ### 12.2 Testability by Design
 
@@ -573,11 +573,11 @@ The FP-first architecture directly supports testability:
 {
   "start:app": "npm run start --workspace app",
   "dev:app": "npm run dev --workspace app",
-  "test": "vitest",
-  "test:unit": "vitest run --reporter=verbose tests/unit",
-  "test:integration": "vitest run --reporter=verbose tests/integration",
-  "test:smoke": "vitest run --reporter=verbose tests/smoke",
-  "test:all": "vitest run --reporter=verbose",
+  "test": "npm run test:all",
+  "test:unit": "npm run test:unit --workspace core/shared",
+  "test:integration": "npm run test:integration --workspace core/app",
+  "test:smoke": "npm run test:smoke --workspace core/app",
+  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app",
   "lint": "eslint .",
   "format": "prettier --write ."
 }
