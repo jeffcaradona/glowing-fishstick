@@ -81,11 +81,11 @@ describe('formatUptime', () => {
     });
 
     it('handles NaN', () => {
-      expect(formatUptime(NaN)).toBe('0s');
+      expect(formatUptime(Number.NaN)).toBe('0s');
     });
 
     it('handles Infinity', () => {
-      expect(formatUptime(Infinity)).toBe('0s');
+      expect(formatUptime(Number.POSITIVE_INFINITY)).toBe('0s');
     });
 
     it('handles non-number types', () => {
