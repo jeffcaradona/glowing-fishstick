@@ -58,6 +58,11 @@ export function createApp(config, plugins = []) {
   // ── View engine ──────────────────────────────────────────────
   app.set('view engine', 'ejs');
 
+  // Enable view caching to prevent EJS memory leak
+  // Express will cache compiled templates in both dev and prod
+  // (Requires nodemon restart to see template changes in development)
+  app.enable('view cache');
+
   const coreViewsDir = path.join(__dirname, 'views');
 
   if (config.viewsDir) {
