@@ -1,11 +1,3 @@
-/**
- * @module app
- * @description Express application factory. Composes middleware, core
- * routes, consumer plugins, and error handling into a single app instance.
- */
-
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
 import express from 'express';
 
 import {
@@ -14,31 +6,8 @@ import {
   createRequestIdMiddleware,
   createRequestLogger,
 } from '@glowing-fishstick/shared';
-import { healthRoutes } from './routes/health.js';
-import { indexRoutes } from './routes/index.js';
-import { adminRoutes } from './routes/admin.js';
-import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * @typedef {(app: import('express').Express, config: object) => void} Plugin
- */
-
-/**
- * Build and return a fully configured Express application.
- *
- * 1. View engine (EJS) setup.
- * 2. Built-in middleware (body parsers, static files).
- * 3. Core routes (health, landing, admin).
- * 4. Consumer plugins (in array order).
- * 5. Error-handling middleware (404 + generic handler).
- *
- * @param {object}   config          - Frozen config from createConfig().
- * @param {Plugin[]} [plugins=[]]    - Plugin functions applied after core routes.
- * @returns {import('express').Express} Configured Express app instance.
- */
-export function createApp(config, plugins = []) {
+export function createApi(config, plugins = []) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -54,24 +23,6 @@ export function createApp(config, plugins = []) {
 
   // Store registries using WeakMap for private access by server-factory
   storeRegistries(app, startupRegistry, shutdownRegistry);
-
-  // ── View engine ──────────────────────────────────────────────
-  app.set('view engine', 'ejs');
-
-  const coreViewsDir = path.join(__dirname, 'views');
-
-  if (config.viewsDir) {
-    // Consumer views take priority; core views are the fallback.
-    app.set('views', [config.viewsDir, coreViewsDir]);
-  } else {
-    app.set('views', coreViewsDir);
-  }
-
-  // ── App locals ───────────────────────────────────────────────
-  app.locals.navLinks = [
-    { label: 'Home', url: '/' },
-    { label: 'Admin', url: '/admin' },
-  ];
 
   // Pass logger to app.locals for middleware access (e.g., errorHandler)
   if (config.logger) {
@@ -97,14 +48,11 @@ export function createApp(config, plugins = []) {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.static(path.join(__dirname, 'public')));
-  if (config.publicDir) {
-    app.use(express.static(config.publicDir));
-  }
 
   // ── Health routes (before shutdown middleware) ───────────────
   // Health checks need to respond with specific messages during shutdown
-  app.use(healthRoutes(app));
+  //TODO: Setup health routes in api-factory, with shutdown-aware responses.
+  //app.use(healthRoutes(app));
 
   // ── Request tracking + shutdown rejection middleware ─────────
   // Reject new requests during shutdown.
@@ -125,8 +73,9 @@ export function createApp(config, plugins = []) {
   });
 
   // ── Core routes ──────────────────────────────────────────────
-  app.use(indexRoutes(config));
-  app.use(adminRoutes(config));
+  //TODO: Setup core routes in api-factory, with config support.
+  //app.use(indexRoutes(config));
+  //app.use(adminRoutes(config));
 
   // ── Plugins ──────────────────────────────────────────────────
   for (const plugin of plugins) {
@@ -134,8 +83,9 @@ export function createApp(config, plugins = []) {
   }
 
   // ── Error handling ───────────────────────────────────────────
-  app.use(notFoundHandler);
-  app.use(errorHandler);
+  //TODO: Add notFoundHandler and errorHandler to api-factory, with logging support.
+  //app.use(notFoundHandler);
+  //app.use(errorHandler);
 
   return app;
 }
