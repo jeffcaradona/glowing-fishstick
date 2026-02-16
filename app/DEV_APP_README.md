@@ -2,23 +2,23 @@
 
 > **Using the `app/` directory for local development and testing**
 
-This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `glowing-fishstick` module in production.
+This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
 
 ---
 
 ## Overview
 
-The `app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `glowing-fishstick` module. It demonstrates:
+The `app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `@glowing-fishstick/app` package. It demonstrates:
 
 - ✅ How to compose the core module with custom plugins
 - ✅ How to provide application-specific routes and views
 - ✅ How to override or extend configuration
 - ✅ How a thin `server.js` entrypoint boots the composed application
 
-**In production**, a consumer would install `glowing-fishstick` via npm:
+**In production**, a consumer would install the published packages via npm:
 
 ```bash
-npm install glowing-fishstick
+npm install @glowing-fishstick/app @glowing-fishstick/shared
 ```
 
 **For local development**, the `app/` directory simulates a consumer importing the package by name:
@@ -27,7 +27,7 @@ npm install glowing-fishstick
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
-In this repository the package name is resolved via workspace package linkage (or `npm link`/monorepo tooling). You can still import directly from the local source (e.g. `../../index.js`) if you prefer, but the examples use the package name to mirror a real consumer app.
+In this repository the package name is resolved via workspace package linkage (or `npm link`/monorepo tooling). Consumer-facing examples should continue to import by package name to mirror real usage boundaries.
 
 ---
 
@@ -481,7 +481,8 @@ The `app/` directory structure mirrors how a real application would consume the 
 ```json
 {
   "dependencies": {
-    "glowing-fishstick": "^0.0.1"
+    "@glowing-fishstick/app": "^0.0.1",
+    "@glowing-fishstick/shared": "^0.0.1"
   }
 }
 ```
@@ -489,7 +490,7 @@ The `app/` directory structure mirrors how a real application would consume the 
 2. **Import from the module**:
 
 ```js
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 ```
 
 3. **Create a plugin**:
@@ -577,7 +578,7 @@ describe('App', () => {
 
 | Aspect            | Local Dev (`app/`)            | Production                              |
 | ----------------- | ----------------------------- | --------------------------------------- |
-| **Module source** | Local import `../../index.js` | npm package `glowing-fishstick`         |
+| **Module source** | Workspace package linkage (`@glowing-fishstick/app`) | npm package (`@glowing-fishstick/app`) |
 | **Configuration** | `.env` in repo root           | Environment variables or config service |
 | **Dependencies**  | Shared `node_modules`         | App's own `package.json`                |
 | **Purpose**       | Development and testing       | Real application deployment             |

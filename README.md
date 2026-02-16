@@ -52,7 +52,7 @@ npm install @glowing-fishstick/app
 Note on repository layout and installs
 
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` (Option A: workspace is the source; consumers install the package).
-- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. You may also import directly from the local source (`../../index.js`) for quick experiments, but examples and docs use the package name to mirror real-world consumption.
+- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 
 ---
 
@@ -252,7 +252,7 @@ Creates an operational application error.
 **Example:**
 
 ```js
-import { createAppError } from 'glowing-fishstick';
+import { createAppError } from '@glowing-fishstick/app';
 
 throw createAppError('INVALID_INPUT', 'Missing required field: email', 400);
 ```
@@ -317,7 +317,7 @@ export function myPlugin(app, config) {
 ### Using Plugins
 
 ```js
-import { createApp, createConfig } from 'glowing-fishstick';
+import { createApp, createConfig } from '@glowing-fishstick/app';
 import { myPlugin } from './my-plugin.js';
 import { analyticsPlugin } from './analytics-plugin.js';
 
@@ -383,7 +383,7 @@ Load it in your application:
 
 ```js
 import 'dotenv/config';
-import { createConfig } from 'glowing-fishstick';
+import { createConfig } from '@glowing-fishstick/app';
 
 const config = createConfig();
 ```
@@ -437,7 +437,7 @@ The functional architecture makes testing straightforward:
 
 ```js
 import { describe, it, expect } from 'vitest';
-import { createConfig, filterSensitiveKeys } from 'glowing-fishstick';
+import { createConfig, filterSensitiveKeys } from '@glowing-fishstick/app';
 
 describe('createConfig', () => {
   it('should merge overrides with defaults', () => {
@@ -453,7 +453,7 @@ describe('createConfig', () => {
 ```js
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { createApp, createConfig } from 'glowing-fishstick';
+import { createApp, createConfig } from '@glowing-fishstick/app';
 
 describe('Health endpoints', () => {
   it('should respond to /healthz', async () => {
@@ -471,7 +471,7 @@ describe('Health endpoints', () => {
 
 ```js
 import { describe, it, expect, afterAll } from 'vitest';
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 describe('Server lifecycle', () => {
   it('should start and stop gracefully', async () => {
@@ -493,7 +493,7 @@ describe('Server lifecycle', () => {
 ```js
 // server.js
 import 'dotenv/config';
-import { createApp, createServer, createConfig } from 'glowing-fishstick';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { taskManagerPlugin } from './plugins/task-manager.js';
 
 const config = createConfig({
