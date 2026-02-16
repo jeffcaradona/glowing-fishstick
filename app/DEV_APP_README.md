@@ -576,12 +576,12 @@ describe('App', () => {
 
 ## Comparing Local Dev vs Production
 
-| Aspect            | Local Dev (`app/`)            | Production                              |
-| ----------------- | ----------------------------- | --------------------------------------- |
-| **Module source** | Workspace package linkage (`@glowing-fishstick/app`) | npm package (`@glowing-fishstick/app`) |
-| **Configuration** | `.env` in repo root           | Environment variables or config service |
-| **Dependencies**  | Shared `node_modules`         | App's own `package.json`                |
-| **Purpose**       | Development and testing       | Real application deployment             |
+| Aspect            | Local Dev (`app/`)                                   | Production                              |
+| ----------------- | ---------------------------------------------------- | --------------------------------------- |
+| **Module source** | Workspace package linkage (`@glowing-fishstick/app`) | npm package (`@glowing-fishstick/app`)  |
+| **Configuration** | `.env` in repo root                                  | Environment variables or config service |
+| **Dependencies**  | Shared `node_modules`                                | App's own `package.json`                |
+| **Purpose**       | Development and testing                              | Real application deployment             |
 
 ---
 

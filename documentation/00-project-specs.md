@@ -526,12 +526,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level           | Directory                          | What's Tested                                                                                                                          | Tools                               |
-| --------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Unit**        | `core/shared/tests/unit/`          | Pure shared utilities and helper functions (e.g., formatters).                                                                        | `vitest` or `node:test`             |
-| **Integration** | `core/app/tests/integration/`      | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle.                       | `supertest`, test runner            |
-| **Smoke**       | `core/app/tests/smoke/`            | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.                                  | test runner, `fetch` or `supertest` |
-| **Stress**      | `tests/stress/` (optional root)    | Cross-module load testing against a running instance. Validates performance and stability under concurrency.                           | `autocannon` or similar             |
+| Level           | Directory                       | What's Tested                                                                                                  | Tools                               |
+| --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Unit**        | `core/shared/tests/unit/`       | Pure shared utilities and helper functions (e.g., formatters).                                                 | `vitest` or `node:test`             |
+| **Integration** | `core/app/tests/integration/`   | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, test runner            |
+| **Smoke**       | `core/app/tests/smoke/`         | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.          | test runner, `fetch` or `supertest` |
+| **Stress**      | `tests/stress/` (optional root) | Cross-module load testing against a running instance. Validates performance and stability under concurrency.   | `autocannon` or similar             |
 
 ### 12.2 Testability by Design
 
