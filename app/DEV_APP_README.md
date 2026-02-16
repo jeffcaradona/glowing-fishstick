@@ -376,6 +376,36 @@ Every request automatically gets a unique UUID attached as `req.id` and returned
 
 ---
 
+## Using Formatting Utilities
+
+The framework provides utility functions for common formatting needs. These are exported from `@glowing-fishstick/shared`.
+
+### Formatting Process Uptime
+
+The `formatUptime` function converts seconds into human-readable duration strings:
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+// In a route handler
+app.get('/status', (req, res) => {
+  res.json({
+    uptime: formatUptime(process.uptime()),
+    // Other status metrics...
+  });
+});
+
+// Example outputs:
+formatUptime(45); // "45s"
+formatUptime(323); // "5m 23s"
+formatUptime(8130); // "2h 15m"
+formatUptime(277530); // "3d 5h 30m"
+```
+
+The formatter automatically selects appropriate time units based on duration, making it ideal for displaying server uptime, session duration, or any time-based metrics.
+
+---
+
 ## Environment Variables
 
 Create a `.env` file in the **repository root** (not in `app/`):

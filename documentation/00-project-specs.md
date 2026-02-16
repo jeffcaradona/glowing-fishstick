@@ -218,6 +218,38 @@ Pure factory function that builds a frozen configuration object.
 
 Pure function that returns a shallow copy of `config` with keys matching `SECRET|KEY|PASSWORD|TOKEN|CREDENTIAL` (case-insensitive) removed. Used by the admin config viewer.
 
+### 4.4.1 `formatUptime(seconds)`
+
+**Module:** `@glowing-fishstick/shared`
+**File:** `core/shared/src/utils/formatters.js`
+
+Pure function that formats duration in seconds into human-readable format. Automatically selects appropriate time units based on duration.
+
+**Signature:**
+
+```js
+formatUptime(seconds: number): string
+```
+
+**Unit selection logic:**
+
+- `< 60s`: Seconds only ("45s")
+- `60s - 3599s`: Minutes and seconds ("5m 23s")
+- `3600s - 86399s`: Hours and minutes ("2h 15m")
+- `≥ 86400s`: Days, hours, and minutes ("3d 5h 30m")
+
+**Edge cases:** Returns `"0s"` for negative, `NaN`, `Infinity`, or non-number inputs. Floors decimal values.
+
+**Example usage:**
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+const uptime = formatUptime(process.uptime());
+// After 1 hour: "1h 0m"
+// After 2 days: "2d 0h 0m"
+```
+
 ### 4.5 Error Factories
 
 ```js

@@ -205,6 +205,44 @@ const safeConfig = filterSensitiveKeys(config);
 
 ---
 
+### `formatUptime(seconds)`
+
+Pure function that formats duration in seconds into a human-readable uptime string. Automatically selects appropriate time units based on duration.
+
+**Parameters:**
+| Name | Type | Description |
+|---|---|---|
+| `seconds` | `number` | Duration in seconds (e.g., from `process.uptime()`) |
+
+**Returns:** `string` — Formatted string with automatic unit selection
+
+**Format patterns:**
+
+- `< 60s`: Seconds only ("45s")
+- `60s - 3599s`: Minutes and seconds ("5m 23s")
+- `3600s - 86399s`: Hours and minutes ("2h 15m")
+- `≥ 86400s`: Days, hours, and minutes ("3d 5h 30m")
+
+**Example:**
+
+```js
+import { formatUptime } from '@glowing-fishstick/shared';
+
+console.log(formatUptime(45)); // "45s"
+console.log(formatUptime(323)); // "5m 23s"
+console.log(formatUptime(8130)); // "2h 15m"
+console.log(formatUptime(277530)); // "3d 5h 30m"
+
+// Use with process uptime
+app.get('/status', (req, res) => {
+  res.json({ uptime: formatUptime(process.uptime()) });
+});
+```
+
+**Edge cases:** Returns `"0s"` for negative numbers, `NaN`, `Infinity`, or non-number inputs.
+
+---
+
 ### Error Factories
 
 #### `createAppError(code, message, statusCode)`
