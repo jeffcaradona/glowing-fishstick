@@ -6,3 +6,12 @@ export { createRequestIdMiddleware } from './src/request-id.js';
 export { formatUptime } from './src/utils/formatters.js';
 export { generateToken, verifyToken } from './src/auth/jwt.js';
 export { jwtAuthMiddleware } from './src/middlewares/jwt-auth.js';
+export {
+  createServiceContainer,
+  ServiceAlreadyRegisteredError,
+  ServiceNotFoundError,
+  ServiceCircularDependencyError,
+  ServiceResolutionError,
+  ServiceDisposeError,
+  ServiceAggregateDisposeError,
+} from './src/service-container.js';

@@ -6,6 +6,7 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
+import { createServiceContainer } from '@glowing-fishstick/shared';
 
 /**
  * Regex pattern matching sensitive key names that should be filtered
@@ -91,6 +92,7 @@ export function createConfig(overrides = {}, env = process.env) {
     apiHealthTimeoutMs: Number(
       overrides.apiHealthTimeoutMs ?? env.API_HEALTH_TIMEOUT_MS ?? DEFAULTS.apiHealthTimeoutMs,
     ),
+    services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
     ...overrides,
   };
 

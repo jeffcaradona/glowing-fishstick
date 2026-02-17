@@ -35,6 +35,7 @@ This module provides:
 - ✅ **Built-in routes** for health checks, admin dashboard, and landing page
 - ✅ **Configuration management** with environment variable support
 - ✅ **Graceful shutdown** for Kubernetes/container environments
+- ✅ **Service container** (`config.services`) for plugin-to-plugin dependency injection
 - ✅ **Functional programming patterns** for testability and composability
 
 ---
@@ -364,11 +365,59 @@ const app = createApp(config, [myPlugin, analyticsPlugin]);
 3. **Your plugins** (in array order)
 4. Error handling middleware (404 + error handler)
 
+### Service Container (`config.services`)
+
+Every config object exposes a service container at `config.services`. Plugins use it to register and share singleton services (database pools, cache clients, etc.) without module-level globals.
+
+```js
+// plugin-a.js — registers a database pool
+export function pluginA(app, config) {
+  config.services.register('db', async () => createPool(config.dbUrl), {
+    dispose: (pool) => pool.end(),
+  });
+
+  // Pre-warm the pool on startup
+  app.registerStartupHook(async () => {
+    await config.services.resolve('db');
+  });
+
+  // Release resources on shutdown
+  app.registerShutdownHook(async () => {
+    await config.services.dispose();
+  });
+}
+
+// plugin-b.js — consumes the database pool registered by Plugin A
+export function pluginB(app, config) {
+  app.get('/items', async (req, res, next) => {
+    try {
+      const db = await config.services.resolve('db');
+      res.json(await db.query('SELECT * FROM items'));
+    } catch (err) {
+      next(err);
+    }
+  });
+}
+```
+
+For tests, inject a pre-populated container via `overrides.services`:
+
+```js
+import { createServiceContainer } from '@glowing-fishstick/shared';
+
+const testContainer = createServiceContainer();
+testContainer.registerValue('db', mockDb);
+const config = createConfig({ services: testContainer });
+```
+
 **Plugin best practices:**
 
 - ✅ Add new routes and middleware
 - ✅ Read config values
 - ✅ Mount sub-applications
+- ✅ Register services with `config.services.register()`
+- ✅ Pre-warm services in startup hooks via `config.services.resolve()`
+- ✅ Dispose the container in a shutdown hook via `config.services.dispose()`
 - ❌ Don't modify or remove core routes
 - ❌ Don't mutate the config object (it's frozen)
 - ❌ Don't call `app.listen()` (use `createServer` instead)

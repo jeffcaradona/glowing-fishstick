@@ -3,6 +3,8 @@
  * @description Configuration factory for the API module.
  */
 
+import { createServiceContainer } from '@glowing-fishstick/shared';
+
 const DEFAULTS = Object.freeze({
   port: 3001,
   nodeEnv: 'development',
@@ -39,6 +41,7 @@ export function createApiConfig(overrides = {}, env = process.env) {
       overrides.shutdownTimeout ?? env.SHUTDOWN_TIMEOUT ?? DEFAULTS.shutdownTimeout,
     ),
     logger: overrides.logger,
+    services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
     ...overrides,
   };
 

@@ -90,6 +90,88 @@ Source-of-truth file mapping for this public API surface:
 - `createLogger` / `createRequestLogger` → `core/shared/src/logger.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `generateToken` / `verifyToken` → `core/shared/src/auth/jwt.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `jwtAuthMiddleware` → `core/shared/src/middlewares/jwt-auth.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+- `createServiceContainer` / error classes → `core/shared/src/service-container.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+
+### 4.0 Service Container (`createServiceContainer`)
+
+The service container provides dependency injection for the plugin ecosystem. It is available on every config object as `config.services`.
+
+**Factory signature:**
+
+```js
+import { createServiceContainer } from '@glowing-fishstick/shared';
+
+const container = createServiceContainer({ logger? });
+```
+
+**Integration point:**
+
+`createConfig()` (app) and `createApiConfig()` (api) both attach a container to `config.services`. Plugins access it via the second argument to the plugin function:
+
+```js
+export function myPlugin(app, config) {
+  // Register a singleton service
+  config.services.register('db', async () => createPool(config.dbUrl), {
+    dispose: (pool) => pool.end(),
+  });
+
+  // Resolve a service inside a route handler
+  app.get('/items', async (req, res, next) => {
+    try {
+      const db = await config.services.resolve('db');
+      res.json(await db.query('SELECT * FROM items'));
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Pre-warm singleton during startup
+  app.registerStartupHook(async () => {
+    await config.services.resolve('db');
+  });
+
+  // Dispose on shutdown
+  app.registerShutdownHook(async () => {
+    await config.services.dispose();
+  });
+}
+```
+
+**Container API:**
+
+| Method          | Signature                 | Description                                                  |
+| --------------- | ------------------------- | ------------------------------------------------------------ |
+| `register`      | `(name, provider, opts?)` | Register a provider function (or plain value) under a name.  |
+| `registerValue` | `(name, value, opts?)`    | Convenience wrapper — registers a pre-initialized singleton. |
+| `resolve`       | `(name) → Promise<T>`     | Resolve a service by name. Always returns a Promise.         |
+| `has`           | `(name) → boolean`        | Check if a service is registered (sync).                     |
+| `keys`          | `() → string[]`           | List all registered service names.                           |
+| `dispose`       | `() → Promise<void>`      | Run disposers in LIFO order and clear all state. Idempotent. |
+
+**Lifecycle options:**
+
+| Option      | Values                                 | Description                                                                              |
+| ----------- | -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `lifecycle` | `'singleton'` (default), `'transient'` | Singletons are cached after first resolve; transients create a new instance per resolve. |
+| `dispose`   | `(instance) => Promise<void>`          | Called during `dispose()`. Not valid on transient services.                              |
+
+**Error classes (all from `@glowing-fishstick/shared`):**
+
+| Class                            | Thrown when                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `ServiceAlreadyRegisteredError`  | `register()` called with a name that already exists.                                                          |
+| `ServiceNotFoundError`           | `resolve()` called for an unregistered name.                                                                  |
+| `ServiceCircularDependencyError` | A provider resolves a name that is already in the current resolution chain. `.path` array contains the cycle. |
+| `ServiceResolutionError`         | A provider throws; wraps the original cause via `error.cause`.                                                |
+| `ServiceDisposeError`            | Exported for forward compatibility; not thrown in v1.                                                         |
+| `ServiceAggregateDisposeError`   | One or more disposers threw. `.errors` is `{ name, cause }[]`.                                                |
+
+**v1 constraints:**
+
+- No request-scoped containers.
+- No `ctx.config` in provider context (use closure capture instead).
+- `dispose()` only tracks initialized singletons (transients are not tracked).
+- No strict-mode toggle.
 
 ### 4.1 `createApp(config, plugins = [])`
 
