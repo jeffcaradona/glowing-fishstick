@@ -208,12 +208,12 @@ export function createServiceContainer(options = {}) {
       const instance = await Promise.resolve(entry.provider(ctx));
       resolvingSet.delete(name);
       return instance;
-    } catch (cause) {
+    } catch (error_) {
       resolvingSet.delete(name);
-      if (cause instanceof ServiceCircularDependencyError) {
-        throw cause;
+      if (error_ instanceof ServiceCircularDependencyError) {
+        throw error_;
       }
-      throw new ServiceResolutionError(name, cause);
+      throw new ServiceResolutionError(name, error_);
     }
   }
 
@@ -271,8 +271,8 @@ export function createServiceContainer(options = {}) {
       if (entry?.dispose && singletonCache.has(name)) {
         try {
           await entry.dispose(singletonCache.get(name));
-        } catch (cause) {
-          errors.push({ name, cause });
+        } catch (error_) {
+          errors.push({ name, cause: error_ });
         }
       }
     }
