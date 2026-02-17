@@ -139,7 +139,7 @@ describe('Cross-plugin service sharing', () => {
   it('multiple plugins share the same singleton instance via config.services', async () => {
     const config = makeConfig();
 
-    const instanceRef = { id: Math.random() };
+    const instanceRef = { id: 'singleton-ref' };
     const providerSpy = vi.fn(() => instanceRef);
 
     // Plugin A registers
