@@ -176,15 +176,15 @@ export function createServiceContainer(options = {}) {
           resolvingSet.delete(name);
           return instance;
         })
-        .catch((cause) => {
+        .catch((error_) => {
           inflightResolves.delete(name);
           singletonCache.delete(name);
           resolvingSet.delete(name);
           // Propagate circular dependency errors unwrapped so callers see the real error.
-          if (cause instanceof ServiceCircularDependencyError) {
-            throw cause;
+          if (error_ instanceof ServiceCircularDependencyError) {
+            throw error_;
           }
-          throw new ServiceResolutionError(name, cause);
+          throw new ServiceResolutionError(name, error_);
         });
 
       inflightResolves.set(name, promise);
@@ -268,7 +268,7 @@ export function createServiceContainer(options = {}) {
 
     for (const name of disposeOrder) {
       const entry = registry.get(name);
-      if (entry && entry.dispose && singletonCache.has(name)) {
+      if (entry?.dispose && singletonCache.has(name)) {
         try {
           await entry.dispose(singletonCache.get(name));
         } catch (cause) {
