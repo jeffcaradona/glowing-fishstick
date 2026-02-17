@@ -1,8 +1,18 @@
 # v1 Dependency Injection (DI) API Proposal + Exact Specification
 
 > Status: Proposal (no runtime implementation yet)
+> Internal Version: v3
 > 
 > Scope: Minimal, backward-compatible service container for app/api plugin ecosystems.
+
+
+---
+
+## Revision History
+
+- **v3**: Introduced explicit internal proposal versioning and added this revision history section for future review cycles.
+- **v2**: Incorporated review clarifications for frozen config integration, transient dispose restrictions, shared error-class location/exports, LIFO-vs-FIFO documentation, plugin ownership rules, logger threading, and `keys()` conformance coverage.
+- **v1**: Initial exact DI API specification draft.
 
 ---
 
