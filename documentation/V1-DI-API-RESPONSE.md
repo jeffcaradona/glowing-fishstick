@@ -41,6 +41,8 @@ Because `Object.freeze` is shallow, `config.services.register(...)` continues to
 
 **Rollout plan update (Step 3):** Rewrite from "Inject `config.services` by default" to "Include `services: createServiceContainer({ logger })` in the config object literal before `Object.freeze()`."
 
+> **Resolution (v2):** ✅ Addressed. Section 5.1 now explicitly states the container must be created inside the config factory before `Object.freeze()`, includes the correct code example, and Step 3 of the rollout plan was rewritten to match.
+
 ---
 
 ## 2. Medium: Transient Lifecycle + `dispose` — GC Risk Unaddressed
@@ -58,6 +60,8 @@ For singleton services this is well-defined: one instance, one disposal. For tra
 **Option B (document the trade-off):** "For transient services with `dispose` callbacks, the container retains a strong reference to every resolved instance. Callers SHOULD NOT register `dispose` callbacks on transient services resolved in request paths. This behavior is intentional and may be revisited in a future version."
 
 Option A is simpler and avoids the ambiguity for v1.
+
+> **Resolution (v2):** ✅ Addressed. Option A was adopted. Section 3.2 adds `// v1 rule: dispose is only valid for singleton lifecycle.` and Section 3.3 under Register adds: *"In v1, `dispose` is only supported for singleton services. Registering `dispose` with `lifecycle: 'transient'` MUST throw `TypeError`."*
 
 ---
 
@@ -84,6 +88,8 @@ export {
 
 Add to rollout plan Step 2: "Export `createServiceContainer` and all service error classes via `@glowing-fishstick/shared` package boundary."
 
+> **Resolution (v2):** ✅ Addressed. Section 4 now explicitly states all error classes SHOULD be defined in `core/shared/src/service-container.js` and exported via `core/shared/index.js`. Step 2 of the rollout plan was updated to match.
+
 ---
 
 ## 4. Low: LIFO Dispose vs FIFO Hook Execution — Document the Distinction
@@ -93,6 +99,8 @@ Add to rollout plan Step 2: "Export `createServiceContainer` and all service err
 The existing hook registry executes hooks in FIFO order (both startup and shutdown). The proposal correctly specifies LIFO for service disposal ("reverse creation order"). These are different systems with intentionally different semantics, and that is fine — but a developer encountering both in the same codebase will notice the apparent contradiction.
 
 **Recommendation:** Add a brief note to Section 3.3 under "Dispose": "Disposal intentionally uses LIFO (reverse creation order) to tear down dependents before their dependencies. This differs from lifecycle hooks, which use FIFO for predictable sequential execution."
+
+> **Resolution (v2):** ✅ Addressed. Section 3.3 now ends with: *"Disposal intentionally uses LIFO so dependents are torn down before dependencies. This differs from lifecycle hook registries (startup/shutdown) that execute FIFO for predictable sequential orchestration."*
 
 ---
 
@@ -105,6 +113,8 @@ The proposal solves *instance* ordering — lazy `resolve` ensures a service is 
 **Recommendation:** Add to Section 5.2:
 
 > Each service name MUST be registered by exactly one plugin. Plugin authors are responsible for coordinating ownership of service names (e.g., via naming conventions such as `'db'`, `'cache'`, `'mailer'`). Attempting to register a name already registered by another plugin will throw `ServiceAlreadyRegisteredError`.
+
+> **Resolution (v2):** ✅ Addressed. Section 5.2 now includes: *"Each service name MUST be owned by exactly one plugin (or one core registration point). If multiple plugins register the same service name, `ServiceAlreadyRegisteredError` is expected."*
 
 ---
 
@@ -133,6 +143,8 @@ The `overrides.logger` reference is safe here because the logger is passed in vi
 
 Add to rollout plan Step 1: "Pass `logger` option to `createServiceContainer` from the config factory so that service providers receive it via `ServiceProviderContext`."
 
+> **Resolution (v2):** ✅ Addressed. Step 1 of the rollout plan now explicitly states to pass `logger` into `createServiceContainer({ logger })`. Step 3 shows the wiring in the config factory snippet.
+
 ---
 
 ## 7. Low: `keys()` Missing from Conformance Test Matrix
@@ -145,18 +157,20 @@ The `ServiceContainer` interface (Section 3.2) includes `keys(): string[]`, but 
 
 > 16. `keys()` returns all registered service names (regardless of initialization state)
 
+> **Resolution (v2):** ✅ Addressed. Added as test 9 in Section 7.1. Remaining tests renumber through 16 total (was 15).
+
 ---
 
 ## Summary
 
-| # | Concern | Severity | Action Required |
-|---|---------|----------|-----------------|
-| 1 | Frozen config prevents `config.services` late-attachment | **Critical** | Create container inside config factory before `Object.freeze()` |
-| 2 | Transient + `dispose` GC/memory risk unspecified | **Medium** | Add clarifying paragraph to Section 3.3; recommend Option A (disallow in v1) |
-| 3 | Error class package location unspecified | **Medium** | Place in `core/shared/src/`; export via `@glowing-fishstick/shared` |
-| 4 | LIFO dispose vs FIFO hooks — undocumented divergence | **Low** | Add a brief explanatory note to Section 3.3 |
-| 5 | Plugin service name ownership convention implicit | **Low** | Add ownership guidance to Section 5.2 |
-| 6 | Logger threading into `ServiceProviderContext` not called out | **Low** | Note in rollout plan Step 1 and show wiring in config factory |
-| 7 | `keys()` absent from conformance test matrix | **Low** | Add as test 16 in Section 7.1 |
+| # | Concern | Severity | Action Required | Resolution |
+|---|---------|----------|-----------------|------------|
+| 1 | Frozen config prevents `config.services` late-attachment | **Critical** | Create container inside config factory before `Object.freeze()` | ✅ v2 |
+| 2 | Transient + `dispose` GC/memory risk unspecified | **Medium** | Add clarifying paragraph to Section 3.3; recommend Option A (disallow in v1) | ✅ v2 (Option A) |
+| 3 | Error class package location unspecified | **Medium** | Place in `core/shared/src/`; export via `@glowing-fishstick/shared` | ✅ v2 |
+| 4 | LIFO dispose vs FIFO hooks — undocumented divergence | **Low** | Add a brief explanatory note to Section 3.3 | ✅ v2 |
+| 5 | Plugin service name ownership convention implicit | **Low** | Add ownership guidance to Section 5.2 | ✅ v2 |
+| 6 | Logger threading into `ServiceProviderContext` not called out | **Low** | Note in rollout plan Step 1 and show wiring in config factory | ✅ v2 |
+| 7 | `keys()` absent from conformance test matrix | **Low** | Add as test 16 in Section 7.1 | ✅ v2 |
 
-No changes to the public `ServiceContainer` interface are proposed. All issues are implementation guidance, spec clarifications, or documentation additions. The proposal is ready to proceed to implementation once the critical concern (item 1) is resolved in the config factories.
+All concerns from the initial review have been incorporated into the v2 proposal. No changes to the public `ServiceContainer` interface were required. The proposal is ready to proceed to implementation.
