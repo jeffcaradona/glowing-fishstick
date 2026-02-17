@@ -1,5 +1,9 @@
 # V1 DI API — Review Response
 
+---
+
+# V1 Response — Review of Proposal v1
+
 > Reviewed against current codebase state (branch: `feature/dependencyInjectionAPI`)
 >
 > Status: Pre-implementation review. No container code exists yet.
@@ -173,4 +177,142 @@ The `ServiceContainer` interface (Section 3.2) includes `keys(): string[]`, but 
 | 6 | Logger threading into `ServiceProviderContext` not called out | **Low** | Note in rollout plan Step 1 and show wiring in config factory | ✅ v2 |
 | 7 | `keys()` absent from conformance test matrix | **Low** | Add as test 16 in Section 7.1 | ✅ v2 |
 
-All concerns from the initial review have been incorporated into the v2 proposal. No changes to the public `ServiceContainer` interface were required. The proposal is ready to proceed to implementation.
+All concerns from the initial review have been incorporated into the v2 proposal. No changes to the public `ServiceContainer` interface were required.
+
+---
+
+# V2 Response — Review of Proposal v2
+
+> Reviewing: Proposal v2 (incorporated all V1 response concerns)
+>
+> Status: All 7 V1 response concerns resolved. Proposal ready to proceed to implementation.
+
+See V1 Summary table above — all items marked ✅ v2.
+
+---
+
+# V3 Response — Review of Proposal v3
+
+> Reviewing: Proposal v3 (added explicit versioning + revision history)
+>
+> Status: Three new concerns identified. All existing V1/V2 response concerns remain resolved.
+
+## Overall Assessment
+
+Proposal v3 adds internal versioning and a revision history section — both good housekeeping. The revision history accurately summarizes what v2 addressed. No regressions from the v2 → v3 update. Three new gaps were identified on close reading of the stable type definitions.
+
+---
+
+## 8. Medium: `ServiceProviderContext.config` Is Unreachable in Practice
+
+**Section affected:** 3.2 (Types — `ServiceProviderContext`)
+
+`ServiceProviderContext` exposes a `config?: object` field:
+
+```ts
+type ServiceProviderContext = {
+  resolve: (name: ServiceName) => Promise<unknown>;
+  has: (name: ServiceName) => boolean;
+  config?: object;   // ← this
+  logger?: object;
+};
+```
+
+The container is created *inside* the config factory before `Object.freeze()` — which is the correct pattern per Section 5.1. However, this means the config object does not exist yet when `createServiceContainer({ logger })` is called. There is no point at which the container can be given a reference to the same config object it is being embedded in. Passing config in post-construction is not possible because the config reference is frozen.
+
+In practice, service providers already access config via closure capture (as shown in Section 6):
+
+```js
+config.services.register('db', async ({ logger }) => {
+  const db = await connectDb(config.dbUrl); // closure, not ctx.config
+  return db;
+});
+```
+
+`ctx.config` will always be `undefined` for any container created inside a config factory. Leaving it in the public type is misleading — callers who attempt to use `ctx.config` will get `undefined` silently.
+
+**Recommendation:** One of:
+
+- **Option A:** Remove `config` from `ServiceProviderContext` in v1. It is unreachable by design and the closure pattern already covers the use case cleanly.
+- **Option B:** Keep it but add a note to Section 3.2: "`ctx.config` is reserved for future use. In v1, containers are constructed inside config factories prior to config object creation, making `ctx.config` always `undefined`. Use closure capture to access config values inside providers."
+
+Option A is cleaner for v1. Option B preserves forward compatibility if a future version supports post-construction config injection.
+
+---
+
+## 9. Low-Medium: `strict: false` Behavior Is Unspecified
+
+**Section affected:** 3.1 (Factory), 3.3 (Runtime semantics)
+
+The factory signature includes a `strict` option:
+
+```ts
+function createServiceContainer(options?: {
+  logger?: { ... };
+  strict?: boolean; // default true (throws on unknown/duplicate)
+}): ServiceContainer;
+```
+
+The comment states the default is `true` and that it "throws on unknown/duplicate." This implies `strict: false` changes that behavior — but the spec does not define what `strict: false` actually does. Possibilities include:
+
+- Unknown service returns `undefined` instead of rejecting
+- Duplicate registration silently overwrites instead of throwing
+- Both of the above
+
+Without a definition, implementors must guess, and tests cannot be written against a contract.
+
+**Recommendation:** Either:
+
+- **Option A:** Define `strict: false` semantics explicitly in Section 3.3 (e.g., "When `strict` is `false`, `resolve` of an unknown service resolves to `undefined`; duplicate `register` is a no-op").
+- **Option B:** Remove `strict` from the v1 API entirely (non-goal). Document it as a potential v2 addition. Strict behavior is always on in v1.
+
+Option B keeps the surface area minimal, consistent with Design Goal 2 ("Tiny surface area"). The `strict` option was not mentioned in Section 8 (Non-goals), which suggests it was meant to be included — but since its semantics are undefined, it should not appear in the spec until they are.
+
+---
+
+## 10. Low: `ServiceAggregateDisposeError` / `ServiceDisposeError` Relationship Unspecified
+
+**Section affected:** 4 (Error model)
+
+The error model defines two related classes:
+
+```
+5. ServiceDisposeError(name, cause)
+6. ServiceAggregateDisposeError(errors: Array<{ name: string; cause: unknown }>)
+```
+
+Section 3.3 states: "If one dispose fails, container SHOULD continue disposing remaining instances and reject with aggregated error context."
+
+It is unspecified whether the `cause` field in each entry of `ServiceAggregateDisposeError.errors` is:
+
+- The raw error thrown by the disposer function, or
+- A wrapped `ServiceDisposeError` instance
+
+This matters for `instanceof` checks in error handlers:
+
+```js
+// Is this valid?
+err.errors.forEach(({ cause }) => {
+  if (cause instanceof ServiceDisposeError) { ... }
+});
+```
+
+**Recommendation:** Add to Section 4 or 3.3:
+
+> "Each entry in `ServiceAggregateDisposeError.errors` MUST have `cause` set to the raw error thrown by the disposer (not wrapped in `ServiceDisposeError`). `ServiceDisposeError` is reserved for single-disposal failure surfaces if needed by future APIs."
+
+Or alternatively, specify that each `cause` IS a `ServiceDisposeError`, and state that `ServiceDisposeError` wraps the original via its standard `.cause` property (ES2022 error chaining).
+
+Choosing one is required for conformance — otherwise test 13 ("Dispose continues after one disposer failure and returns aggregate error") cannot be fully specified.
+
+---
+
+## V3 Summary
+
+| # | Concern | Severity | Recommendation |
+|---|---------|----------|----------------|
+| 8 | `ctx.config` unreachable due to construction-ordering constraint | **Medium** | Remove from `ServiceProviderContext` in v1 (Option A), or document as always-`undefined` (Option B) |
+| 9 | `strict: false` semantics undefined despite appearing in public API | **Low-Medium** | Define its behavior (Option A) or remove from v1 scope (Option B) |
+| 10 | `ServiceAggregateDisposeError.errors[].cause` type unspecified | **Low** | Specify whether cause is raw error or wrapped `ServiceDisposeError` |
+
+No changes to the conformance test matrix are required by these findings, though resolving concern 10 will affect the exact assertion shape of test 13.
