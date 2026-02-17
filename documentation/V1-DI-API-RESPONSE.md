@@ -238,6 +238,8 @@ config.services.register('db', async ({ logger }) => {
 
 Option A is cleaner for v1. Option B preserves forward compatibility if a future version supports post-construction config injection.
 
+> **Resolution (v4):** ✅ Addressed. Option A was adopted. `config` removed from `ServiceProviderContext`. Section 8 (Non-goals) now includes "Config-injected `ctx.config` in provider context (providers should use closure capture in v1)."
+
 ---
 
 ## 9. Low-Medium: `strict: false` Behavior Is Unspecified
@@ -267,6 +269,8 @@ Without a definition, implementors must guess, and tests cannot be written again
 - **Option B:** Remove `strict` from the v1 API entirely (non-goal). Document it as a potential v2 addition. Strict behavior is always on in v1.
 
 Option B keeps the surface area minimal, consistent with Design Goal 2 ("Tiny surface area"). The `strict` option was not mentioned in Section 8 (Non-goals), which suggests it was meant to be included — but since its semantics are undefined, it should not appear in the spec until they are.
+
+> **Resolution (v4):** ✅ Addressed. Option B was adopted. `strict` removed from the factory signature in Section 3.1. Section 8 (Non-goals) now includes "Configurable strict/non-strict container mode."
 
 ---
 
@@ -305,14 +309,113 @@ Or alternatively, specify that each `cause` IS a `ServiceDisposeError`, and stat
 
 Choosing one is required for conformance — otherwise test 13 ("Dispose continues after one disposer failure and returns aggregate error") cannot be fully specified.
 
+> **Resolution (v4):** ✅ Addressed. Section 4 now states: "For `ServiceAggregateDisposeError.errors`, each entry's `cause` MUST be the raw error thrown by the disposer (not a wrapped `ServiceDisposeError` instance)."
+
 ---
 
 ## V3 Summary
 
-| # | Concern | Severity | Recommendation |
-|---|---------|----------|----------------|
-| 8 | `ctx.config` unreachable due to construction-ordering constraint | **Medium** | Remove from `ServiceProviderContext` in v1 (Option A), or document as always-`undefined` (Option B) |
-| 9 | `strict: false` semantics undefined despite appearing in public API | **Low-Medium** | Define its behavior (Option A) or remove from v1 scope (Option B) |
-| 10 | `ServiceAggregateDisposeError.errors[].cause` type unspecified | **Low** | Specify whether cause is raw error or wrapped `ServiceDisposeError` |
+| # | Concern | Severity | Recommendation | Resolution |
+|---|---------|----------|----------------|------------|
+| 8 | `ctx.config` unreachable due to construction-ordering constraint | **Medium** | Remove from `ServiceProviderContext` in v1 (Option A), or document as always-`undefined` (Option B) | ✅ v4 (Option A) |
+| 9 | `strict: false` semantics undefined despite appearing in public API | **Low-Medium** | Define its behavior (Option A) or remove from v1 scope (Option B) | ✅ v4 (Option B) |
+| 10 | `ServiceAggregateDisposeError.errors[].cause` type unspecified | **Low** | Specify whether cause is raw error or wrapped `ServiceDisposeError` | ✅ v4 |
 
 No changes to the conformance test matrix are required by these findings, though resolving concern 10 will affect the exact assertion shape of test 13.
+
+---
+
+# V4 Response — Review of Proposal v4
+
+> Reviewing: Proposal v4 (removed `ctx.config`, removed `strict` option, specified aggregate-dispose `cause` semantics)
+>
+> Status: Four new concerns identified. All existing V1/V2/V3 response concerns remain resolved.
+
+## Overall Assessment
+
+Proposal v4 cleanly resolves all three V3 concerns. Removing `ctx.config` from `ServiceProviderContext` eliminates a misleading field; removing `strict` from the factory signature eliminates an undefined-behavior surface; specifying raw-error cause for `ServiceAggregateDisposeError` closes the last explicit ambiguity in the error model. No regressions from v3 → v4. Four new gaps were identified on close reading of the normative semantics and conformance matrix.
+
+---
+
+## 11. Medium: `ServiceResolutionError` Throw Conditions Unspecified
+
+**Section affected:** 4 (Error model), 3.3 (Runtime semantics — Resolve)
+
+`ServiceResolutionError(name, cause)` is one of the six required error classes. Section 3.3 specifies exactly when `resolve` rejects with `ServiceNotFoundError` (unknown name) and `ServiceCircularDependencyError` (cycle detected), but does not state whether — or how — a provider's own thrown error surfaces to the caller.
+
+This is directly parallel to the concern resolved in v4 for `ServiceAggregateDisposeError.errors[].cause`. Given a provider that throws during initialization:
+
+```js
+container.register('db', async () => { throw new Error('connection refused'); });
+await container.resolve('db'); // rejects with — what?
+```
+
+Without a normative statement, implementors will diverge: some will propagate the raw error; others will wrap it in `ServiceResolutionError`. Conformance tests cannot be written for this path. The existence of `ServiceResolutionError(name, cause)` strongly implies wrapping, but implication is not specification.
+
+**Recommendation:** Add to Section 3.3 under "Resolve":
+
+> If a provider function throws or rejects during initialization, `resolve` MUST reject with `ServiceResolutionError(name, cause)`, where `cause` is the raw error thrown by the provider.
+
+And add a corresponding conformance test to Section 7.1:
+
+> 17. Provider initialization failure rejects `resolve` with `ServiceResolutionError` wrapping the raw cause
+
+---
+
+## 12. Low: `has()` Absent from Conformance Test Matrix
+
+**Section affected:** 7.1 (Core behavior)
+
+`has(name: ServiceName): boolean` appears in both the `ServiceContainer` interface and `ServiceProviderContext`. It is used for conditional resolution in providers and is part of the stable v1 surface. No conformance test covers its behavior.
+
+This is directly parallel to the `keys()` gap identified in V1 response (concern 7) and resolved as test 9 in v2.
+
+**Recommendation:** Add to Section 7.1:
+
+> 18. `has()` returns `true` for registered names and `false` for unregistered names, regardless of initialization state
+
+---
+
+## 13. Low: `ServiceDisposeError` Has No Defined Throw Site in v1
+
+**Section affected:** 4 (Error model)
+
+`ServiceDisposeError(name, cause)` is one of the six required error classes — it must be defined, exported, and available for `instanceof` checks. However, v4 specifies that `ServiceAggregateDisposeError.errors[].cause` is the *raw* error, not a wrapped `ServiceDisposeError`, and there is no other operation in v1 that throws or rejects with `ServiceDisposeError`.
+
+The class is required to exist but is never surfaced by any v1 container operation. Without a note in the spec, consumers may attempt `instanceof ServiceDisposeError` checks inside dispose error handlers and find it never matches. Some implementors may wrap inconsistently (using it for some failures but not others) to fill the perceived gap.
+
+**Recommendation:** Add to Section 4:
+
+> `ServiceDisposeError` is defined for forward compatibility. In v1, no container operation throws it directly — dispose failures appear as raw errors in `ServiceAggregateDisposeError.errors[].cause`. Consumers SHOULD NOT write `instanceof ServiceDisposeError` checks in v1 error handlers.
+
+---
+
+## 14. Low: `registerValue` Runtime Semantics and Conformance Coverage
+
+**Section affected:** 3.2 (Types), 3.3 (Runtime semantics), 7.1 (Core behavior)
+
+`registerValue` omits `lifecycle` from its options (`Omit<ServiceRegistrationOptions<T>, 'lifecycle'>`), correctly implying the option is not applicable. However, Section 3.3 has no normative statement about `registerValue`'s runtime behavior — specifically, whether the value is returned immediately as a resolved `Promise` and whether it counts as "initialized" for `dispose` and `keys()` purposes.
+
+Separately, test 1 in Section 7.1 reads: "Registers and resolves plain value service." This is ambiguous — it could describe `register(name, nonFunctionValue)` or `registerValue(name, value)`. Both are valid interpretations, and `registerValue` is the dedicated API for the pattern.
+
+**Recommendation:** Add to Section 3.3 under "Register":
+
+> `registerValue` MUST register the value as a pre-initialized singleton: `resolve` returns it wrapped in a resolved `Promise`, and it counts as initialized for `dispose` and `keys()` purposes. `lifecycle` is not applicable and MUST be ignored if supplied via any bypass.
+
+Update test 1 in Section 7.1 to reference `registerValue` explicitly, and add a companion test:
+
+> 1. `registerValue` registers a pre-initialized value; `resolve` returns it as a resolved `Promise`
+> 2. Async provider function resolves to its returned value (covers `register` with factory)
+
+---
+
+## V4 Summary
+
+| # | Concern | Severity | Recommendation |
+|---|---------|----------|----------------|
+| 11 | `ServiceResolutionError` throw conditions unspecified | **Medium** | Add normative clause to Section 3.3 under Resolve; add conformance test 17 |
+| 12 | `has()` absent from conformance test matrix | **Low** | Add test 18 to Section 7.1 (parallel to `keys()` gap resolved in v2) |
+| 13 | `ServiceDisposeError` has no defined throw site in v1 | **Low** | Document as forward-compatibility stub in Section 4; warn against `instanceof` checks |
+| 14 | `registerValue` lifecycle semantics implicit; no dedicated conformance test | **Low** | Add normative statement to Section 3.3; clarify tests 1–2 in Section 7.1 |
+
+Resolving concern 11 adds one normative clause and one conformance test. Resolving concern 12 adds one conformance test. Concern 13 requires a documentation addition only. Resolving concern 14 adds one normative clause and refines two existing test descriptions.
