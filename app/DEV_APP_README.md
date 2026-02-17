@@ -166,6 +166,72 @@ export const appOverrides = {
 
 ---
 
+### Service Container: `config.services`
+
+`createConfig()` attaches a service container to `config.services`. Plugins register shared services (database pools, cache clients, etc.) and resolve them by name. The container handles singleton caching, concurrent deduplication, and LIFO disposal.
+
+**Registering and resolving a service:**
+
+```js
+export function myPlugin(app, config) {
+  // Register a singleton DB pool with a dispose callback
+  config.services.register('db', async () => createPool(config.dbUrl), {
+    dispose: (pool) => pool.end(),
+  });
+
+  // Route handler resolves the service on demand
+  app.get('/records', async (req, res, next) => {
+    try {
+      const db = await config.services.resolve('db');
+      res.json(await db.query('SELECT * FROM records'));
+    } catch (err) {
+      next(err);
+    }
+  });
+}
+```
+
+**Startup warmup pattern** — pre-resolve singletons before the server accepts requests:
+
+```js
+export function myPlugin(app, config) {
+  config.services.register('db', async () => createPool(config.dbUrl), {
+    dispose: (pool) => pool.end(),
+  });
+
+  // Resolving during startup caches the instance; subsequent resolves are instant
+  app.registerStartupHook(async () => {
+    await config.services.resolve('db');
+  });
+}
+```
+
+**Shutdown dispose pattern** — cleanly release resources on graceful shutdown:
+
+```js
+// In server.js entry point (runs after all plugin shutdown hooks)
+const { registerShutdownHook } = createServer(app, config);
+
+registerShutdownHook(async () => {
+  await config.services.dispose(); // runs disposers in LIFO order
+});
+```
+
+**Injecting a test container:**
+
+```js
+import { createServiceContainer } from '@glowing-fishstick/shared';
+import { createConfig } from '@glowing-fishstick/app';
+
+const testContainer = createServiceContainer();
+testContainer.registerValue('db', mockDb);
+
+const config = createConfig({ services: testContainer });
+// Plugins will resolve from testContainer instead of the real DB pool
+```
+
+---
+
 ### Custom Routes: `app/src/routes/router.js`
 
 The task manager routes demonstrate how to add application-specific endpoints:

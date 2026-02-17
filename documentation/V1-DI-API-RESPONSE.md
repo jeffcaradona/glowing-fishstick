@@ -22,7 +22,7 @@ The proposal is well-structured and aligns strongly with the project's existing 
 
 `createConfig()` in both `core/app/src/config/env.js` and `core/api/src/config/env.js` returns `Object.freeze(config)`. A frozen object rejects property assignment at runtime (or silently in non-strict mode). The proposal describes `config.services` as the integration point, but it cannot be attached after creation.
 
-**Required fix:** The service container must be created *inside* the config factory and included in the object literal before `Object.freeze()` is called.
+**Required fix:** The service container must be created _inside_ the config factory and included in the object literal before `Object.freeze()` is called.
 
 ```js
 // core/app/src/config/env.js
@@ -65,7 +65,7 @@ For singleton services this is well-defined: one instance, one disposal. For tra
 
 Option A is simpler and avoids the ambiguity for v1.
 
-> **Resolution (v2):** ✅ Addressed. Option A was adopted. Section 3.2 adds `// v1 rule: dispose is only valid for singleton lifecycle.` and Section 3.3 under Register adds: *"In v1, `dispose` is only supported for singleton services. Registering `dispose` with `lifecycle: 'transient'` MUST throw `TypeError`."*
+> **Resolution (v2):** ✅ Addressed. Option A was adopted. Section 3.2 adds `// v1 rule: dispose is only valid for singleton lifecycle.` and Section 3.3 under Register adds: _"In v1, `dispose` is only supported for singleton services. Registering `dispose` with `lifecycle: 'transient'` MUST throw `TypeError`."_
 
 ---
 
@@ -104,7 +104,7 @@ The existing hook registry executes hooks in FIFO order (both startup and shutdo
 
 **Recommendation:** Add a brief note to Section 3.3 under "Dispose": "Disposal intentionally uses LIFO (reverse creation order) to tear down dependents before their dependencies. This differs from lifecycle hooks, which use FIFO for predictable sequential execution."
 
-> **Resolution (v2):** ✅ Addressed. Section 3.3 now ends with: *"Disposal intentionally uses LIFO so dependents are torn down before dependencies. This differs from lifecycle hook registries (startup/shutdown) that execute FIFO for predictable sequential orchestration."*
+> **Resolution (v2):** ✅ Addressed. Section 3.3 now ends with: _"Disposal intentionally uses LIFO so dependents are torn down before dependencies. This differs from lifecycle hook registries (startup/shutdown) that execute FIFO for predictable sequential orchestration."_
 
 ---
 
@@ -112,13 +112,13 @@ The existing hook registry executes hooks in FIFO order (both startup and shutdo
 
 **Section affected:** 5.2 (Plugin usage contract)
 
-The proposal solves *instance* ordering — lazy `resolve` ensures a service is initialized before its consumer, regardless of plugin order. However, *registration* ordering still matters: only one plugin may register a given service name; duplicates throw `ServiceAlreadyRegisteredError`. Plugin authors need to know this is a constraint.
+The proposal solves _instance_ ordering — lazy `resolve` ensures a service is initialized before its consumer, regardless of plugin order. However, _registration_ ordering still matters: only one plugin may register a given service name; duplicates throw `ServiceAlreadyRegisteredError`. Plugin authors need to know this is a constraint.
 
 **Recommendation:** Add to Section 5.2:
 
 > Each service name MUST be registered by exactly one plugin. Plugin authors are responsible for coordinating ownership of service names (e.g., via naming conventions such as `'db'`, `'cache'`, `'mailer'`). Attempting to register a name already registered by another plugin will throw `ServiceAlreadyRegisteredError`.
 
-> **Resolution (v2):** ✅ Addressed. Section 5.2 now includes: *"Each service name MUST be owned by exactly one plugin (or one core registration point). If multiple plugins register the same service name, `ServiceAlreadyRegisteredError` is expected."*
+> **Resolution (v2):** ✅ Addressed. Section 5.2 now includes: _"Each service name MUST be owned by exactly one plugin (or one core registration point). If multiple plugins register the same service name, `ServiceAlreadyRegisteredError` is expected."_
 
 ---
 
@@ -140,7 +140,7 @@ function createServiceContainer(options?: {
 And the config factory wires it:
 
 ```js
-services: overrides.services ?? createServiceContainer({ logger: overrides.logger })
+services: overrides.services ?? createServiceContainer({ logger: overrides.logger });
 ```
 
 The `overrides.logger` reference is safe here because the logger is passed in via overrides before the config object is frozen.
@@ -167,15 +167,15 @@ The `ServiceContainer` interface (Section 3.2) includes `keys(): string[]`, but 
 
 ## Summary
 
-| # | Concern | Severity | Action Required | Resolution |
-|---|---------|----------|-----------------|------------|
-| 1 | Frozen config prevents `config.services` late-attachment | **Critical** | Create container inside config factory before `Object.freeze()` | ✅ v2 |
-| 2 | Transient + `dispose` GC/memory risk unspecified | **Medium** | Add clarifying paragraph to Section 3.3; recommend Option A (disallow in v1) | ✅ v2 (Option A) |
-| 3 | Error class package location unspecified | **Medium** | Place in `core/shared/src/`; export via `@glowing-fishstick/shared` | ✅ v2 |
-| 4 | LIFO dispose vs FIFO hooks — undocumented divergence | **Low** | Add a brief explanatory note to Section 3.3 | ✅ v2 |
-| 5 | Plugin service name ownership convention implicit | **Low** | Add ownership guidance to Section 5.2 | ✅ v2 |
-| 6 | Logger threading into `ServiceProviderContext` not called out | **Low** | Note in rollout plan Step 1 and show wiring in config factory | ✅ v2 |
-| 7 | `keys()` absent from conformance test matrix | **Low** | Add as test 16 in Section 7.1 | ✅ v2 |
+| #   | Concern                                                       | Severity     | Action Required                                                              | Resolution       |
+| --- | ------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------- | ---------------- |
+| 1   | Frozen config prevents `config.services` late-attachment      | **Critical** | Create container inside config factory before `Object.freeze()`              | ✅ v2            |
+| 2   | Transient + `dispose` GC/memory risk unspecified              | **Medium**   | Add clarifying paragraph to Section 3.3; recommend Option A (disallow in v1) | ✅ v2 (Option A) |
+| 3   | Error class package location unspecified                      | **Medium**   | Place in `core/shared/src/`; export via `@glowing-fishstick/shared`          | ✅ v2            |
+| 4   | LIFO dispose vs FIFO hooks — undocumented divergence          | **Low**      | Add a brief explanatory note to Section 3.3                                  | ✅ v2            |
+| 5   | Plugin service name ownership convention implicit             | **Low**      | Add ownership guidance to Section 5.2                                        | ✅ v2            |
+| 6   | Logger threading into `ServiceProviderContext` not called out | **Low**      | Note in rollout plan Step 1 and show wiring in config factory                | ✅ v2            |
+| 7   | `keys()` absent from conformance test matrix                  | **Low**      | Add as test 16 in Section 7.1                                                | ✅ v2            |
 
 All concerns from the initial review have been incorporated into the v2 proposal. No changes to the public `ServiceContainer` interface were required.
 
@@ -213,12 +213,12 @@ Proposal v3 adds internal versioning and a revision history section — both goo
 type ServiceProviderContext = {
   resolve: (name: ServiceName) => Promise<unknown>;
   has: (name: ServiceName) => boolean;
-  config?: object;   // ← this
+  config?: object; // ← this
   logger?: object;
 };
 ```
 
-The container is created *inside* the config factory before `Object.freeze()` — which is the correct pattern per Section 5.1. However, this means the config object does not exist yet when `createServiceContainer({ logger })` is called. There is no point at which the container can be given a reference to the same config object it is being embedded in. Passing config in post-construction is not possible because the config reference is frozen.
+The container is created _inside_ the config factory before `Object.freeze()` — which is the correct pattern per Section 5.1. However, this means the config object does not exist yet when `createServiceContainer({ logger })` is called. There is no point at which the container can be given a reference to the same config object it is being embedded in. Passing config in post-construction is not possible because the config reference is frozen.
 
 In practice, service providers already access config via closure capture (as shown in Section 6):
 
@@ -315,11 +315,11 @@ Choosing one is required for conformance — otherwise test 13 ("Dispose continu
 
 ## V3 Summary
 
-| # | Concern | Severity | Recommendation | Resolution |
-|---|---------|----------|----------------|------------|
-| 8 | `ctx.config` unreachable due to construction-ordering constraint | **Medium** | Remove from `ServiceProviderContext` in v1 (Option A), or document as always-`undefined` (Option B) | ✅ v4 (Option A) |
-| 9 | `strict: false` semantics undefined despite appearing in public API | **Low-Medium** | Define its behavior (Option A) or remove from v1 scope (Option B) | ✅ v4 (Option B) |
-| 10 | `ServiceAggregateDisposeError.errors[].cause` type unspecified | **Low** | Specify whether cause is raw error or wrapped `ServiceDisposeError` | ✅ v4 |
+| #   | Concern                                                             | Severity       | Recommendation                                                                                      | Resolution       |
+| --- | ------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------- | ---------------- |
+| 8   | `ctx.config` unreachable due to construction-ordering constraint    | **Medium**     | Remove from `ServiceProviderContext` in v1 (Option A), or document as always-`undefined` (Option B) | ✅ v4 (Option A) |
+| 9   | `strict: false` semantics undefined despite appearing in public API | **Low-Medium** | Define its behavior (Option A) or remove from v1 scope (Option B)                                   | ✅ v4 (Option B) |
+| 10  | `ServiceAggregateDisposeError.errors[].cause` type unspecified      | **Low**        | Specify whether cause is raw error or wrapped `ServiceDisposeError`                                 | ✅ v4            |
 
 No changes to the conformance test matrix are required by these findings, though resolving concern 10 will affect the exact assertion shape of test 13.
 
@@ -346,7 +346,9 @@ Proposal v4 cleanly resolves all three V3 concerns. Removing `ctx.config` from `
 This is directly parallel to the concern resolved in v4 for `ServiceAggregateDisposeError.errors[].cause`. Given a provider that throws during initialization:
 
 ```js
-container.register('db', async () => { throw new Error('connection refused'); });
+container.register('db', async () => {
+  throw new Error('connection refused');
+});
 await container.resolve('db'); // rejects with — what?
 ```
 
@@ -380,7 +382,7 @@ This is directly parallel to the `keys()` gap identified in V1 response (concern
 
 **Section affected:** 4 (Error model)
 
-`ServiceDisposeError(name, cause)` is one of the six required error classes — it must be defined, exported, and available for `instanceof` checks. However, v4 specifies that `ServiceAggregateDisposeError.errors[].cause` is the *raw* error, not a wrapped `ServiceDisposeError`, and there is no other operation in v1 that throws or rejects with `ServiceDisposeError`.
+`ServiceDisposeError(name, cause)` is one of the six required error classes — it must be defined, exported, and available for `instanceof` checks. However, v4 specifies that `ServiceAggregateDisposeError.errors[].cause` is the _raw_ error, not a wrapped `ServiceDisposeError`, and there is no other operation in v1 that throws or rejects with `ServiceDisposeError`.
 
 The class is required to exist but is never surfaced by any v1 container operation. Without a note in the spec, consumers may attempt `instanceof ServiceDisposeError` checks inside dispose error handlers and find it never matches. Some implementors may wrap inconsistently (using it for some failures but not others) to fill the perceived gap.
 
@@ -411,11 +413,11 @@ Update test 1 in Section 7.1 to reference `registerValue` explicitly, and add a 
 
 ## V4 Summary
 
-| # | Concern | Severity | Recommendation |
-|---|---------|----------|----------------|
-| 11 | `ServiceResolutionError` throw conditions unspecified | **Medium** | Add normative clause to Section 3.3 under Resolve; add conformance test 17 |
-| 12 | `has()` absent from conformance test matrix | **Low** | Add test 18 to Section 7.1 (parallel to `keys()` gap resolved in v2) |
-| 13 | `ServiceDisposeError` has no defined throw site in v1 | **Low** | Document as forward-compatibility stub in Section 4; warn against `instanceof` checks |
-| 14 | `registerValue` lifecycle semantics implicit; no dedicated conformance test | **Low** | Add normative statement to Section 3.3; clarify tests 1–2 in Section 7.1 |
+| #   | Concern                                                                     | Severity   | Recommendation                                                                        |
+| --- | --------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| 11  | `ServiceResolutionError` throw conditions unspecified                       | **Medium** | Add normative clause to Section 3.3 under Resolve; add conformance test 17            |
+| 12  | `has()` absent from conformance test matrix                                 | **Low**    | Add test 18 to Section 7.1 (parallel to `keys()` gap resolved in v2)                  |
+| 13  | `ServiceDisposeError` has no defined throw site in v1                       | **Low**    | Document as forward-compatibility stub in Section 4; warn against `instanceof` checks |
+| 14  | `registerValue` lifecycle semantics implicit; no dedicated conformance test | **Low**    | Add normative statement to Section 3.3; clarify tests 1–2 in Section 7.1              |
 
 Resolving concern 11 adds one normative clause and one conformance test. Resolving concern 12 adds one conformance test. Concern 13 requires a documentation addition only. Resolving concern 14 adds one normative clause and refines two existing test descriptions.

@@ -11,12 +11,12 @@
 
 This build plan implements the v4 proposal as written. It incorporates all resolved concerns from V1–V3 review responses (concerns 1–10). V4 response concerns (11–14) are explicitly **out of scope** — they refine specification language and conformance test coverage beyond what is needed for a correct, minimal implementation. If any of them surface as real issues during implementation, they can be addressed in a follow-up patch without API changes.
 
-| V4 concern | Disposition | Rationale |
-|---|---|---|
-| 11 — `ServiceResolutionError` throw conditions | Deferred | Error class exists with `(name, cause)` signature; wrapping provider failures is the obvious behavior. |
-| 12 — `has()` conformance test | Deferred | Trivial boolean lookup; tested implicitly. Can add later. |
-| 13 — `ServiceDisposeError` has no throw site | Deferred | Forward-compatibility stub by design. |
-| 14 — `registerValue` semantics/test split | Deferred | Tautological; covered by test 1. |
+| V4 concern                                     | Disposition | Rationale                                                                                              |
+| ---------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------ |
+| 11 — `ServiceResolutionError` throw conditions | Deferred    | Error class exists with `(name, cause)` signature; wrapping provider failures is the obvious behavior. |
+| 12 — `has()` conformance test                  | Deferred    | Trivial boolean lookup; tested implicitly. Can add later.                                              |
+| 13 — `ServiceDisposeError` has no throw site   | Deferred    | Forward-compatibility stub by design.                                                                  |
+| 14 — `registerValue` semantics/test split      | Deferred    | Tautological; covered by test 1.                                                                       |
 
 ---
 
@@ -53,6 +53,7 @@ ServiceAggregateDisposeError(errors)         → message: `Failed to dispose ${e
 ```
 
 Convention notes:
+
 - Use ES2022 `{ cause }` option for `ServiceResolutionError` and `ServiceDisposeError` to enable standard error chaining.
 - `ServiceAggregateDisposeError.errors` entries are `{ name: string, cause: unknown }` where `cause` is the **raw** error from the disposer.
 - `ServiceDisposeError` is exported for forward compatibility; no v1 code path throws it directly.
@@ -63,24 +64,24 @@ Convention notes:
 
 Internal data structures:
 
-| Structure | Type | Purpose |
-|---|---|---|
-| `registry` | `Map<string, { provider, lifecycle, dispose?, metadata? }>` | Registration metadata |
-| `singletonCache` | `Map<string, unknown>` | Resolved singleton instances |
-| `inflightResolves` | `Map<string, Promise<unknown>>` | Deduplication of concurrent singleton init |
-| `creationOrder` | `string[]` | Tracks singleton init order for LIFO dispose |
-| `disposed` | `boolean` | Idempotency guard |
+| Structure          | Type                                                        | Purpose                                      |
+| ------------------ | ----------------------------------------------------------- | -------------------------------------------- |
+| `registry`         | `Map<string, { provider, lifecycle, dispose?, metadata? }>` | Registration metadata                        |
+| `singletonCache`   | `Map<string, unknown>`                                      | Resolved singleton instances                 |
+| `inflightResolves` | `Map<string, Promise<unknown>>`                             | Deduplication of concurrent singleton init   |
+| `creationOrder`    | `string[]`                                                  | Tracks singleton init order for LIFO dispose |
+| `disposed`         | `boolean`                                                   | Idempotency guard                            |
 
 **Methods to implement:**
 
-| Method | Key behaviors |
-|---|---|
-| `register(name, provider, options?)` | Validate name (non-empty string → `TypeError`). Check duplicate → `ServiceAlreadyRegisteredError`. Default lifecycle to `'singleton'`. Reject `dispose` + `lifecycle: 'transient'` → `TypeError`. If provider is not a function, wrap in `() => provider`. Store in `registry`. |
-| `registerValue(name, value, options?)` | Convenience for pre-initialized singletons. Internally: `register(name, value, { ...options, lifecycle: 'singleton' })` — the non-function provider path stores value directly. Also pre-populate `singletonCache` and `creationOrder` so it's immediately resolved and included in dispose. |
-| `resolve(name)` | Always returns `Promise`. Unknown → reject `ServiceNotFoundError`. If singleton and cached → return cached. If singleton and in-flight → return in-flight promise. Detect cycles via resolution stack (thread-local set passed through `ctx.resolve`) → `ServiceCircularDependencyError`. On provider failure → reject `ServiceResolutionError(name, cause)`, clear cache. On success → cache, push to `creationOrder`. Transient → call provider, no cache. |
-| `has(name)` | `registry.has(name)` — sync boolean. |
-| `keys()` | `[...registry.keys()]`. |
-| `dispose()` | If already disposed, resolve immediately (idempotent). Reverse `creationOrder`, iterate. For each name with a registered `dispose` callback and an entry in `singletonCache`, call the disposer. Collect `{ name, cause }` for failures. Continue through all. If any failures, reject with `ServiceAggregateDisposeError(errors)`. Clear all maps. Set `disposed = true`. |
+| Method                                 | Key behaviors                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `register(name, provider, options?)`   | Validate name (non-empty string → `TypeError`). Check duplicate → `ServiceAlreadyRegisteredError`. Default lifecycle to `'singleton'`. Reject `dispose` + `lifecycle: 'transient'` → `TypeError`. If provider is not a function, wrap in `() => provider`. Store in `registry`.                                                                                                                                                                              |
+| `registerValue(name, value, options?)` | Convenience for pre-initialized singletons. Internally: `register(name, value, { ...options, lifecycle: 'singleton' })` — the non-function provider path stores value directly. Also pre-populate `singletonCache` and `creationOrder` so it's immediately resolved and included in dispose.                                                                                                                                                                 |
+| `resolve(name)`                        | Always returns `Promise`. Unknown → reject `ServiceNotFoundError`. If singleton and cached → return cached. If singleton and in-flight → return in-flight promise. Detect cycles via resolution stack (thread-local set passed through `ctx.resolve`) → `ServiceCircularDependencyError`. On provider failure → reject `ServiceResolutionError(name, cause)`, clear cache. On success → cache, push to `creationOrder`. Transient → call provider, no cache. |
+| `has(name)`                            | `registry.has(name)` — sync boolean.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `keys()`                               | `[...registry.keys()]`.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `dispose()`                            | If already disposed, resolve immediately (idempotent). Reverse `creationOrder`, iterate. For each name with a registered `dispose` callback and an entry in `singletonCache`, call the disposer. Collect `{ name, cause }` for failures. Continue through all. If any failures, reject with `ServiceAggregateDisposeError(errors)`. Clear all maps. Set `disposed = true`.                                                                                   |
 
 **Circular detection approach:**
 
@@ -182,37 +183,37 @@ Tests map directly to the conformance matrix (Section 7 of the proposal):
 
 #### 7.1 Core behavior
 
-| # | Test description | Key assertions |
-|---|---|---|
-| 1 | Registers and resolves plain value service | `registerValue('cfg', { a: 1 })` → `resolve('cfg')` returns `{ a: 1 }`. Result is a `Promise`. |
-| 2 | Registers and resolves async provider service | `register('db', async () => mockDb)` → `resolve('db')` returns `mockDb`. |
-| 3 | Singleton provider executes once across many resolves | Provider spy called once despite 3 sequential `resolve()` calls. All return same reference. |
-| 4 | Concurrent singleton resolves dedupe to single provider invocation | `Promise.all([resolve('x'), resolve('x'), resolve('x')])` → provider spy called once. |
-| 5 | Transient provider executes per resolve | `register('t', () => ({}), { lifecycle: 'transient' })` → two resolves return different references. Provider spy called twice. |
-| 6 | Duplicate registration throws `ServiceAlreadyRegisteredError` | Second `register('x', ...)` throws. Verify `error.name === 'ServiceAlreadyRegisteredError'`. |
-| 7 | Unknown service rejects with `ServiceNotFoundError` | `resolve('nope')` rejects. Verify `error.name === 'ServiceNotFoundError'`. |
-| 8 | Circular dependency rejects with `ServiceCircularDependencyError` + path | A resolves B, B resolves A. Verify rejection, `error.name`, and `error.path` includes both names. |
-| 9 | `keys()` returns all registered names regardless of init state | Register 3 services, resolve 1. `keys()` returns all 3. |
+| #   | Test description                                                         | Key assertions                                                                                                                 |
+| --- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Registers and resolves plain value service                               | `registerValue('cfg', { a: 1 })` → `resolve('cfg')` returns `{ a: 1 }`. Result is a `Promise`.                                 |
+| 2   | Registers and resolves async provider service                            | `register('db', async () => mockDb)` → `resolve('db')` returns `mockDb`.                                                       |
+| 3   | Singleton provider executes once across many resolves                    | Provider spy called once despite 3 sequential `resolve()` calls. All return same reference.                                    |
+| 4   | Concurrent singleton resolves dedupe to single provider invocation       | `Promise.all([resolve('x'), resolve('x'), resolve('x')])` → provider spy called once.                                          |
+| 5   | Transient provider executes per resolve                                  | `register('t', () => ({}), { lifecycle: 'transient' })` → two resolves return different references. Provider spy called twice. |
+| 6   | Duplicate registration throws `ServiceAlreadyRegisteredError`            | Second `register('x', ...)` throws. Verify `error.name === 'ServiceAlreadyRegisteredError'`.                                   |
+| 7   | Unknown service rejects with `ServiceNotFoundError`                      | `resolve('nope')` rejects. Verify `error.name === 'ServiceNotFoundError'`.                                                     |
+| 8   | Circular dependency rejects with `ServiceCircularDependencyError` + path | A resolves B, B resolves A. Verify rejection, `error.name`, and `error.path` includes both names.                              |
+| 9   | `keys()` returns all registered names regardless of init state           | Register 3 services, resolve 1. `keys()` returns all 3.                                                                        |
 
 #### 7.2 Lifecycle behavior
 
-| # | Test description | Key assertions |
-|---|---|---|
-| 10 | `dispose()` runs disposers for initialized services only | Register A (with disposer) and B (with disposer). Resolve only A. Dispose. Only A's disposer called. |
-| 11 | Disposal order is reverse creation order (LIFO) | Register and resolve A, then B, then C (all with disposers). Dispose. Disposer call order: C, B, A. |
-| 12 | Dispose is idempotent | Call `dispose()` twice. Second call resolves without error. Disposers called exactly once total. |
-| 13 | Dispose continues after one disposer failure, returns aggregate error | B's disposer throws. A and C disposers succeed. Verify rejection with `ServiceAggregateDisposeError`, `.errors` length 1, `.errors[0].cause` is the raw throw. |
+| #   | Test description                                                      | Key assertions                                                                                                                                                 |
+| --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10  | `dispose()` runs disposers for initialized services only              | Register A (with disposer) and B (with disposer). Resolve only A. Dispose. Only A's disposer called.                                                           |
+| 11  | Disposal order is reverse creation order (LIFO)                       | Register and resolve A, then B, then C (all with disposers). Dispose. Disposer call order: C, B, A.                                                            |
+| 12  | Dispose is idempotent                                                 | Call `dispose()` twice. Second call resolves without error. Disposers called exactly once total.                                                               |
+| 13  | Dispose continues after one disposer failure, returns aggregate error | B's disposer throws. A and C disposers succeed. Verify rejection with `ServiceAggregateDisposeError`, `.errors` length 1, `.errors[0].cause` is the raw throw. |
 
 #### Additional unit tests (input validation)
 
-| Test description | Key assertions |
-|---|---|
-| `register` throws `TypeError` for empty string name | Verify `TypeError`. |
-| `register` throws `TypeError` for non-string name | Pass `42`. Verify `TypeError`. |
-| `register` throws `TypeError` for transient + dispose combo | Verify `TypeError` message references transient lifecycle. |
-| Provider failure clears singleton cache, allows retry | First resolve rejects. Fix provider. Second resolve succeeds. |
-| `ctx.resolve` and `ctx.has` are available inside providers | Provider asserts `typeof ctx.resolve === 'function'` and `typeof ctx.has === 'function'`. |
-| `ctx.logger` is the logger passed to factory | Provider asserts `ctx.logger` identity matches. |
+| Test description                                            | Key assertions                                                                            |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `register` throws `TypeError` for empty string name         | Verify `TypeError`.                                                                       |
+| `register` throws `TypeError` for non-string name           | Pass `42`. Verify `TypeError`.                                                            |
+| `register` throws `TypeError` for transient + dispose combo | Verify `TypeError` message references transient lifecycle.                                |
+| Provider failure clears singleton cache, allows retry       | First resolve rejects. Fix provider. Second resolve succeeds.                             |
+| `ctx.resolve` and `ctx.has` are available inside providers  | Provider asserts `typeof ctx.resolve === 'function'` and `typeof ctx.has === 'function'`. |
+| `ctx.logger` is the logger passed to factory                | Provider asserts `ctx.logger` identity matches.                                           |
 
 ---
 
@@ -222,11 +223,11 @@ Tests map directly to the conformance matrix (Section 7 of the proposal):
 
 These tests verify the container works with the app factory and plugin system. They correspond to conformance matrix Section 7.3.
 
-| # | Test description | Approach |
-|---|---|---|
-| 14 | Plugin A registers service, Plugin B resolves it | Create config with container. Define two plugin functions. Plugin A calls `config.services.register(...)`. Plugin B calls `config.services.resolve(...)` inside a route handler. Use Supertest to hit the route and verify the resolved value. |
-| 15 | Startup warmup via hooks executes before server listen | Plugin registers a service and a startup hook that resolves it. Verify the service is cached (provider called) before the first request arrives. |
-| 16 | Shutdown hook invokes container dispose | Register shutdown hook with `await config.services.dispose()`. Trigger shutdown. Verify disposers ran. |
+| #   | Test description                                       | Approach                                                                                                                                                                                                                                       |
+| --- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 14  | Plugin A registers service, Plugin B resolves it       | Create config with container. Define two plugin functions. Plugin A calls `config.services.register(...)`. Plugin B calls `config.services.resolve(...)` inside a route handler. Use Supertest to hit the route and verify the resolved value. |
+| 15  | Startup warmup via hooks executes before server listen | Plugin registers a service and a startup hook that resolves it. Verify the service is cached (provider called) before the first request arrives.                                                                                               |
+| 16  | Shutdown hook invokes container dispose                | Register shutdown hook with `await config.services.dispose()`. Trigger shutdown. Verify disposers ran.                                                                                                                                         |
 
 ---
 
@@ -280,18 +281,18 @@ npm pack --dry-run --workspace=core/shared
 
 ## File change summary
 
-| File | Action | Description |
-|---|---|---|
-| `core/shared/src/service-container.js` | **Create** | Container factory + 6 error classes (~250-350 lines) |
-| `core/shared/index.js` | **Edit** | Add 7 named exports |
-| `core/app/src/config/env.js` | **Edit** | Add import + `services` field in config literal |
-| `core/api/src/config/env.js` | **Edit** | Add import + `services` field in config literal |
-| `core/shared/tests/unit/service-container.test.js` | **Create** | Unit tests (conformance 1–13 + validation tests) |
-| `core/shared/tests/unit/service-container-integration.test.js` | **Create** | Integration tests (conformance 14–16) |
-| `documentation/00-project-specs.md` | **Edit** | Add service container section |
-| `app/DEV_APP_README.md` | **Edit** | Add plugin usage example |
-| `README.md` | **Edit** | Add feature mention + example |
-| `documentation/99-potential-gaps.md` | **Edit** | Update implementation status |
+| File                                                           | Action     | Description                                          |
+| -------------------------------------------------------------- | ---------- | ---------------------------------------------------- |
+| `core/shared/src/service-container.js`                         | **Create** | Container factory + 6 error classes (~250-350 lines) |
+| `core/shared/index.js`                                         | **Edit**   | Add 7 named exports                                  |
+| `core/app/src/config/env.js`                                   | **Edit**   | Add import + `services` field in config literal      |
+| `core/api/src/config/env.js`                                   | **Edit**   | Add import + `services` field in config literal      |
+| `core/shared/tests/unit/service-container.test.js`             | **Create** | Unit tests (conformance 1–13 + validation tests)     |
+| `core/shared/tests/unit/service-container-integration.test.js` | **Create** | Integration tests (conformance 14–16)                |
+| `documentation/00-project-specs.md`                            | **Edit**   | Add service container section                        |
+| `app/DEV_APP_README.md`                                        | **Edit**   | Add plugin usage example                             |
+| `README.md`                                                    | **Edit**   | Add feature mention + example                        |
+| `documentation/99-potential-gaps.md`                           | **Edit**   | Update implementation status                         |
 
 **No existing tests are modified. No existing exports are removed. No plugin signatures change.**
 

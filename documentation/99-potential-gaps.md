@@ -59,18 +59,26 @@ This document tracks potential server composability features and architectural g
 
 ## 2. Dependency Injection / Service Container
 
-**Description**: Provide a lightweight service registry so plugins can register and consume shared services (DB pools, cache instances, external clients) without creating duplicates or circular dependencies.
+**Status**: ✓ Complete — v1 implemented in `core/shared/src/service-container.js`
 
-**Use Cases**:
+**Description**: Lightweight service registry for plugins to register and consume shared services (DB pools, cache instances, external clients) without module-level singletons or circular dependencies.
 
-- Plugins registering singleton database connections
-- Shared cache instances across features
-- Configuration service accessible to all plugins
-- Extensible service discovery
+**Implemented**:
 
-**Rationale**: Without a DI pattern, plugins resort to module-level singletons or loose coupling. A container enables clean decoupling and testability.
+- `createServiceContainer({ logger? })` factory exported from `@glowing-fishstick/shared`
+- `config.services` attached to both app (`createConfig`) and api (`createApiConfig`) config objects
+- Singleton + transient lifecycles with concurrent-resolve deduplication
+- Circular dependency detection via resolution-chain set threading
+- LIFO disposal with `ServiceAggregateDisposeError` on partial failure
+- 6 error classes: `ServiceAlreadyRegisteredError`, `ServiceNotFoundError`, `ServiceCircularDependencyError`, `ServiceResolutionError`, `ServiceDisposeError`, `ServiceAggregateDisposeError`
+- Full conformance test suite (16 tests across §7.1–§7.3)
 
-**Potential Impact**: High — Becomes essential as the number of plugins and shared resources grows.
+**v1 constraints** (not implemented — deferred by design):
+
+- No request-scoped containers
+- No `ctx.config` on provider context (use closure capture)
+- `dispose()` tracks initialized singletons only (transients are not tracked)
+- No strict-mode toggle
 
 ---
 
@@ -150,10 +158,9 @@ This document tracks potential server composability features and architectural g
 - `@glowing-fishstick/api` Thin MVP Slice — Implemented `createApi`/`createApiConfig`, core middleware stack, JSON-first error handling, and integration tests
 - API health passthrough (phase 1) — Implemented fixed app endpoint (`/admin/api-health`) to probe API readiness (`/readyz`) without exposing generic proxying
 - Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
+- Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
 
 **High Priority** (near-term):
-
-- Dependency Injection / Service Container (#2)
 
 **Medium Priority** (mid-term):
 

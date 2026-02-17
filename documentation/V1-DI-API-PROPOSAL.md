@@ -2,9 +2,8 @@
 
 > Status: Proposal (no runtime implementation yet)
 > Internal Version: v4
-> 
+>
 > Scope: Minimal, backward-compatible service container for app/api plugin ecosystems.
-
 
 ---
 
@@ -63,9 +62,7 @@ type ServiceProviderContext = {
   logger?: object;
 };
 
-type ServiceProvider<T = unknown> =
-  | T
-  | ((ctx: ServiceProviderContext) => T | Promise<T>);
+type ServiceProvider<T = unknown> = T | ((ctx: ServiceProviderContext) => T | Promise<T>);
 
 type ServiceRegistrationOptions<T = unknown> = {
   lifecycle?: ServiceLifecycle; // default: 'singleton'
