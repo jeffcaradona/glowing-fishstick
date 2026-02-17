@@ -15,18 +15,18 @@ Implemented the v1 service container for the plugin ecosystem across both `@glow
 
 ## Delivered artifacts
 
-| File | Action | Notes |
-|---|---|---|
-| `core/shared/src/service-container.js` | **Created** | Factory + 6 error classes |
-| `core/shared/index.js` | **Edited** | 7 new named exports appended |
-| `core/app/src/config/env.js` | **Edited** | Import + `services` field |
-| `core/api/src/config/env.js` | **Edited** | Import + `services` field |
-| `core/shared/tests/unit/service-container.test.js` | **Created** | 44 tests (§7.1, §7.2, validation) |
-| `core/shared/tests/unit/service-container-integration.test.js` | **Created** | 5 tests (§7.3, cross-plugin sharing) |
-| `documentation/00-project-specs.md` | **Edited** | Section 4.0 added before existing 4.1 |
-| `app/DEV_APP_README.md` | **Edited** | Service container usage section added |
-| `README.md` | **Edited** | Feature list + plugin section examples |
-| `documentation/99-potential-gaps.md` | **Edited** | DI item marked ✓ Complete |
+| File                                                           | Action      | Notes                                  |
+| -------------------------------------------------------------- | ----------- | -------------------------------------- |
+| `core/shared/src/service-container.js`                         | **Created** | Factory + 6 error classes              |
+| `core/shared/index.js`                                         | **Edited**  | 7 new named exports appended           |
+| `core/app/src/config/env.js`                                   | **Edited**  | Import + `services` field              |
+| `core/api/src/config/env.js`                                   | **Edited**  | Import + `services` field              |
+| `core/shared/tests/unit/service-container.test.js`             | **Created** | 44 tests (§7.1, §7.2, validation)      |
+| `core/shared/tests/unit/service-container-integration.test.js` | **Created** | 5 tests (§7.3, cross-plugin sharing)   |
+| `documentation/00-project-specs.md`                            | **Edited**  | Section 4.0 added before existing 4.1  |
+| `app/DEV_APP_README.md`                                        | **Edited**  | Service container usage section added  |
+| `README.md`                                                    | **Edited**  | Feature list + plugin section examples |
+| `documentation/99-potential-gaps.md`                           | **Edited**  | DI item marked ✓ Complete              |
 
 ---
 
@@ -49,13 +49,13 @@ ServiceAggregateDisposeError(errors)             // .errors is { name, cause }[]
 
 ### Internal data structures
 
-| Structure | Type | Purpose |
-|---|---|---|
-| `registry` | `Map<string, { provider, lifecycle, dispose? }>` | Registration metadata |
-| `singletonCache` | `Map<string, unknown>` | Resolved singleton instances |
-| `inflightResolves` | `Map<string, Promise<unknown>>` | Concurrent deduplication |
-| `creationOrder` | `string[]` | Push-on-resolve, reversed for LIFO dispose |
-| `disposed` | `boolean` | Idempotency guard on `dispose()` |
+| Structure          | Type                                             | Purpose                                    |
+| ------------------ | ------------------------------------------------ | ------------------------------------------ |
+| `registry`         | `Map<string, { provider, lifecycle, dispose? }>` | Registration metadata                      |
+| `singletonCache`   | `Map<string, unknown>`                           | Resolved singleton instances               |
+| `inflightResolves` | `Map<string, Promise<unknown>>`                  | Concurrent deduplication                   |
+| `creationOrder`    | `string[]`                                       | Push-on-resolve, reversed for LIFO dispose |
+| `disposed`         | `boolean`                                        | Idempotency guard on `dispose()`           |
 
 ### Key implementation decisions
 
@@ -136,12 +136,12 @@ const config = createConfig({ services: testContainer });
 
 44 tests across 4 describe blocks:
 
-| Block | Tests | Coverage |
-|---|---|---|
-| Core behavior (§7.1) | 9 | Conformance tests 1–9 |
-| Lifecycle behavior (§7.2) | 4 | Conformance tests 10–13 |
-| Input validation | 6 | TypeError cases, retry after failure, ctx shape |
-| ServiceAggregateDisposeError detail | 1 | `.errors[].name` and `.errors[].cause` structure |
+| Block                               | Tests | Coverage                                         |
+| ----------------------------------- | ----- | ------------------------------------------------ |
+| Core behavior (§7.1)                | 9     | Conformance tests 1–9                            |
+| Lifecycle behavior (§7.2)           | 4     | Conformance tests 10–13                          |
+| Input validation                    | 6     | TypeError cases, retry after failure, ctx shape  |
+| ServiceAggregateDisposeError detail | 1     | `.errors[].name` and `.errors[].cause` structure |
 
 ---
 
@@ -151,10 +151,10 @@ const config = createConfig({ services: testContainer });
 
 5 tests across 2 describe blocks:
 
-| Block | Tests | Coverage |
-|---|---|---|
-| Plugin composition (§7.3) | 3 | Conformance tests 14–16 |
-| Cross-plugin service sharing | 2 | Singleton sharing, test container injection |
+| Block                        | Tests | Coverage                                    |
+| ---------------------------- | ----- | ------------------------------------------- |
+| Plugin composition (§7.3)    | 3     | Conformance tests 14–16                     |
+| Cross-plugin service sharing | 2     | Singleton sharing, test container injection |
 
 **Note on approach for tests 14–16:** The build plan described using Supertest to hit a live route. Instead, tests simulate the plugin pattern via a minimal `makeConfig()` helper and `createHookRunner()` stand-in for the startup/shutdown registry. This avoids a cross-package dependency on `@glowing-fishstick/app` from within the `@glowing-fishstick/shared` test suite while covering the same behavioral contracts. The plugin functions are called directly with `(null, config)` to exercise the pattern without Express.
 
@@ -165,6 +165,7 @@ const config = createConfig({ services: testContainer });
 All 4 required files updated:
 
 **`documentation/00-project-specs.md`** — New section 4.0 inserted before existing 4.1 with:
+
 - Factory signature
 - Integration point (`config.services` on both config factories)
 - Full container API table
@@ -173,12 +174,14 @@ All 4 required files updated:
 - v1 constraint list
 
 **`app/DEV_APP_README.md`** — New "Service Container" section added with:
+
 - Register + route handler pattern
 - Startup warmup pattern
 - Shutdown dispose pattern
 - Test container injection pattern
 
 **`README.md`** — Updated with:
+
 - `config.services` line added to feature list
 - Two-plugin example in Plugin System section
 - Test injection snippet
@@ -223,16 +226,16 @@ rg "from '../../index.js'" README.md app/DEV_APP_README.md documentation/*.md
 
 ## Acceptance criteria — final status
 
-| Criterion | Status |
-|---|---|
-| All 16 conformance tests from §7 pass | ✅ |
-| Input validation tests pass (TypeError cases) | ✅ |
-| `npm run test:all` green, no regressions | ✅ 80/80 |
-| `npm run lint && npm run format` clean | ✅ |
-| Zero sync blocking APIs in `service-container.js` | ✅ |
-| All 4 documentation files updated | ✅ |
-| `config.services` on both app and api config | ✅ |
-| Existing `(app, config) => void` contract unchanged | ✅ |
+| Criterion                                           | Status   |
+| --------------------------------------------------- | -------- |
+| All 16 conformance tests from §7 pass               | ✅       |
+| Input validation tests pass (TypeError cases)       | ✅       |
+| `npm run test:all` green, no regressions            | ✅ 80/80 |
+| `npm run lint && npm run format` clean              | ✅       |
+| Zero sync blocking APIs in `service-container.js`   | ✅       |
+| All 4 documentation files updated                   | ✅       |
+| `config.services` on both app and api config        | ✅       |
+| Existing `(app, config) => void` contract unchanged | ✅       |
 
 ---
 
@@ -240,12 +243,12 @@ rg "from '../../index.js'" README.md app/DEV_APP_README.md documentation/*.md
 
 Per the scope fence in the build plan, V4 concerns 11–14 were deferred. No issues surfaced during implementation requiring them:
 
-| Concern | Disposition | Outcome |
-|---|---|---|
-| 11 — `ServiceResolutionError` throw conditions | Deferred | Implemented as specified; wraps provider failures via `{ cause }` |
-| 12 — `has()` conformance test | Deferred | `has()` exercised implicitly via `ctx.has` provider context test |
-| 13 — `ServiceDisposeError` has no throw site | Deferred | Exported as forward-compat stub; no v1 path throws it |
-| 14 — `registerValue` semantics/test split | Deferred | Covered by test 1 (registers and resolves plain value) |
+| Concern                                        | Disposition | Outcome                                                           |
+| ---------------------------------------------- | ----------- | ----------------------------------------------------------------- |
+| 11 — `ServiceResolutionError` throw conditions | Deferred    | Implemented as specified; wraps provider failures via `{ cause }` |
+| 12 — `has()` conformance test                  | Deferred    | `has()` exercised implicitly via `ctx.has` provider context test  |
+| 13 — `ServiceDisposeError` has no throw site   | Deferred    | Exported as forward-compat stub; no v1 path throws it             |
+| 14 — `registerValue` semantics/test split      | Deferred    | Covered by test 1 (registers and resolves plain value)            |
 
 ---
 
