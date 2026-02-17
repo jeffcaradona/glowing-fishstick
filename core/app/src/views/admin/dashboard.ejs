@@ -14,19 +14,47 @@
     <div class="card">
       <h3>Runtime</h3>
       <table>
-        <tr><td>Node.js</td><td><%= nodeVersion %></td></tr>
-        <tr><td>Uptime</td><td><%= uptime %></td></tr>
+        <thead><tr><th>Process</th><th>Node.js</th><th>Uptime</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>App</td>
+            <td><%= appRuntime.nodeVersion %></td>
+            <td><%= appRuntime.uptime %></td>
+          </tr>
+          <tr>
+            <td>API</td>
+            <% if (apiRuntime) { %>
+              <td><%= apiRuntime.nodeVersion %></td>
+              <td><%= apiRuntime.uptime %></td>
+            <% } else { %>
+              <td colspan="2">Unavailable</td>
+            <% } %>
+          </tr>
+        </tbody>
       </table>
     </div>
 
     <div class="card">
-      <h3>Memory Usage</h3>      
+      <h3>Memory Usage</h3>
       <table>
-        <thead><tr><th>Type</th><th>Usage</th></tr></thead>
+        <thead><tr><th>Process</th><th>RSS</th><th>Heap Used</th><th>Heap Total</th></tr></thead>
         <tbody>
-        <tr><td>RSS</td><td><%= (memoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td></tr>
-        <tr><td>Heap Used</td><td><%= (memoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td></tr>
-        <tr><td>Heap Total</td><td><%= (memoryUsage.heapTotal / 1024 / 1024).toFixed(2) %> MB</td></tr>
+          <tr>
+            <td>App</td>
+            <td><%= (appMemoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td>
+            <td><%= (appMemoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td>
+            <td><%= (appMemoryUsage.heapTotal / 1024 / 1024).toFixed(2) %> MB</td>
+          </tr>
+          <tr>
+            <td>API</td>
+            <% if (apiMemoryUsage) { %>
+              <td><%= (apiMemoryUsage.rss / 1024 / 1024).toFixed(2) %> MB</td>
+              <td><%= (apiMemoryUsage.heapUsed / 1024 / 1024).toFixed(2) %> MB</td>
+              <td><%= (apiMemoryUsage.heapTotal / 1024 / 1024).toFixed(2) %> MB</td>
+            <% } else { %>
+              <td colspan="3">Unavailable</td>
+            <% } %>
+          </tr>
         </tbody>
       </table>
     </div>

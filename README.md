@@ -6,6 +6,7 @@
 >
 > - The root package provides documentation, development scripts, and a monorepo structure.
 > - The main application logic is in [`core/app`](core/app), distributed as `@glowing-fishstick/app`.
+> - The JSON-first API module is in [`core/api`](core/api), distributed as `@glowing-fishstick/api`.
 > - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared`.
 >
 > See the individual module READMEs for usage details.
@@ -42,6 +43,8 @@ This module provides:
 
 ```bash
 npm install @glowing-fishstick/app
+# or
+npm install @glowing-fishstick/api
 ```
 
 **Requirements:**
@@ -51,7 +54,7 @@ npm install @glowing-fishstick/app
 
 Note on repository layout and installs
 
-- This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` (Option A: workspace is the source; consumers install the package).
+- This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` or `@glowing-fishstick/api` (Option A: workspace is the source; consumers install the package).
 - For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 
 ---
@@ -361,10 +364,11 @@ const app = createApp(config, [myPlugin, analyticsPlugin]);
 
 ### Admin Dashboard
 
-| Route           | Method | Response      | Purpose                                        |
-| --------------- | ------ | ------------- | ---------------------------------------------- |
-| `/admin`        | GET    | Rendered HTML | Dashboard with app info                        |
-| `/admin/config` | GET    | Rendered HTML | Configuration viewer (sensitive keys filtered) |
+| Route               | Method | Response      | Purpose                                           |
+| ------------------- | ------ | ------------- | ------------------------------------------------- |
+| `/admin`            | GET    | Rendered HTML | Dashboard with app info                           |
+| `/admin/config`     | GET    | Rendered HTML | Configuration viewer (sensitive keys filtered)    |
+| `/admin/api-health` | GET    | JSON          | Dashboard AJAX passthrough to API readiness probe |
 
 ---
 
@@ -377,6 +381,9 @@ PORT=3000
 NODE_ENV=development
 APP_NAME=my-application
 APP_VERSION=1.0.0
+API_BASE_URL=http://localhost:3001
+API_HEALTH_PATH=/readyz
+API_HEALTH_TIMEOUT_MS=3000
 ```
 
 Load it in your application:
@@ -391,8 +398,10 @@ const config = createConfig();
 **Workspace Package Map**
 
 - `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
-- `core/shared` — Shared utilities and supporting code used by `core/app`. Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/shared` — Shared utilities and supporting code used by `core/app` and `core/api`. Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, and API middleware composition.
 - `app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
+- `api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.
 
 These roles reflect the current repository structure and are the intended mapping for consumers and maintainers.
 

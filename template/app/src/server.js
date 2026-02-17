@@ -1,31 +1,24 @@
 /**
  * @module server
- * @description Application entrypoint — composes the core module with app
- * plugins and boots the server.
+ * @description Thin app entrypoint for local development.
  */
 
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createLogger } from '@glowing-fishstick/shared';
 import { myApplicationPlugin } from './app.js';
 import { appOverrides } from './config/env.js';
 
-const config = createConfig(appOverrides);
+const logger = createLogger({ name: 'my-app' });
+const config = createConfig({ ...appOverrides, logger });
 const app = createApp(config, [myApplicationPlugin]);
 const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
 
-// ── Optional: Register server-level startup hook ──────────────────
-// Use for entry-point-specific initialization (e.g., deployment-specific setup).
-// This runs before the server begins listening.
 registerStartupHook(async () => {
-  console.warn('Server startup initialization…');
-  // Perform deployment-specific initialization tasks
+  logger.info('Entry-point startup initialization...');
 });
 
-// ── Optional: Register server-level shutdown hook ────────────────
-// Use for entry-point-specific cleanup (e.g., graceful resource release).
-// This runs during graceful shutdown, before closing connections.
 registerShutdownHook(async () => {
-  console.warn('Server shutdown cleanup…');
-  // Perform deployment-specific cleanup tasks
+  logger.info('Entry-point shutdown cleanup...');
 });
 
 export { server, close };

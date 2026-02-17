@@ -1,6 +1,6 @@
 {
-  "name": "glowing-fishstick-tasks-api",
-  "description": "A local development application to help build the core modules",
+  "name": "my-glowing-fishstick-api",
+  "description": "A starter API using the glowing-fishstick core API module",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "dev": "nodemon --watch src --watch ../core/api/src --watch ../core/shared/src --ext js,mjs,cjs,json,ejs src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/api": "0.0.1",
+    "@glowing-fishstick/api": "^0.0.1",
+    "@glowing-fishstick/shared": "^0.0.1",
     "express": "^5.2.1"
   },
   "devDependencies": {

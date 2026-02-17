@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon --watch src --watch ../core/app/src --watch ../core/shared/src --ext js,mjs,cjs,json,ejs src/server.js"
   },
   "dependencies": {
     "@glowing-fishstick/app": "0.0.1",

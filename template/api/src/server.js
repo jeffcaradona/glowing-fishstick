@@ -5,21 +5,21 @@
 
 import { createApi, createApiConfig } from '@glowing-fishstick/api';
 import { createServer, createLogger } from '@glowing-fishstick/shared';
-import { taskApiPlugin } from './api.js';
-import { appOverrides } from './config/env.js';
+import { myApiPlugin } from './api.js';
+import { apiOverrides } from './config/env.js';
 
-const logger = createLogger({ name: 'task-api' });
-const config = createApiConfig({ ...appOverrides, logger });
-const app = createApi(config, [taskApiPlugin]);
+const logger = createLogger({ name: 'my-api' });
+const config = createApiConfig({ ...apiOverrides, logger });
+const app = createApi(config, [myApiPlugin]);
 
 const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
 
 registerStartupHook(async () => {
-  logger.info('Entry-point API startup initialization...');
+  logger.info('API entry-point startup initialization...');
 });
 
 registerShutdownHook(async () => {
-  logger.info('Entry-point API shutdown cleanup...');
+  logger.info('API entry-point shutdown cleanup...');
 });
 
 export { server, close };

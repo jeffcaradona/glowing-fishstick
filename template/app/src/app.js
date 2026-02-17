@@ -1,35 +1,26 @@
 /**
  * @module app
- * @description Application plugin — mounts app routes and middleware
- * onto the core glowing-fishstick app.
+ * @description App plugin that mounts template routes.
  */
 
 import { myRoutes } from './routes/router.js';
 
 /**
- * Plugin that registers application-specific routes.
- *
- * @param {import('express').Express} app    - Express app instance
- * @param {object}                    config - Frozen config object
+ * @param {import('express').Express} app
+ * @param {object} config
  */
 export function myApplicationPlugin(app, config) {
-  app.locals.navLinks = app.locals.navLinks || [];
-  app.locals.navLinks.push({ label: 'My App', url: '/my-feature' });
+  const logger = config.logger;
 
-  // Mount routes
-  app.use(myRoutes(config));
+  app.locals.navLinks.push({ label: 'My Feature', url: '/my-feature' });
 
-  // ── Optional: Register startup hook for initialization ─────────────
-  // Use app.registerStartupHook() to add async initialization tasks:
   app.registerStartupHook(async () => {
-    console.warn('Initializing application resources…');
-    // Connect to databases, initialize caches, etc.
+    logger?.info('Initializing application resources...');
   });
 
-  // ── Optional: Register shutdown hook for cleanup ──────────────────
-  // Use app.registerShutdownHook() to add async cleanup tasks:
   app.registerShutdownHook(async () => {
-    console.warn('Cleaning up application resources…');
-    // Close database connections, clear caches, etc.
+    logger?.info('Cleaning up application resources...');
   });
+
+  app.use(myRoutes(config));
 }
