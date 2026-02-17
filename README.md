@@ -246,6 +246,35 @@ app.get('/status', (req, res) => {
 
 ---
 
+### `generateToken(secret, expiresIn = '15m')` and `verifyToken(token, secret)`
+
+JWT helpers from `@glowing-fishstick/shared` for service-to-service auth flows.
+
+**Example:**
+
+```js
+import { generateToken, verifyToken } from '@glowing-fishstick/shared';
+
+const token = generateToken(process.env.JWT_SECRET, '15m');
+const decoded = verifyToken(token, process.env.JWT_SECRET);
+```
+
+---
+
+### `jwtAuthMiddleware(secret)`
+
+Express middleware from `@glowing-fishstick/shared` that validates `Authorization: Bearer <token>` and responds with `401` on invalid or missing tokens.
+
+**Example:**
+
+```js
+import { jwtAuthMiddleware } from '@glowing-fishstick/shared';
+
+app.use('/api/private', jwtAuthMiddleware(process.env.JWT_SECRET));
+```
+
+---
+
 ### Error Factories
 
 #### `createAppError(code, message, statusCode)`
@@ -384,6 +413,8 @@ APP_VERSION=1.0.0
 API_BASE_URL=http://localhost:3001
 API_HEALTH_PATH=/readyz
 API_HEALTH_TIMEOUT_MS=3000
+JWT_SECRET=replace-with-random-secret
+JWT_EXPIRES_IN=15m
 ```
 
 Load it in your application:
@@ -398,7 +429,7 @@ const config = createConfig();
 **Workspace Package Map**
 
 - `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
-- `core/shared` — Shared utilities and supporting code used by `core/app` and `core/api`. Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/shared` — Shared utilities and supporting code used by `core/app` and `core/api` (logging, request IDs, lifecycle registries, formatters, JWT helpers). Published as `@glowing-fishstick/shared` when distributed separately.
 - `core/api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, and API middleware composition.
 - `app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
 - `api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.

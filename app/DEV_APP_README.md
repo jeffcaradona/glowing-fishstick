@@ -197,17 +197,19 @@ Edit files in the core packages under `core/`:
 
 ```
 core/app/src/
-├── app-factory.js
-├── server-factory.js
-├── config/
-├── routes/
-├── middlewares/
-└── views/
+|-- app-factory.js
+|-- config/
+|-- controllers/
+|-- middlewares/
+|-- routes/
+`-- views/
 
 core/shared/src/
-├── hook-registry.js
-├── server-factory.js
-└── other shared utilities
+|-- auth/
+|-- hook-registry.js
+|-- middlewares/
+|-- server-factory.js
+`-- other shared utilities
 ```
 
 ### 2. Test with App
@@ -417,6 +419,11 @@ PORT=3000
 NODE_ENV=development
 APP_NAME=Task Manager
 APP_VERSION=1.0.0
+API_BASE_URL=http://localhost:3001
+API_HEALTH_PATH=/readyz
+API_HEALTH_TIMEOUT_MS=3000
+JWT_SECRET=replace-with-random-secret
+JWT_EXPIRES_IN=15m
 ```
 
 The app will use these values when it calls `createConfig()`.
