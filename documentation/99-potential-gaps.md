@@ -149,6 +149,7 @@ This document tracks potential server composability features and architectural g
 - Private Lifecycle Registries via WeakMap — Language-enforced encapsulation replacing underscore fields (P1)
 - `@glowing-fishstick/api` Thin MVP Slice — Implemented `createApi`/`createApiConfig`, core middleware stack, JSON-first error handling, and integration tests
 - API health passthrough (phase 1) — Implemented fixed app endpoint (`/admin/api-health`) to probe API readiness (`/readyz`) without exposing generic proxying
+- Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
 
 **High Priority** (near-term):
 
@@ -164,7 +165,7 @@ This document tracks potential server composability features and architectural g
 - Error Handling Customization (#4)
 - Config Validation (#5)
 - Plugin Prerequisites / Ordering (#6)
-- Service-to-service JWT auth + strict passthrough request allowlists for expanded proxy scope
+- Service-to-service JWT auth enablement on live app/api routes + strict passthrough request allowlists for expanded proxy scope
 
 ---
 

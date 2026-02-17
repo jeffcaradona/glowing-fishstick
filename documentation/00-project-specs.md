@@ -1,7 +1,7 @@
 # Project Specification — glowing-fishstick
 
 > **Version:** 0.0.1  
-> **Last Updated:** 2026-02-16  
+> **Last Updated:** 2026-02-17  
 > **Status:** Active implementation (core packages and app workspace are in use)
 
 ---
@@ -75,6 +75,10 @@ export { createServer } from './src/server-factory.js';
 export { createHookRegistry } from './src/hook-registry.js';
 export { storeRegistries } from './src/registry-store.js';
 export { createLogger, createRequestLogger } from './src/logger.js';
+export { createRequestIdMiddleware } from './src/request-id.js';
+export { formatUptime } from './src/utils/formatters.js';
+export { generateToken, verifyToken } from './src/auth/jwt.js';
+export { jwtAuthMiddleware } from './src/middlewares/jwt-auth.js';
 ```
 
 Source-of-truth file mapping for this public API surface:
@@ -84,6 +88,8 @@ Source-of-truth file mapping for this public API surface:
 - `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
 - `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `createLogger` / `createRequestLogger` → `core/shared/src/logger.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+- `generateToken` / `verifyToken` → `core/shared/src/auth/jwt.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+- `jwtAuthMiddleware` → `core/shared/src/middlewares/jwt-auth.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 
 ### 4.1 `createApp(config, plugins = [])`
 
@@ -101,7 +107,7 @@ Factory function that builds and returns a configured Express `app` instance.
 1. Creates an Express app.
 2. Sets EJS as the view engine with `src/views/` as default views directory.
 3. Applies built-in middleware (JSON body parser, URL-encoded parser, static file serving).
-4. Mounts core routes: health (`/healthz`, `/readyz`, `/livez`), landing page (`/`), admin (`/admin`, `/admin/config`).
+4. Mounts core routes: health (`/healthz`, `/readyz`, `/livez`), landing page (`/`), admin (`/admin`, `/admin/config`, `/admin/api-health`).
 5. Iterates `plugins`, calling each as `plugin(app, config)`.
 6. Mounts error-handling middleware (404 catch-all, generic error handler).
 7. Returns the Express `app` instance.
@@ -302,84 +308,71 @@ export function task_managerPlugin(app, config) {
 
 ```
 glowing-fishstick/
-├── jsconfig.json
-├── LICENSE
-├── package.json                # Root package
-├── README.md
-│
-├── app/                        # Example consuming application ("task_manager")
-│   ├── DEV_APP_README.md
-│   ├── package.json            # App package
-│   └── src/
-│       ├── app.js              # task_managerPlugin — custom routes/middleware
-│       ├── server.js           # Thin entrypoint — composes & boots
-│       ├── config/
-│       │   └── env.js          # App-specific config overrides
-│       ├── controllers/
-│       ├── models/
-│       ├── routes/
-│       │   └── router.js
-│       ├── utils/
-│       └── views/
-│           ├── index.ejs
-│           └── tasks/
-│               └── list.ejs
-│
-├── core/
-│   ├── app/
-│   │   ├── index.js            # Core module entry
-│   │   ├── package.json
-│   │   └── src/
-│   │       ├── app-factory.js  # createApp() factory
-│   │       ├── config/
-│   │       │   └── env.js      # createConfig(), filterSensitiveKeys()
-│   │       ├── errors/
-│   │       │   └── appError.js # AppError class + factory functions
-│   │       ├── middlewares/
-│   │       │   └── errorHandler.js # notFoundHandler(), errorHandler()
-│   │       ├── public/
-│   │       │   └── css/
-│   │       │       └── style.css
-│   │       ├── routes/
-│   │       │   ├── admin.js
-│   │       │   ├── health.js
-│   │       │   └── index.js
-│   │       └── views/
-│   │           ├── index.ejs
-│   │           ├── admin/
-│   │           │   ├── config.ejs
-│   │           │   └── dashboard.ejs
-│   │           ├── errors/
-│   │           │   └── 404.ejs
-│   │           └── layouts/
-│   │               ├── footer.ejs
-│   │               └── header.ejs
-│   └── shared/
-│       ├── README.md
-│       └── src/
-│           └── server-factory.js # createServer() factory
-│
-├── documentation/
-│   └── 00-project-specs.md
-│
-└── scripts/
+|-- jsconfig.json
+|-- LICENSE
+|-- package.json
+|-- README.md
+|-- app/
+|   |-- DEV_APP_README.md
+|   |-- package.json
+|   `-- src/
+|       |-- app.js
+|       |-- server.js
+|       |-- config/
+|       |   `-- env.js
+|       |-- controllers/
+|       |-- models/
+|       |-- routes/
+|       |   `-- router.js
+|       |-- utils/
+|       `-- views/
+|           |-- index.ejs
+|           `-- tasks/
+|               `-- list.ejs
+|-- core/
+|   |-- app/
+|   |   |-- index.js
+|   |   |-- package.json
+|   |   `-- src/
+|   |       |-- app-factory.js
+|   |       |-- config/
+|   |       |   `-- env.js
+|   |       |-- controllers/
+|   |       |   |-- admin-controller.js
+|   |       |   `-- admin-controller.helpers.js
+|   |       |-- errors/
+|   |       |   `-- appError.js
+|   |       |-- middlewares/
+|   |       |   `-- errorHandler.js
+|   |       |-- public/
+|   |       |   `-- css/
+|   |       |       `-- style.css
+|   |       |-- routes/
+|   |       |   |-- admin.js
+|   |       |   |-- health.js
+|   |       |   `-- index.js
+|   |       `-- views/
+|   |           |-- index.ejs
+|   |           |-- admin/
+|   |           |   |-- config.ejs
+|   |           |   `-- dashboard.ejs
+|   |           |-- errors/
+|   |           |   `-- 404.ejs
+|   |           `-- layouts/
+|   |               |-- footer.ejs
+|   |               `-- header.ejs
+|   `-- shared/
+|       |-- README.md
+|       `-- src/
+|           |-- auth/
+|           |   `-- jwt.js
+|           |-- middlewares/
+|           |   `-- jwt-auth.js
+|           `-- server-factory.js
+|-- documentation/
+|   `-- 00-project-specs.md
+`-- scripts/
 ```
-
-│ ├── controllers/ # App-specific controllers
-│ ├── models/ # App-specific models
-│ ├── services/ # App-specific business logic
-│ └── views/ # App-specific views
-│
-├── tests/
-│ ├── unit/ # Pure function & factory tests
-│ ├── integration/ # supertest against createApp()
-│ ├── smoke/ # Boot createServer(), hit endpoints, shut down
-│ └── stress/ # Load testing (autocannon or similar)
-│
-└── documentation/
-└── 00-project-specs.md # This file
-
-````
 
 ---
 
@@ -403,11 +396,11 @@ All return HTTP 200 with `Content-Type: application/json`.
 
 ### 7.3 Admin
 
-| Route           | Method | Response          | Purpose                                                                                   |
-| --------------- | ------ | ----------------- | ----------------------------------------------------------------------------------------- |
-| `/admin`        | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, and memory usage for both app and API. |
-| `/admin/config` | GET    | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`). |
-| `/admin/api-health` | GET | JSON response | Dashboard AJAX passthrough to API readiness probe (`/readyz`). |
+| Route               | Method | Response          | Purpose                                                                                       |
+| ------------------- | ------ | ----------------- | --------------------------------------------------------------------------------------------- |
+| `/admin`            | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, and memory usage for both app and API. |
+| `/admin/config`     | GET    | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`).     |
+| `/admin/api-health` | GET    | JSON response     | Dashboard AJAX passthrough to API readiness probe (`/readyz`).                                |
 
 ---
 
@@ -446,7 +439,7 @@ EJS does not have a built-in layout/block system. We use `<%- include() %>` part
 <%- include('../layouts/header') %>
   <!-- page-specific content -->
 <%- include('../layouts/footer') %>
-````
+```
 
 ### 9.2 View Inventory
 
@@ -559,11 +552,12 @@ The FP-first architecture directly supports testability:
 
 ### 13.1 Production
 
-| Package   | Purpose              |
-| --------- | -------------------- |
-| `express` | HTTP framework       |
-| `ejs`     | View/template engine |
-| `dotenv`  | `.env` file loading  |
+| Package        | Purpose                                            |
+| -------------- | -------------------------------------------------- |
+| `express`      | HTTP framework                                     |
+| `ejs`          | View/template engine                               |
+| `dotenv`       | `.env` file loading                                |
+| `jsonwebtoken` | JWT signing/verification utilities (shared module) |
 
 ### 13.2 Development
 
