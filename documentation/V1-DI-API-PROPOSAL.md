@@ -60,6 +60,7 @@ type ServiceProvider<T = unknown> =
 
 type ServiceRegistrationOptions<T = unknown> = {
   lifecycle?: ServiceLifecycle; // default: 'singleton'
+  // v1 rule: dispose is only valid for singleton lifecycle.
   dispose?: (instance: T) => void | Promise<void>;
   metadata?: Record<string, unknown>; // optional observability/debugging metadata
 };
@@ -94,6 +95,7 @@ interface ServiceContainer {
 - `register` MUST throw `TypeError` if `name` is empty/non-string.
 - `register` MUST throw `ServiceAlreadyRegisteredError` if `name` already exists.
 - `options.lifecycle` defaults to `'singleton'`.
+- In v1, `dispose` is only supported for singleton services. Registering `dispose` with `lifecycle: 'transient'` MUST throw `TypeError`.
 
 #### Resolve
 
@@ -116,6 +118,8 @@ interface ServiceContainer {
 - Disposal order MUST be reverse creation order (LIFO) for predictable teardown.
 - If one dispose fails, container SHOULD continue disposing remaining instances and reject with aggregated error context.
 
+Disposal intentionally uses LIFO so dependents are torn down before dependencies. This differs from lifecycle hook registries (startup/shutdown) that execute FIFO for predictable sequential orchestration.
+
 ---
 
 ## 4) Error model (exact)
@@ -131,6 +135,8 @@ Required error classes:
 
 All MUST extend `Error` and include stable `.name` values.
 
+All container errors SHOULD be defined alongside the container implementation in `core/shared/src/service-container.js` and exported via `core/shared/index.js` so both app and api packages can consume them through `@glowing-fishstick/shared`.
+
 ---
 
 ## 5) Integration contract for app/api (v1)
@@ -145,6 +151,21 @@ No plugin signature changes.
 config.services: ServiceContainer
 ```
 
+Because both config factories freeze the returned config object, the service container MUST be created inside each config factory and included in the object literal before `Object.freeze(...)`.
+
+```js
+const logger = overrides.logger;
+const config = {
+  // ...existing fields...
+  services: overrides.services ?? createServiceContainer({ logger }),
+  ...overrides,
+};
+
+return Object.freeze(config);
+```
+
+`Object.freeze` is shallow, so `config.services` methods (`register`, `resolve`, `dispose`) remain callable; only replacement of the `services` reference is prevented.
+
 ### 5.2 Plugin usage contract
 
 Plugins MAY:
@@ -153,6 +174,8 @@ Plugins MAY:
 - resolve services in route handlers/middleware/startup hooks
 
 Plugins SHOULD avoid expensive initialization in request paths; use startup hooks for warmup when needed.
+
+Each service name MUST be owned by exactly one plugin (or one core registration point). If multiple plugins register the same service name, `ServiceAlreadyRegisteredError` is expected.
 
 ### 5.3 Lifecycle hooks
 
@@ -215,19 +238,20 @@ export function tasksPlugin(app, config) {
 6. Duplicate registration throws
 7. Unknown service throws
 8. Circular dependency throws with path
+9. `keys()` returns all registered service names regardless of initialization state
 
 ### 7.2 Lifecycle behavior
 
-9. `dispose()` runs disposers for initialized services only
-10. Disposal order is reverse creation order
-11. Dispose is idempotent
-12. Dispose continues after one disposer failure and returns aggregate error
+10. `dispose()` runs disposers for initialized services only
+11. Disposal order is reverse creation order
+12. Dispose is idempotent
+13. Dispose continues after one disposer failure and returns aggregate error
 
 ### 7.3 Integration behavior
 
-13. Plugin A registers service, Plugin B resolves service successfully
-14. Startup warmup via hooks executes before server listen
-15. Shutdown hook invokes container dispose
+14. Plugin A registers service, Plugin B resolves service successfully
+15. Startup warmup via hooks executes before server listen
+16. Shutdown hook invokes container dispose
 
 ---
 
@@ -243,9 +267,9 @@ export function tasksPlugin(app, config) {
 
 ## 9) Rollout plan
 
-1. Implement container in shared package internals
-2. Export `createServiceContainer` via package boundary
-3. Inject `config.services` by default in app/api config factories
+1. Implement container in `core/shared/src/service-container.js` and pass `logger` into `createServiceContainer({ logger })` so providers receive `ctx.logger`.
+2. Export `createServiceContainer` and all service container error classes via `core/shared/index.js` (`@glowing-fishstick/shared` boundary).
+3. In both app/api config factories, include `services: overrides.services ?? createServiceContainer({ logger })` in the config object literal before `Object.freeze(...)`.
 4. Add unit tests for container + integration tests for plugin composition
 5. Document usage examples in README, DEV_APP_README, and project specs
 
