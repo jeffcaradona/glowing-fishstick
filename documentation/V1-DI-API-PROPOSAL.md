@@ -1,7 +1,7 @@
 # v1 Dependency Injection (DI) API Proposal + Exact Specification
 
 > Status: Proposal (no runtime implementation yet)
-> Internal Version: v3
+> Internal Version: v4
 > 
 > Scope: Minimal, backward-compatible service container for app/api plugin ecosystems.
 
@@ -10,6 +10,7 @@
 
 ## Revision History
 
+- **v4**: Removed unreachable `ctx.config` from provider context, removed unspecified `strict` factory option from v1 surface, and specified aggregate-dispose `cause` semantics.
 - **v3**: Introduced explicit internal proposal versioning and added this revision history section for future review cycles.
 - **v2**: Incorporated review clarifications for frozen config integration, transient dispose restrictions, shared error-class location/exports, LIFO-vs-FIFO documentation, plugin ownership rules, logger threading, and `keys()` conformance coverage.
 - **v1**: Initial exact DI API specification draft.
@@ -46,7 +47,6 @@ This proposal keeps the existing plugin contract and introduces a small containe
 ```ts
 function createServiceContainer(options?: {
   logger?: { debug?: Function; info?: Function; warn?: Function; error?: Function };
-  strict?: boolean; // default true (throws on unknown/duplicate)
 }): ServiceContainer;
 ```
 
@@ -60,7 +60,6 @@ type ServiceLifecycle = 'singleton' | 'transient';
 type ServiceProviderContext = {
   resolve: (name: ServiceName) => Promise<unknown>;
   has: (name: ServiceName) => boolean;
-  config?: object;
   logger?: object;
 };
 
@@ -144,6 +143,8 @@ Required error classes:
 6. `ServiceAggregateDisposeError(errors: Array<{ name: string; cause: unknown }>)`
 
 All MUST extend `Error` and include stable `.name` values.
+
+For `ServiceAggregateDisposeError.errors`, each entry's `cause` MUST be the raw error thrown by the disposer (not a wrapped `ServiceDisposeError` instance).
 
 All container errors SHOULD be defined alongside the container implementation in `core/shared/src/service-container.js` and exported via `core/shared/index.js` so both app and api packages can consume them through `@glowing-fishstick/shared`.
 
@@ -267,6 +268,8 @@ export function tasksPlugin(app, config) {
 
 ## 8) Non-goals for v1
 
+- Config-injected `ctx.config` in provider context (providers should use closure capture in v1)
+- Configurable strict/non-strict container mode
 - Request-scoped containers
 - AsyncLocalStorage integration
 - Plugin dependency graph solver
