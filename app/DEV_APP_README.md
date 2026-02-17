@@ -86,8 +86,9 @@ Open your browser to:
 
 - **http://localhost:3000** — Landing page
 - **http://localhost:3000/healthz** — Health check
-- **http://localhost:3000/admin** — Admin dashboard
+- **http://localhost:3000/admin** — Admin dashboard (includes app + API memory usage)
 - **http://localhost:3000/admin/config** — Configuration viewer
+- **http://localhost:3000/admin/api-health** — App passthrough endpoint for API readiness checks
 - **http://localhost:3000/tasks** — Task manager (app plugin)
 
 ---
@@ -224,6 +225,7 @@ The app will automatically restart when you modify files (via `nodemon`).
 - Visit the routes in your browser
 - Check the admin dashboard at `/admin`
 - Verify configuration at `/admin/config`
+- Use the dashboard health button to trigger the API passthrough check at `/admin/api-health`
 - Test health endpoints at `/healthz`, `/readyz`, `/livez`
 
 ### 4. Run Tests

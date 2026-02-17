@@ -58,6 +58,8 @@ const DEFAULTS = Object.freeze({
   nodeEnv: 'development',
   appName: 'app',
   appVersion: '0.0.0',
+  apiHealthPath: '/readyz',
+  apiHealthTimeoutMs: 3000,
 });
 
 /**
@@ -77,11 +79,18 @@ const DEFAULTS = Object.freeze({
  * @returns {Readonly<AppConfig>} Frozen configuration object.
  */
 export function createConfig(overrides = {}, env = process.env) {
+  const defaultApiBaseUrl = `http://localhost:${Number(env.API_PORT ?? 3001)}`;
+
   const config = {
     port: Number(overrides.port ?? env.PORT ?? DEFAULTS.port),
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
     appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
+    apiBaseUrl: overrides.apiBaseUrl ?? env.API_BASE_URL ?? defaultApiBaseUrl,
+    apiHealthPath: overrides.apiHealthPath ?? env.API_HEALTH_PATH ?? DEFAULTS.apiHealthPath,
+    apiHealthTimeoutMs: Number(
+      overrides.apiHealthTimeoutMs ?? env.API_HEALTH_TIMEOUT_MS ?? DEFAULTS.apiHealthTimeoutMs,
+    ),
     ...overrides,
   };
 

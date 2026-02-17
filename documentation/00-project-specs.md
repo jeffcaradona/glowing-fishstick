@@ -405,8 +405,9 @@ All return HTTP 200 with `Content-Type: application/json`.
 
 | Route           | Method | Response          | Purpose                                                                                   |
 | --------------- | ------ | ----------------- | ----------------------------------------------------------------------------------------- |
-| `/admin`        | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, memory usage, placeholder cards.   |
+| `/admin`        | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, and memory usage for both app and API. |
 | `/admin/config` | GET    | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`). |
+| `/admin/api-health` | GET | JSON response | Dashboard AJAX passthrough to API readiness probe (`/readyz`). |
 
 ---
 
@@ -469,6 +470,9 @@ PORT=3000
 NODE_ENV=development
 APP_NAME=glowing-fishstick
 APP_VERSION=0.0.1
+API_BASE_URL=http://localhost:3001
+API_HEALTH_PATH=/readyz
+API_HEALTH_TIMEOUT_MS=3000
 ```
 
 ### 10.2 Config Layering
@@ -478,6 +482,12 @@ Priority (highest wins):
 1. `overrides` argument passed to `createConfig()` by the consuming app.
 2. Environment variables (`process.env` or injected `env` object).
 3. Built-in defaults.
+
+Additional passthrough-related config keys:
+
+- `apiBaseUrl` (from `API_BASE_URL`, defaults to `http://localhost:${API_PORT || 3001}`)
+- `apiHealthPath` (from `API_HEALTH_PATH`, default `/readyz`)
+- `apiHealthTimeoutMs` (from `API_HEALTH_TIMEOUT_MS`, default `3000`)
 
 ### 10.3 Sensitive Key Filtering
 
@@ -843,3 +853,26 @@ app.use(createRequestLogger(httpLogger, { generateRequestId: false }));
 {"level":30,"time":1739615025100,"name":"server","port":3000,"msg":"app listening on http://localhost:3000"}
 {"level":50,"time":1739615027000,"name":"server","err":{"type":"Error","message":"Connection refused"},"msg":"Error in startup hook"}
 ```
+
+## 19. API Module (`@glowing-fishstick/api`)
+
+The repository includes a JSON-first API package published as `@glowing-fishstick/api`.
+
+Public API:
+
+```js
+import { createApi, createApiConfig } from '@glowing-fishstick/api';
+import { createServer } from '@glowing-fishstick/shared';
+```
+
+`createApi(config, plugins = [])` composes:
+
+- Request ID middleware
+- Optional request logging middleware
+- Health routes (`/healthz`, `/readyz`, `/livez`)
+- Memory metrics route (`/metrics/memory`)
+- Shutdown-aware 503 guard for non-health traffic
+- Core JSON route (`/`) and plugin routes
+- JSON-first not-found and error handlers
+
+`createApiConfig(overrides = {}, env = process.env)` returns a frozen API config object with API defaults and env/override layering, following the same contract style as `createConfig` in `@glowing-fishstick/app`.

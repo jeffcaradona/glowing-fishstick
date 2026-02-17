@@ -17,6 +17,7 @@ export const appOverrides = {
   appVersion: '0.0.1',
   viewsDir: path.join(__dirname, '..', 'views'),
   publicDir: path.join(__dirname, '..', 'public'),
-  // port: 3000,  // Optional: override default port
-  // environment: 'development',  // Optional: override environment
+  // apiBaseUrl: 'http://localhost:3001',
+  // apiHealthPath: '/readyz',
+  // apiHealthTimeoutMs: 3000,
 };
