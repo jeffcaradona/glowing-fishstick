@@ -1,11 +1,77 @@
 <%- include('layouts/header', { appName }) %>
 
-  <h1>Tasks</h1>
-  <p>This is the <strong><%= appName %></strong> tasks page — provided by the app plugin.</p>
+<h1>Tasks</h1>
 
-  <div class="card">
-    <h3>No tasks yet</h3>
-    <p>Create your first task to get started.</p>
+<% if (error) { %>
+  <div class="card" style="border-left:4px solid #e53e3e;background:#fff5f5;margin-bottom:1rem;">
+    <p style="color:#e53e3e;margin:0;"><%= error %></p>
   </div>
+<% } %>
+
+<!-- ── Add task form ─────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <h3 style="margin-top:0;">New Task</h3>
+  <form method="POST" action="/tasks" style="display:flex;flex-direction:column;gap:0.5rem;">
+    <input
+      type="text"
+      name="title"
+      placeholder="Task title (required)"
+      required
+      style="padding:0.5rem;font-size:1rem;border:1px solid #ccc;border-radius:4px;"
+    />
+    <input
+      type="text"
+      name="description"
+      placeholder="Description (optional)"
+      style="padding:0.5rem;font-size:1rem;border:1px solid #ccc;border-radius:4px;"
+    />
+    <button type="submit" style="align-self:flex-start;padding:0.5rem 1.25rem;cursor:pointer;">
+      Add Task
+    </button>
+  </form>
+</div>
+
+<!-- ── Task list ─────────────────────────────────────────── -->
+<% if (!tasks || tasks.length === 0) { %>
+  <div class="card">
+    <p style="margin:0;color:#666;">No tasks yet — add one above.</p>
+  </div>
+<% } else { %>
+  <% tasks.forEach(function(task) { %>
+    <div class="card" style="display:flex;align-items:flex-start;gap:1rem;<%= task.done ? 'opacity:0.55;' : '' %>margin-bottom:0.75rem;">
+
+      <!-- Toggle done/undone -->
+      <form method="POST" action="/tasks/<%= task.id %>/toggle" style="margin:0;flex-shrink:0;">
+        <input type="hidden" name="done" value="<%= task.done ? 'false' : 'true' %>">
+        <button
+          type="submit"
+          title="<%= task.done ? 'Mark incomplete' : 'Mark complete' %>"
+          style="background:none;border:none;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;"
+        ><%= task.done ? '✅' : '⬜' %></button>
+      </form>
+
+      <!-- Task text -->
+      <div style="flex:1;min-width:0;">
+        <strong style="<%= task.done ? 'text-decoration:line-through;' : '' %>">
+          <%= task.title %>
+        </strong>
+        <% if (task.description) { %>
+          <p style="margin:0.2rem 0 0;color:#555;font-size:0.9rem;"><%= task.description %></p>
+        <% } %>
+        <small style="color:#999;font-size:0.8rem;"><%= task.created_at %></small>
+      </div>
+
+      <!-- Delete -->
+      <form method="POST" action="/tasks/<%= task.id %>/delete" style="margin:0;flex-shrink:0;">
+        <button
+          type="submit"
+          title="Delete task"
+          style="background:none;border:none;cursor:pointer;color:#e53e3e;font-size:1.1rem;padding:0;line-height:1;"
+        >✕</button>
+      </form>
+
+    </div>
+  <% }); %>
+<% } %>
 
 <%- include('layouts/footer') %>

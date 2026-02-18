@@ -4,6 +4,7 @@
  * onto the core app.
  */
 
+import { createTasksApiClient } from './services/tasks-api.js';
 import { taskRoutes } from './routes/router.js';
 
 /**
@@ -15,22 +16,19 @@ import { taskRoutes } from './routes/router.js';
 export function taskManagerApplicationPlugin(app, config) {
   const logger = config.logger;
 
-  // ── Optional: Register startup hook for initialization ─────────────
-  // Use app.registerStartupHook() to add async initialization tasks:
+  // HTTP client that talks to the tasks REST API (api/ workspace).
+  const tasksApiClient = createTasksApiClient(config);
+
   app.registerStartupHook(async () => {
-    logger?.info('Initializing task manager resources…');
-    // Connect to databases, initialize caches, etc.
+    logger?.info({ apiUrl: config.apiUrl }, 'Task manager connecting to API…');
   });
 
-  // ── Optional: Register shutdown hook for cleanup ──────────────────
-  // Use app.registerShutdownHook() to add async cleanup tasks:
   app.registerShutdownHook(async () => {
-    logger?.info('Cleaning up task manager resources…');
-    // Close database connections, clear caches, etc.
+    logger?.info('Task manager shutting down…');
   });
 
   // Register app nav link
   app.locals.navLinks.push({ label: 'Tasks', url: '/tasks' });
 
-  app.use(taskRoutes(config));
+  app.use(taskRoutes(config, tasksApiClient));
 }
