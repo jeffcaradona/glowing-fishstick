@@ -12,7 +12,8 @@
   "scripts": {
     "test": "npm run test:integration",
     "test:integration": "vitest run --reporter=verbose tests/integration",
-    "test:smoke": "vitest run --reporter=verbose tests/smoke --passWithNoTests"
+    "test:smoke": "vitest run --reporter=verbose tests/smoke --passWithNoTests",
+    "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-app vitest run --reporter=verbose tests/integration tests/smoke --passWithNoTests"
   },
   "files": [
     "index.js",

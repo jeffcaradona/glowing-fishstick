@@ -11,7 +11,8 @@
   },
   "scripts": {
     "test": "npm run test:unit",
-    "test:unit": "vitest run --reporter=verbose tests/unit"
+    "test:unit": "vitest run --reporter=verbose tests/unit",
+    "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-shared vitest run --reporter=verbose tests/unit"
   },
   "files": [
     "index.js",

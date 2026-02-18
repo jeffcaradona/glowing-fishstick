@@ -3,7 +3,17 @@
  * @description Configuration factory for the API module.
  */
 
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import { createServiceContainer } from '@glowing-fishstick/shared';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Read at startup (before the server accepts traffic) — sync I/O is safe here.
+const FRAMEWORK_VERSION = JSON.parse(
+  readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'),
+).version;
 
 const DEFAULTS = Object.freeze({
   port: 3001,
@@ -29,6 +39,7 @@ export function createApiConfig(overrides = {}, env = process.env) {
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
     appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
+    frameworkVersion: FRAMEWORK_VERSION,
     enableRequestLogging:
       overrides.enableRequestLogging ??
       (env.ENABLE_REQUEST_LOGGING

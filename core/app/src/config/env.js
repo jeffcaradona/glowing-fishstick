@@ -18,6 +18,12 @@ const SENSITIVE_PATTERN = /SECRET|KEY|PASSWORD|TOKEN|CREDENTIAL/i;
  * Repository root directory - discovered by traversing up looking for jsconfig.json.
  */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Read at startup (before the server accepts traffic) — sync I/O is safe here.
+const FRAMEWORK_VERSION = JSON.parse(
+  readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'),
+).version;
+
 const REPO_ROOT = (() => {
   let current = __dirname;
   const root = path.parse(current).root;
@@ -87,6 +93,7 @@ export function createConfig(overrides = {}, env = process.env) {
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
     appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
+    frameworkVersion: FRAMEWORK_VERSION,
     apiBaseUrl: overrides.apiBaseUrl ?? env.API_BASE_URL ?? defaultApiBaseUrl,
     apiHealthPath: overrides.apiHealthPath ?? env.API_HEALTH_PATH ?? DEFAULTS.apiHealthPath,
     apiHealthTimeoutMs: Number(

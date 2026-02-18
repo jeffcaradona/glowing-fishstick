@@ -11,6 +11,7 @@ import {
   normalizeRelativePathForDisplay,
   readApiMemoryUsage,
   readApiRuntime,
+  readApiVersion,
 } from './admin-controller.helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,27 +54,38 @@ export function createAdminController({
     async renderDashboard(req, res) {
       const timeoutMs = config.apiHealthTimeoutMs ?? 3000;
       const { controller, timeoutId } = createAbortControllerWithTimeout(timeoutMs);
+      const apiVersionUrl = new globalThis.URL('/', config.apiBaseUrl);
       const apiMemoryUrl = new globalThis.URL('/metrics/memory', config.apiBaseUrl);
       const apiRuntimeUrl = new globalThis.URL('/metrics/runtime', config.apiBaseUrl);
 
-      const [appMemoryResult, appRuntimeResult, apiMemoryResult, apiRuntimeResult] =
-        await Promise.allSettled([
-          Promise.resolve(process.memoryUsage()),
-          Promise.resolve({
-            nodeVersion: process.version,
-            uptime: formatUptime(process.uptime()),
-          }),
-          readApiMemoryUsage(
-            fetchImpl,
-            apiMemoryUrl,
-            buildApiRequestOptions(req, { signal: controller.signal }),
-          ),
-          readApiRuntime(
-            fetchImpl,
-            apiRuntimeUrl,
-            buildApiRequestOptions(req, { signal: controller.signal }),
-          ),
-        ]);
+      const [
+        appMemoryResult,
+        appRuntimeResult,
+        apiVersionResult,
+        apiMemoryResult,
+        apiRuntimeResult,
+      ] = await Promise.allSettled([
+        Promise.resolve(process.memoryUsage()),
+        Promise.resolve({
+          nodeVersion: process.version,
+          uptime: formatUptime(process.uptime()),
+        }),
+        readApiVersion(
+          fetchImpl,
+          apiVersionUrl,
+          buildApiRequestOptions(req, { signal: controller.signal }),
+        ),
+        readApiMemoryUsage(
+          fetchImpl,
+          apiMemoryUrl,
+          buildApiRequestOptions(req, { signal: controller.signal }),
+        ),
+        readApiRuntime(
+          fetchImpl,
+          apiRuntimeUrl,
+          buildApiRequestOptions(req, { signal: controller.signal }),
+        ),
+      ]);
 
       clearTimeout(timeoutId);
 
@@ -85,9 +97,22 @@ export function createAdminController({
         appRuntimeResult.status === 'fulfilled'
           ? appRuntimeResult.value
           : { nodeVersion: process.version, uptime: 'Unavailable' };
+      const apiVersionData = apiVersionResult.status === 'fulfilled' ? apiVersionResult.value : null;
+      const apiVersion = apiVersionData?.version ?? null;
+      const apiFrameworkVersion = apiVersionData?.frameworkVersion ?? null;
       const apiMemoryUsage = apiMemoryResult.status === 'fulfilled' ? apiMemoryResult.value : null;
       const apiRuntime = apiRuntimeResult.status === 'fulfilled' ? apiRuntimeResult.value : null;
 
+      if (apiVersionResult.status === 'rejected') {
+        logger?.warn(
+          {
+            type: 'api.version.fetch',
+            err: apiVersionResult.reason,
+            upstream: apiVersionUrl.toString(),
+          },
+          'Failed to fetch API version for admin dashboard',
+        );
+      }
       if (apiMemoryResult.status === 'rejected') {
         logger?.warn(
           {
@@ -112,7 +137,10 @@ export function createAdminController({
       res.render('admin/dashboard', {
         appName: config.appName,
         appVersion: config.appVersion,
+        frameworkVersion: config.frameworkVersion,
         appRuntime,
+        apiVersion,
+        apiFrameworkVersion,
         apiRuntime,
         appMemoryUsage,
         apiMemoryUsage,

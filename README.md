@@ -48,6 +48,12 @@ npm install @glowing-fishstick/app
 npm install @glowing-fishstick/api
 ```
 
+If you import shared helpers directly (for example `formatUptime`, JWT helpers, or logger utilities), also install:
+
+```bash
+npm install @glowing-fishstick/shared
+```
+
 **Requirements:**
 
 - Node.js >= 22

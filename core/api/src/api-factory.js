@@ -7,6 +7,7 @@ import {
   createRequestLogger,
 } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
+import { metricsRoutes } from './routes/metrics.js';
 import { indexRoutes } from './routes/index.js';
 import { notFoundHandler, errorHandler } from './middlewares/error-handler.js';
 
@@ -55,6 +56,7 @@ export function createApi(config, plugins = []) {
 
   // Health checks run before shutdown gate.
   app.use(healthRoutes(app));
+  app.use(metricsRoutes(config));
 
   // Reject new non-health traffic during shutdown.
   app.use((_req, res, next) => {

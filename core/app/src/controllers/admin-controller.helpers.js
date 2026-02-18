@@ -47,6 +47,24 @@ export async function readApiMemoryUsage(fetchImpl, apiMemoryUrl, requestOptions
 
 /**
  * @param {(input: string | URL, init?: object) => Promise<Response>} fetchImpl
+ * @param {URL} apiRootUrl
+ * @param {object} requestOptions
+ * @returns {Promise<{version: string, frameworkVersion: string}>}
+ */
+export async function readApiVersion(fetchImpl, apiRootUrl, requestOptions) {
+  const response = await fetchImpl(apiRootUrl, requestOptions);
+  if (!response.ok) {
+    throw new Error(`API root endpoint failed with status ${response.status}`);
+  }
+  const payload = await response.json();
+  if (typeof payload?.version !== 'string' || typeof payload?.frameworkVersion !== 'string') {
+    throw new Error('API root payload missing version fields');
+  }
+  return { version: payload.version, frameworkVersion: payload.frameworkVersion };
+}
+
+/**
+ * @param {(input: string | URL, init?: object) => Promise<Response>} fetchImpl
  * @param {URL} apiRuntimeUrl
  * @param {object} requestOptions
  * @returns {Promise<{nodeVersion: string, uptime: string}>}
