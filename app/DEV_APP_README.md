@@ -511,10 +511,10 @@ router.get('/tasks/:id', (req, res) => {
 2. **Create the view** in `app/src/views/tasks/detail.ejs`:
 
 ```ejs
-<%- include('../../../src/views/layouts/header') %>
+<%- include('layouts/header', { appName }) %>
   <h1>Task Details</h1>
   <p>Task ID: <%= taskId %></p>
-<%- include('../../../src/views/layouts/footer') %>
+<%- include('layouts/footer') %>
 ```
 
 3. **Test it** by visiting `http://localhost:3000/tasks/123`
@@ -622,7 +622,7 @@ npm run dev:app  # Not start:app
 
 - Core views: `src/views/`
 - App views: `app/src/views/`
-- Use relative includes: `<%- include('../../../src/views/layouts/header') %>`
+- Use shared layout includes from the active views chain: `<%- include('layouts/header', { appName }) %>`
 
 ---
 
@@ -633,7 +633,7 @@ You can test the app just like you would test any Express app:
 ```js
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { server, close } from './app/src/server.js';
+import { server, close } from './src/server.js';
 
 describe('App', () => {
   afterAll(async () => {

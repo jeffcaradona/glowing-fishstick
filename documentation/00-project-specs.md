@@ -58,7 +58,12 @@ The app package public entry point is `core/app/index.js` and re-exports the fol
 ```js
 // core/app/index.js
 export { createApp } from './src/app-factory.js';
-export { createServer, createLogger, createRequestLogger } from '@glowing-fishstick/shared';
+export {
+  createServer,
+  createLogger,
+  createRequestLogger,
+  createRequestIdMiddleware,
+} from '@glowing-fishstick/shared';
 export { createConfig, filterSensitiveKeys } from './src/config/env.js';
 export {
   createAppError,
@@ -402,19 +407,30 @@ glowing-fishstick/
 |       |-- server.js
 |       |-- config/
 |       |   `-- env.js
-|       |-- controllers/
-|       |-- models/
 |       |-- routes/
 |       |   `-- router.js
-|       |-- utils/
+|       |-- public/
+|       |   `-- js/
+|       |       `-- tasks/
+|       |           `-- list.js
 |       `-- views/
-|           |-- index.ejs
 |           `-- tasks/
 |               `-- list.ejs
+|-- api/
+|   |-- package.json
+|   `-- src/
+|       |-- server.js
+|       `-- config/
+|           `-- env.js
 |-- core/
 |   |-- app/
 |   |   |-- index.js
 |   |   |-- package.json
+|   |   |-- tests/
+|   |   |   `-- integration/
+|   |   |       |-- admin-routes.test.js
+|   |   |       |-- graceful-shutdown.test.js
+|   |   |       `-- startup-hook-ordering.test.js
 |   |   `-- src/
 |   |       |-- app-factory.js
 |   |       |-- config/
@@ -443,17 +459,50 @@ glowing-fishstick/
 |   |           `-- layouts/
 |   |               |-- footer.ejs
 |   |               `-- header.ejs
+|   |-- api/
+|   |   |-- index.js
+|   |   |-- package.json
+|   |   |-- tests/
+|   |   |   `-- integration/
+|   |   |       |-- api-factory.test.js
+|   |   |       `-- config.test.js
+|   |   `-- src/
+|   |       |-- api-factory.js
+|   |       |-- config/
+|   |       |   `-- env.js
+|   |       |-- middlewares/
+|   |       |   `-- error-handler.js
+|   |       `-- routes/
+|   |           |-- health.js
+|   |           `-- index.js
 |   `-- shared/
-|       |-- README.md
+|       |-- index.js
+|       |-- package.json
+|       |-- tests/
+|       |   `-- unit/
+|       |       |-- formatters.test.js
+|       |       |-- jwt.test.js
+|       |       |-- service-container.test.js
+|       |       `-- service-container-integration.test.js
 |       `-- src/
+|           |-- server-factory.js
+|           |-- hook-registry.js
+|           |-- registry-store.js
+|           |-- logger.js
+|           |-- request-id.js
+|           |-- service-container.js
 |           |-- auth/
 |           |   `-- jwt.js
 |           |-- middlewares/
 |           |   `-- jwt-auth.js
-|           `-- server-factory.js
+|           `-- utils/
+|               `-- formatters.js
 |-- documentation/
-|   `-- 00-project-specs.md
-`-- scripts/
+|   |-- 00-project-specs.md
+|   `-- 99-potential-gaps.md
+`-- template/
+    |-- app/
+    `-- api/
 ```
 
 ---
@@ -611,12 +660,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level           | Directory                       | What's Tested                                                                                                  | Tools                               |
-| --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Unit**        | `core/shared/tests/unit/`       | Pure shared utilities and helper functions (e.g., formatters).                                                 | `vitest` or `node:test`             |
-| **Integration** | `core/app/tests/integration/`   | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, test runner            |
-| **Smoke**       | `core/app/tests/smoke/`         | `createServer()` booted on a random port — hit health endpoints, verify responses, graceful shutdown.          | test runner, `fetch` or `supertest` |
-| **Stress**      | `tests/stress/` (optional root) | Cross-module load testing against a running instance. Validates performance and stability under concurrency.   | `autocannon` or similar             |
+| Level           | Directory                          | What's Tested                                                                                                  | Tools                               |
+| --------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Unit**        | `core/shared/tests/unit/`          | Pure shared utilities and helper functions (e.g., formatters, JWT, service container).                         | `vitest`                            |
+| **Integration** | `core/app/tests/integration/`      | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest`               |
+| **Integration** | `core/api/tests/integration/`      | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest`               |
+| **Stress**      | `autocannon` (optional, dev tool)  | Load testing against a running instance. Validates performance and stability under concurrency.                 | `autocannon`                        |
 
 ### 12.2 Testability by Design
 
@@ -659,19 +708,22 @@ The FP-first architecture directly supports testability:
 {
   "start:app": "npm run start --workspace app",
   "dev:app": "npm run dev --workspace app",
+  "start:api": "npm run start --workspace api",
+  "dev:api": "npm run dev --workspace api",
   "test": "npm run test:all",
   "test:unit": "npm run test:unit --workspace core/shared",
   "test:integration": "npm run test:integration --workspace core/app",
   "test:smoke": "npm run test:smoke --workspace core/app",
-  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app",
+  "test:api": "npm run test --workspace core/api",
+  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api",
   "lint": "eslint .",
   "format": "prettier --write ."
 }
 ```
 
-**App (`app/package.json`):**
+**App (`app/package.json`) and API (`api/package.json`):**
 
-The app has its own `package.json` and can be run/tested independently.
+Each consumer has its own `package.json` and can be run/tested independently.
 
 ---
 
@@ -696,25 +748,43 @@ The `app/` directory simulates how a consuming application would use the core mo
 ```js
 // app/src/server.js
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
-import { task_managerPlugin } from './app.js';
+import { createLogger } from '@glowing-fishstick/shared';
+import { taskManagerApplicationPlugin } from './app.js';
+import { appOverrides } from './config/env.js';
 
-const config = createConfig({
-  appName: 'task_manager',
-  appVersion: '1.0.0',
+const logger = createLogger({ name: 'task-manager' });
+const config = createConfig({ ...appOverrides, logger });
+const app = createApp(config, [taskManagerApplicationPlugin]);
+const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
+
+registerStartupHook(async () => {
+  logger.info('Entry-point startup initialization…');
 });
 
-const app = createApp(config, [task_managerPlugin]);
-const { server, close } = createServer(app, config);
+registerShutdownHook(async () => {
+  logger.info('Entry-point shutdown cleanup…');
+});
+
+export { server, close };
 ```
 
 **App plugin (custom routes):**
 
 ```js
 // app/src/app.js
-export function task_managerPlugin(app, config) {
-  app.get('/tasks', (req, res) => {
-    res.render('tasks/list', { appName: config.appName });
+export function taskManagerApplicationPlugin(app, config) {
+  const logger = config.logger;
+
+  app.registerStartupHook(async () => {
+    logger?.info('Initializing task manager resources…');
   });
+
+  app.registerShutdownHook(async () => {
+    logger?.info('Cleaning up task manager resources…');
+  });
+
+  app.locals.navLinks.push({ label: 'Tasks', url: '/tasks' });
+  app.use(taskRoutes(config));
 }
 ```
 

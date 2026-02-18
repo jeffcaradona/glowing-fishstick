@@ -42,6 +42,10 @@
     "test:smoke": "npm run test:smoke --workspace core/app",
     "test:api": "npm run test --workspace core/api",
     "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api",
+    "coverage:shared": "npm run coverage --workspace core/shared",
+    "coverage:app": "npm run coverage --workspace core/app",
+    "coverage:api": "npm run coverage --workspace core/api",
+    "coverage:scan": "npm run coverage:shared && npm run coverage:app && npm run coverage:api",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

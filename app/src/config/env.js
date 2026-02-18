@@ -5,8 +5,14 @@
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Read at startup (before the server accepts traffic) — sync I/O is safe here.
+const { version } = JSON.parse(
+  readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8'),
+);
 
 /**
  * Overrides merged into the core config via createConfig().
@@ -15,7 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 export const appOverrides = {
   appName: 'task_manager',
-  appVersion: '1.0.0',
+  appVersion: version,
   viewsDir: path.join(__dirname, '..', 'views'),
   publicDir: path.join(__dirname, '..', 'public'),
 };

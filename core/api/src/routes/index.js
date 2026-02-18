@@ -18,27 +18,8 @@ export function indexRoutes(config) {
     res.json({
       name: config.appName,
       version: config.appVersion,
+      frameworkVersion: config.frameworkVersion,
       status: 'ok',
-    });
-  });
-
-  router.get('/metrics/memory', (_req, res) => {
-    const memoryUsage = process.memoryUsage();
-    res.json({
-      status: 'ok',
-      memoryUsage: {
-        rss: memoryUsage.rss,
-        heapUsed: memoryUsage.heapUsed,
-        heapTotal: memoryUsage.heapTotal,
-      },
-    });
-  });
-
-  router.get('/metrics/runtime', (_req, res) => {
-    res.json({
-      status: 'ok',
-      nodeVersion: process.version,
-      uptimeSeconds: process.uptime(),
     });
   });
 
