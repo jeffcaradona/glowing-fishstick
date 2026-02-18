@@ -132,16 +132,27 @@ Factory function that starts an HTTP server and sets up graceful shutdown handle
 | `app` | `Express` | Express app instance from `createApp()` |
 | `config` | `object` | Configuration object (reads `port`) |
 
-**Returns:** `{ server, close }`
+**Returns:** `{ server, close, registerStartupHook, registerShutdownHook }`
 | Property | Type | Description |
 |---|---|---|
 | `server` | `http.Server` | Node.js HTTP server instance |
 | `close` | `() => Promise<void>` | Graceful shutdown function |
+| `registerStartupHook` | `(hook: () => Promise<void>) => void` | Register an async hook to run before the server begins listening (FIFO order) |
+| `registerShutdownHook` | `(hook: () => Promise<void>) => void` | Register an async hook to run during graceful shutdown (FIFO order) |
 
 **Example:**
 
 ```js
-const { server, close } = createServer(app, config);
+const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);
+
+// Register hooks after createServer() returns, before startup begins
+registerStartupHook(async () => {
+  // Deployment-specific initialization
+});
+
+registerShutdownHook(async () => {
+  // Deployment-specific cleanup
+});
 
 // Graceful shutdown on SIGTERM/SIGINT is automatic
 // Or manually close:
