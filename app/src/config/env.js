@@ -24,4 +24,6 @@ export const appOverrides = {
   appVersion: version,
   viewsDir: path.join(__dirname, '..', 'views'),
   publicDir: path.join(__dirname, '..', 'public'),
+  /** Base URL of the tasks REST API (api/ workspace). Override via API_URL env var. */
+  apiUrl: process.env.API_URL ?? 'http://localhost:3001',
 };
