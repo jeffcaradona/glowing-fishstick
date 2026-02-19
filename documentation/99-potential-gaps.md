@@ -27,14 +27,14 @@ This document tracks potential server composability features and architectural g
 - **Issue**: `createServer()` IIFE executed synchronously during factory call, before consumer code could register hooks.
 - **Solution**: Wrap startup sequence in `setImmediate()` to defer to next event loop tick, guaranteeing consumer hook registration happens first.
 - **Impact**: Lifecycle API contract now reliable; plugins and consumers can depend on hook registration order without race conditions.
-- **Docs**: [P0-STARTUP-HOOK-ORDERING-FIX.md](./P0-STARTUP-HOOK-ORDERING-FIX.md)
+- **Docs**: [P0-STARTUP-HOOK-ORDERING-FIX.md](./archive/2026-02/P0-STARTUP-HOOK-ORDERING-FIX.md)
 
 **Fix Details (P1 — Private Lifecycle Registries)**:
 
 - **Issue**: Registries exposed via `app._startupRegistry` / `app._shutdownRegistry` underscore fields — externally mutable.
 - **Solution**: Replace underscore fields with a module-level `WeakMap` in `registry-store.js`. Only internal infrastructure can access registries.
 - **Impact**: True language-level privacy; external code cannot access or mutate registries. Auto-garbage-collection via WeakMap.
-- **Docs**: [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./P1-PRIVATE-LIFECYCLE-REGISTRITES.md)
+- **Docs**: [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./archive/2026-02/P1-PRIVATE-LIFECYCLE-REGISTRITES.md)
 
 **Benefit**: Cleaner API contract, prevents plugin bugs, keeps `app.locals` focused on observable state, reliable startup hook execution order, language-enforced registry privacy.
 

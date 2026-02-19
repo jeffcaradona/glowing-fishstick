@@ -47,14 +47,14 @@ Successfully implemented a Pino-based logger system across the glowing-fishstick
 
 ### Documentation Updates
 
-| Document                                                                                      | Changes                                                                                                  |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [core/shared/README.md](../core/shared/README.md)                                             | Added Logger section with features, configuration, and HTTP middleware examples                          |
-| [core/app/README.md](../core/app/README.md)                                                   | Updated to reflect logger re-exports                                                                     |
-| [app/DEV_APP_README.md](../app/DEV_APP_README.md)                                             | Added "Using the Logger" section with structured logging examples, replaced console examples with logger |
-| [documentation/00-project-specs.md](../documentation/00-project-specs.md)                     | Added Section 18 "Logger Implementation" with full API documentation, moved from "Future Considerations" |
-| [documentation/01-application-development.md](../documentation/01-application-development.md) | Updated all plugin examples to use logger instead of console                                             |
-| [documentation/P3-LOGGER-IMPLEMENTATION.md](P3-LOGGER-IMPLEMENTATION.md)                      | Created comprehensive implementation plan document                                                       |
+| Document                                                                                           | Changes                                                                                                  |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [core/shared/README.md](../core/shared/README.md)                                                  | Added Logger section with features, configuration, and HTTP middleware examples                          |
+| [core/app/README.md](../core/app/README.md)                                                        | Updated to reflect logger re-exports                                                                     |
+| [app/DEV_APP_README.md](../app/DEV_APP_README.md)                                                  | Added "Using the Logger" section with structured logging examples, replaced console examples with logger |
+| [documentation/00-project-specs.md](../documentation/00-project-specs.md)                          | Added Section 18 "Logger Implementation" with full API documentation, moved from "Future Considerations" |
+| [documentation/01-application-development.md](../documentation/01-application-development.md)      | Updated all plugin examples to use logger instead of console                                             |
+| [documentation/archive/2026-02/P3-LOGGER-IMPLEMENTATION.md](./2026-02/P3-LOGGER-IMPLEMENTATION.md) | Created comprehensive implementation plan document                                                       |
 
 ## Implementation Highlights
 
@@ -303,7 +303,7 @@ Existing consumer apps continue working without changes.
 
 ## References
 
-- [Implementation Plan](P3-LOGGER-IMPLEMENTATION.md)
+- [Implementation Plan](./2026-02/P3-LOGGER-IMPLEMENTATION.md)
 - [Pino Documentation](https://getpino.io/)
 - [Project Specs - Logger Implementation](00-project-specs.md#18-logger-implementation)
 - [Application Development Guide](01-application-development.md)
