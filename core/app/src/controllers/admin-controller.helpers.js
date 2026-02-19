@@ -58,7 +58,7 @@ export async function readApiVersion(fetchImpl, apiRootUrl, requestOptions) {
   }
   const payload = await response.json();
   if (typeof payload?.version !== 'string' || typeof payload?.frameworkVersion !== 'string') {
-    throw new Error('API root payload missing version fields');
+    throw new TypeError('API root payload missing version fields');
   }
   return { version: payload.version, frameworkVersion: payload.frameworkVersion };
 }
