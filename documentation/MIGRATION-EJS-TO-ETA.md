@@ -1,197 +1,149 @@
-# Migration Plan: EJS → Eta (v0.1.0)
+# Migration Plan: EJS to Eta (v0.1.0)
 
-**Status:** Planned  
-**Version Target:** 0.1.0 (Breaking Change)  
-**Reason:** Eliminate EJS transitive dependency on `jake` which carries ReDoS vulnerability in `minimatch`
+**Status:** Draft for pre-approval review  
+**Version Target:** 0.1.0 (breaking change)  
+**Last Reviewed:** 2026-02-19
 
-## Problem Statement
+## Why This Migration Exists
 
-EJS v4.0.1 depends on `jake` (build tool), which pulls in `filelist` → `minimatch` (<10.2.1). The `minimatch` package has a ReDoS vulnerability (GHSA-3ppc-4f35-3m26) that cannot be resolved without upgrading EJS to v3.0.2 (breaking change) or replacing the template engine entirely.
+`npm audit` currently reports a high-severity chain through EJS:
 
-**Current Vulnerability Chain:**
+```text
+ejs@4.0.1 -> jake -> filelist -> minimatch (<10.2.1)
 ```
-ejs@4.0.1 → jake → filelist → minimatch (<10.2.1) [VULNERABLE]
-```
 
-**Solution:** Replace EJS with Eta, a smaller, faster, well-maintained alternative with identical template syntax.
+Advisory: GHSA-3ppc-4f35-3m26 (ReDoS in minimatch).
 
-## Template Syntax Comparison
+In this repository, `npm audit` reports no non-breaking fix path for this chain. Replacing EJS with Eta avoids the transitive dependency on `jake/filelist/minimatch`.
 
-| Feature | EJS | Eta | Migration |
-|---------|-----|-----|-----------|
-| Output | `<%= var %>` | `<%= var %>` | ✅ No change |
-| HTML escape | `<%- html %>` | `<%~ html %>` | **Update** |
-| Logic (if/for) | `<% if () {} %>` | `<% if () {} %>` | ✅ No change |
-| Include | `<%- include('file') %>` | `<%= include('file') %>` | **Update** |
-| Comments | `<%# comment %>` | `<%# comment %>` | ✅ No change |
-| Include with data | `include(path, obj)` | `include(path, obj)` | ✅ No change |
+## Current Repository Reality (as of 2026-02-19)
 
-## Implementation Phases
+- Runtime is still EJS in `core/app/src/app-factory.js` (`app.set('view engine', 'ejs')`).
+- Templates are still `.ejs` under:
+  - `core/app/src/views/`
+  - `app/src/views/`
+  - `template/app/src/views/`
+- `core/app/src/engines/eta-engine.js` exists but is not wired into `createApp`.
+- Existing Eta engine code currently uses sync filesystem APIs (`existsSync`, `readFileSync`) in render/include paths.
 
-### Phase 1: Dependency & Engine Configuration
+## Pre-Approval Corrections to the Original Plan
 
-**Files to Update:**
+1. Include syntax must not be escaped:
+   - Use `Eta` raw output for includes: `<%~ include('path') %>`
+   - Do **not** use `<%= include('path') %>` when `autoEscape: true` (it may escape HTML output).
+2. File extension migration is required:
+   - Rename `.ejs` templates to `.eta`.
+   - Update any references in docs/examples accordingly.
+3. Express integration steps were incomplete:
+   - Register Eta engine via `app.engine('eta', createEtaEngine(viewDirs))`.
+   - Set `app.set('view engine', 'eta')`.
+   - Keep multi-directory view fallback behavior consistent with current EJS behavior.
+4. Event-loop safety must be part of migration scope:
+   - Replace sync FS calls in request-render paths with async/promise APIs before approval.
 
-1. **core/app/package.json**
-   - Remove: `"ejs": "^4.0.1"`
-   - Add: `"eta": "^3.4.0"`
-   - Update `@glowing-fishstick/shared` dependency version to `0.1.0`
+## Migration Phases
 
-2. **core/app/src/app-factory.js**
-   - Line 59: Change `app.set('view engine', 'ejs')` → `app.set('view engine', 'eta')`
-   - Line 61: Update comment from "prevent EJS memory leak" → "Eta compiles templates once"
-   - Update JSDoc comment (line 31) from "EJS" to "Eta"
+## Phase 1: Dependency and Engine Wiring
 
-### Phase 2: Template File Conversions
-
-**Core Templates (6 files in `core/app/src/views/`):**
-
-1. **index.ejs**
-   - Line 1: `<%- include('layouts/header', { appName }) %>` → `<%= include('layouts/header', { appName }) %>`
-   - Line 20: `<%- include('layouts/footer') %>` → `<%= include('layouts/footer') %>`
-
-2. **admin/dashboard.ejs**
-   - Line 1: `<%- include('../layouts/header', { appName, scripts }) %>` → `<%= include('../layouts/header', { appName, scripts }) %>`
-   - Line 75: `<%- include('../layouts/footer') %>` → `<%= include('../layouts/footer') %>`
-
-3. **admin/config.ejs**
-   - All `<%- include(...) %>` → `<%= include(...) %>`
-
-4. **errors/404.ejs**
-   - All `<%- include(...) %>` → `<%= include(...) %>`
-
-5. **layouts/header.ejs**
-   - All `<%- include(...) %>` → `<%= include(...) %>`
-
-6. **layouts/footer.ejs**
-   - No changes needed (typically no includes)
-
-**Consumer Templates (2 files in `app/src/views/`):**
-
-1. **index.ejs**
-   - Update all `<%- include(...) %>` → `<%= include(...) %>`
-
-2. **tasks/list.ejs**
-   - Update all `<%- include(...) %>` → `<%= include(...) %>`
-
-**Template Project (3 files in `template/app/src/views/`):**
-
-1. **my-feature.ejs**
-   - Update all `<%- include(...) %>` → `<%= include(...) %>`
-
-2. **layouts/header.ejs**
-   - Update all `<%- include(...) %>` → `<%= include(...) %>`
-
-3. **layouts/footer.ejs**
-   - Update all `<%- include(...) %>` → `<%= include(...) %>`
-
-### Phase 3: Development Configuration
-
-**Update nodemon watch extensions (remove `.ejs` monitoring if desired):**
-
-1. **app/package.json** - dev script
-   - Change `--ext js,mjs,cjs,json,ejs` → `--ext js,mjs,cjs,json,eta` (optional)
-
-2. **api/package.json** - dev script
-   - Change `--ext js,mjs,cjs,json,ejs` → `--ext js,mjs,cjs,json,eta` (optional)
-
-3. **template/app/package.json** - dev script
-   - Change `--ext js,mjs,cjs,json,ejs` → `--ext js,mjs,cjs,json,eta` (optional)
-
-4. **template/api/package.json** - dev script
-   - Change `--ext js,mjs,cjs,json,ejs` → `--ext js,mjs,cjs,json,eta` (optional)
-
-### Phase 4: Version Bumps
-
-**All package.json files:**
-
-Update version from `0.0.2` to `0.1.0`:
-
-- `package.json` (root)
+Files:
 - `core/app/package.json`
-- `core/shared/package.json`
-- `core/api/package.json`
+- `core/app/src/app-factory.js`
+- `core/app/src/engines/eta-engine.js`
+
+Required changes:
+- Replace `ejs` dependency with `eta`.
+- Wire custom engine:
+  - import `createEtaEngine`
+  - `app.engine('eta', createEtaEngine(viewDirs))`
+  - `app.set('view engine', 'eta')`
+- Preserve view directory precedence (consumer first, core fallback).
+- Prefer Eta's built-in multi-view resolution (`views` as array) before maintaining custom include-path override logic.
+- Remove sync filesystem calls from Eta engine hot path.
+
+## Phase 2: Template Conversion
+
+Rename all template files from `.ejs` to `.eta`:
+
+- `core/app/src/views/index.ejs`
+- `core/app/src/views/admin/dashboard.ejs`
+- `core/app/src/views/admin/config.ejs`
+- `core/app/src/views/errors/404.ejs`
+- `core/app/src/views/layouts/header.ejs`
+- `core/app/src/views/layouts/footer.ejs`
+- `app/src/views/index.ejs`
+- `app/src/views/tasks/list.ejs`
+- `template/app/src/views/my-feature.ejs`
+- `template/app/src/views/layouts/header.ejs`
+- `template/app/src/views/layouts/footer.ejs`
+
+Template syntax updates:
+- Include partials: `<%- include(...) %>` -> `<%~ include(...) %>`
+- Escaped output remains `<%= ... %>`
+- Raw HTML output remains raw form (`<%~ ... %>`)
+
+## Phase 3: Dev Workflow Updates
+
+Files:
 - `app/package.json`
 - `api/package.json`
-- `template/app/package.json` (if versioned)
-- `template/api/package.json` (if versioned)
+- `template/app/package.json`
+- `template/api/package.json`
 
-### Phase 5: Documentation Updates
+Update nodemon extension watch lists to include `.eta` (and optionally keep `.ejs` during transition window).
 
-1. **README.md**
-   - Line 123: Update "EJS view engine with layouts" → "Eta view engine with layouts"
-   - Line 511: Update section title from "Customizing EJS templates" → "Customizing Eta templates"
-   - Line 528: Update "module uses EJS" → "module uses Eta"
-   - Line 530+: Update code block syntax from EJS to Eta (include statements)
+## Phase 4: Documentation Sync (Required by AGENTS.md)
 
-2. **core/app/README.md**
-   - Update tech stack reference from "EJS" to "Eta"
+Update all canonical docs for consistency:
 
-3. **documentation/00-project-specs.md**
-   - Section 9 (Views): Comprehensive rewrite
-     - Line 559: `## 9. Views (Eta)` (change from EJS)
-     - Line 561: Update view engine description to Eta
-     - Line 567: Update layout system explanation
-     - Line 570: Update code block examples with Eta syntax
-     - Line 579-584: Update view list (no structural changes, just variable names)
+- `README.md`
+- `app/DEV_APP_README.md`
+- `documentation/00-project-specs.md`
+- `documentation/99-potential-gaps.md` (status wording if implementation state changes)
+- Any package README that states EJS behavior (for example `template/app/README.md`)
 
-4. **CLAUDE.md**
-   - Line 605: Update tech stack from "EJS (templating)" to "Eta (templating)"
+## Phase 5: Versioning
 
-5. **app/DEV_APP_README.md**
-   - Line 48: Update comment from "EJS templates" to "Eta templates"
-   - Line 511: Update example section header
-   - Line 513+: Update code example with Eta syntax
+Planned version bump for breaking change: `0.0.2` -> `0.1.0` in versioned workspace packages.
 
-## Validation Steps
+## Validation Checklist
 
-### Pre-Migration Testing
+Pre-migration baseline:
+
 ```bash
-npm test:all                    # Baseline test coverage
-npm audit                       # Verify vulnerabilities exist
+npm test:all
+npm audit --json
 ```
 
-### Post-Migration Testing
+Post-migration checks:
+
 ```bash
-npm install                     # Install Eta
-npm test:all                    # Should pass all tests
-npm audit                       # Should show 0 high vulnerabilities
-npm run start:app               # Verify app loads
-npm run start:api               # Verify API loads
-npm run dev:app                 # Verify dev auto-reload works
+npm install
+npm test:all
+npm audit --json
+npm run start:app
+npm run start:api
+npm run dev:app
 ```
 
-### Manual Smoke Tests
-- [ ] Visit `/` - landing page renders correctly
-- [ ] Visit `/admin` - dashboard renders with memory stats
-- [ ] Visit `/admin/config` - config table displays
-- [ ] Visit `/healthz` - JSON response works
-- [ ] 404 error page renders correctly
-- [ ] Verify no console errors in browser
+Doc consistency checks:
 
-## Risk Assessment
+```bash
+rg -n "\\.ejs|EJS|<%- include\\(" README.md app/DEV_APP_README.md documentation/*.md template/app/README.md
+rg -n "view engine" core/app/src/app-factory.js documentation/*.md
+```
 
-| Risk | Severity | Mitigation |
-|------|----------|-----------|
-| Template syntax errors | Low | Systematic conversion with test coverage |
-| Include path issues | Low | Same include mechanism, only syntax changes |
-| Performance differences | Low | Eta is generally faster than EJS |
-| Breaking change | High | Clear version bump to 0.1.0, documented |
+Performance/safety checks:
 
-## Rollback Plan
+```bash
+rg -n "\\b(readFileSync|existsSync|writeFileSync|readdirSync|statSync)\\b" core/app/src/engines core/app/src
+```
 
-If issues arise:
-1. Revert all package.json changes
-2. Revert all template files
-3. Restore prior version tag
-4. No database or state changes involved (safe rollback)
+## Approval Gates (Must Pass Before Code Merge)
 
-## Success Criteria
-
-✅ All tests pass (`npm test:all`)  
-✅ `npm audit` shows 0 high vulnerabilities  
-✅ All views render correctly  
-✅ No console errors in app or API  
-✅ Dev watch mode works with nodemon  
-✅ Documentation is consistent and up-to-date  
-✅ Version bumped to 0.1.0 in all packages
+- [ ] No sync blocking APIs in request/template render paths.
+- [ ] Eta engine is registered and view resolution order matches current behavior.
+- [ ] All runtime templates migrated to `.eta`.
+- [ ] Include syntax uses Eta raw include form (`<%~ include(...) %>`).
+- [ ] `npm test:all` passes.
+- [ ] `npm audit` no longer reports this EJS -> jake -> filelist -> minimatch vulnerability chain.
+- [ ] Canonical docs and examples are fully synchronized.
