@@ -12,6 +12,7 @@ Use this index to quickly find the right document type.
 
 - `documentation/API-APP-ACCESS-ROLLOUT.md` - Current rollout reference for API app-access controls.
 - `documentation/MIGRATION-EJS-TO-ETA.md` - Current migration plan.
+- `documentation/99-potential-gaps.md` - Includes planned security hardening item for request throttling and resource-allocation limits (Snyk `NoRateLimitingForExpensiveWebOperation`).
 
 ## Historical / Archive
 

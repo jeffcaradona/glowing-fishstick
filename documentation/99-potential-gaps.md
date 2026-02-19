@@ -163,6 +163,50 @@ This document tracks potential server composability features and architectural g
 
 **High Priority** (near-term):
 
+### Security: Resource Allocation Limits and Throttling (Snyk Code)
+
+**Status**: Planned - deferred to a future hardening update
+
+**Finding**: Snyk Code reports `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
+
+- `core/app/src/middlewares/errorHandler.js`
+- `core/app/src/controllers/admin-controller.js`
+
+**Risk Summary**:
+
+- Unthrottled expensive request paths can increase CPU, memory, and I/O pressure under burst traffic.
+- Error-path fallback behaviors and repeated dashboard rendering/fetch work can amplify denial-of-service risk when endpoints are hit at high frequency.
+
+**Planned Remediation Scope**:
+
+1. Add explicit request body allocation limits in app and API factories:
+- `express.json({ limit })`
+- `express.urlencoded({ limit, parameterLimit })`
+2. Add route-level throttling for admin endpoints:
+- `/admin`
+- `/admin/config`
+- `/admin/api-health`
+3. Eliminate request-path logger construction fallback in error handling so logger initialization is startup-only.
+4. Add integration tests validating:
+- `413` for oversized payloads
+- `429` when rate thresholds are exceeded
+- health endpoints remain available
+
+**Definition of Done**:
+
+- Snyk finding is resolved or reduced to documented accepted risk with rationale.
+- No per-request sync filesystem setup in request/error hot paths.
+- Throttling and payload limits are configurable via environment-backed config.
+- Documentation and examples reflect the new config surface.
+
+**Validation Commands**:
+
+```bash
+npm run lint
+npm run test:all
+rg -n "\\b(readFileSync|writeFileSync|appendFileSync|existsSync|readdirSync|statSync|lstatSync|mkdirSync|rmSync|unlinkSync|execSync|spawnSync|pbkdf2Sync|scryptSync)\\b" app core api
+```
+
 **Medium Priority** (mid-term):
 
 - Health Check Extensibility (#3)
