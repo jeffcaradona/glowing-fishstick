@@ -39,31 +39,14 @@ export function createEtaEngine(viewDirs) {
   const pathPrefixRegExp = /^\\|^\//;
 
   eta.resolvePath = function resolveMultiDir(templatePath, options) {
-    const ext = path.extname(templatePath) ? '' : '.eta';
-    const normalizedTemplate = `${templatePath}${ext}`;
+    const normalizedTemplate = ensureEtaExtension(templatePath);
     const baseFilePath = options?.filepath;
-    const candidates = [];
-
-    if (baseFilePath) {
-      if (pathPrefixRegExp.test(normalizedTemplate)) {
-        const relativeTemplate = normalizedTemplate.replace(/^\/*|^\\*/, '');
-        for (const dir of dirs) {
-          candidates.push(path.resolve(dir, relativeTemplate));
-        }
-      } else {
-        // Relative include from the current template's directory.
-        candidates.push(path.resolve(path.dirname(baseFilePath), normalizedTemplate));
-
-        // Fallback to top-level views directories in priority order.
-        for (const dir of dirs) {
-          candidates.push(path.resolve(dir, normalizedTemplate));
-        }
-      }
-    } else {
-      for (const dir of dirs) {
-        candidates.push(path.resolve(dir, normalizedTemplate));
-      }
-    }
+    const candidates = getTemplateCandidates({
+      baseFilePath,
+      dirs,
+      normalizedTemplate,
+      pathPrefixRegExp,
+    });
 
     for (const candidate of candidates) {
       if (isInAnyViewDir(candidate, dirs) && knownTemplates.has(candidate)) {
@@ -92,6 +75,35 @@ export function createEtaEngine(viewDirs) {
       (err) => callback(err),
     );
   };
+}
+
+function ensureEtaExtension(templatePath) {
+  return `${templatePath}${path.extname(templatePath) ? '' : '.eta'}`;
+}
+
+function resolveInDirs(dirs, templatePath) {
+  const candidates = [];
+  for (const dir of dirs) {
+    candidates.push(path.resolve(dir, templatePath));
+  }
+  return candidates;
+}
+
+function getTemplateCandidates({ baseFilePath, dirs, normalizedTemplate, pathPrefixRegExp }) {
+  if (!baseFilePath) {
+    return resolveInDirs(dirs, normalizedTemplate);
+  }
+
+  if (pathPrefixRegExp.test(normalizedTemplate)) {
+    const relativeTemplate = normalizedTemplate.replace(/^\/*|^\\*/, '');
+    return resolveInDirs(dirs, relativeTemplate);
+  }
+
+  // Relative include from the current template's directory.
+  return [
+    path.resolve(path.dirname(baseFilePath), normalizedTemplate),
+    ...resolveInDirs(dirs, normalizedTemplate),
+  ];
 }
 
 function indexTemplates(dir, knownTemplates) {
