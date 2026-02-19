@@ -13,15 +13,13 @@
  */
 export const createTasksService = (getDb) => {
   /** Return all tasks, newest first. */
-  const findAll = () =>
-    getDb().prepare('SELECT * FROM tasks ORDER BY created_at DESC').all();
+  const findAll = () => getDb().prepare('SELECT * FROM tasks ORDER BY created_at DESC').all();
 
   /**
    * Return a single task by id, or null if not found.
    * @param {number} id
    */
-  const findById = (id) =>
-    getDb().prepare('SELECT * FROM tasks WHERE id = ?').get(id) ?? null;
+  const findById = (id) => getDb().prepare('SELECT * FROM tasks WHERE id = ?').get(id) ?? null;
 
   /**
    * Insert a new task and return the created row.

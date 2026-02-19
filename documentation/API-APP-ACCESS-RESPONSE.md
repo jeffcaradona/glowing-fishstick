@@ -12,32 +12,37 @@
 
 ## Resolution Scorecard (v1 Issues)
 
-| # | Issue | Severity | v1 Status | v2 Status |
-|---|---|---|---|---|
-| 1 | `API_JWT_SECRET` naming conflict | Critical | Open | **Resolved** |
-| 2 | Per-request signing / event-loop safety | Critical | Open | **Resolved** |
-| 3 | Metrics route scope / Stage B test case | Medium | Open | **Resolved** |
-| 4 | Stage D default-flip implementation guidance | Medium | Open | **Partially resolved** (see §1) |
-| 5 | Empty Test Plan intro | Low | Open | **Resolved** |
-| 6 | Fail-fast falsy check on secret | Low | Open | **Resolved** |
+| #   | Issue                                        | Severity | v1 Status | v2 Status                       |
+| --- | -------------------------------------------- | -------- | --------- | ------------------------------- |
+| 1   | `API_JWT_SECRET` naming conflict             | Critical | Open      | **Resolved**                    |
+| 2   | Per-request signing / event-loop safety      | Critical | Open      | **Resolved**                    |
+| 3   | Metrics route scope / Stage B test case      | Medium   | Open      | **Resolved**                    |
+| 4   | Stage D default-flip implementation guidance | Medium   | Open      | **Partially resolved** (see §1) |
+| 5   | Empty Test Plan intro                        | Low      | Open      | **Resolved**                    |
+| 6   | Fail-fast falsy check on secret              | Low      | Open      | **Resolved**                    |
 
 ---
 
 ## Resolved Issues (no further action)
 
 ### Issue 1 — Env var naming
+
 Feature Flags table now correctly uses `JWT_SECRET` and `JWT_EXPIRES_IN`. No conflicts with existing codebase references.
 
 ### Issue 2 — Event-loop safety
+
 `JWT_EXPIRES_IN` description now reads "Token is pre-generated and rotated before expiry (not signed per request)." Language unambiguously rules out per-request `jwt.sign()`.
 
 ### Issue 3 — Metrics scope
+
 Stage B validation now explicitly includes "Browser-origin requests to `/metrics/*` return `403`." Option A confirmed.
 
 ### Issue 5 — Test Plan intro
+
 "Tests must cover all flag combinations and confirm health routes are never affected by enforcement." Present and correct.
 
 ### Issue 6 — Fail-fast falsy check
+
 Test plan entry now reads "missing **or empty**" — the intent of `!config.jwtSecret` (falsy, not `=== undefined`) is captured at the spec level. No further doc change needed; implementation must match.
 
 ---
@@ -51,6 +56,7 @@ Test plan entry now reads "missing **or empty**" — the intent of `!config.jwtS
 Stage D now correctly specifies flipping the `DEFAULTS` constant rather than the env var reading logic — that guidance is right. However, the file path is wrong.
 
 The rollout doc says:
+
 > flip `DEFAULTS` for `blockBrowserOrigin` and `requireJwt` to `true` in `api/src/config/env.js`
 
 The consumer config at `api/src/config/env.js` currently contains only `appOverrides` (appName, appVersion, port). It has no `DEFAULTS` constant and no feature flags. The `DEFAULTS` constant that governs API behavior lives in `core/api/src/config/env.js` — that is where `blockBrowserOrigin` and `requireJwt` defaults will be defined when implementation lands.
@@ -63,6 +69,7 @@ in `core/api/src/config/env.js`
 ```
 
 Consumer env override for rollback remains:
+
 ```bash
 API_BLOCK_BROWSER_ORIGIN=false API_REQUIRE_JWT=false node src/server.js
 ```
@@ -108,13 +115,13 @@ Option A1 is consistent with the factory pattern, keeps `api-factory.js` as the 
 
 ## Implementation Alignment (updated)
 
-| Area | Requirement |
-|---|---|
-| `core/api/src/config/env.js` | Add `blockBrowserOrigin` and `requireJwt` to `DEFAULTS` (default `false`); read from `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT` env vars |
-| `core/api/src/config/env.js` | Add `jwtSecret: env.JWT_SECRET ?? ''` and `jwtExpiresIn: env.JWT_EXPIRES_IN ?? '120s'` |
-| `core/api/src/api-factory.js` | Register enforcement middleware before `metricsRoutes` (Option A1); not as a plugin |
-| App API client (not yet written) | Pre-generate token at factory time; rotate via `setInterval` at 90s; read from closure per request |
-| Fail-fast guard | Use `!config.jwtSecret` (falsy), not `=== undefined`, to catch `JWT_SECRET=` (empty string from env) |
+| Area                             | Requirement                                                                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/api/src/config/env.js`     | Add `blockBrowserOrigin` and `requireJwt` to `DEFAULTS` (default `false`); read from `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT` env vars |
+| `core/api/src/config/env.js`     | Add `jwtSecret: env.JWT_SECRET ?? ''` and `jwtExpiresIn: env.JWT_EXPIRES_IN ?? '120s'`                                                         |
+| `core/api/src/api-factory.js`    | Register enforcement middleware before `metricsRoutes` (Option A1); not as a plugin                                                            |
+| App API client (not yet written) | Pre-generate token at factory time; rotate via `setInterval` at 90s; read from closure per request                                             |
+| Fail-fast guard                  | Use `!config.jwtSecret` (falsy), not `=== undefined`, to catch `JWT_SECRET=` (empty string from env)                                           |
 
 ---
 
@@ -143,10 +150,10 @@ Neither finding blocks writing code. Both can be addressed as small doc edits to
 
 ## Resolution Scorecard (v2 New Findings)
 
-| # | Finding | Severity | v2 Status | v3 Status |
-|---|---|---|---|---|
-| 1 | Stage D points at wrong config file | Low-Medium | Open | **Resolved** |
-| 2 | Metrics middleware order makes Option A non-trivial | Medium | Open | **Resolved** |
+| #   | Finding                                             | Severity   | v2 Status | v3 Status    |
+| --- | --------------------------------------------------- | ---------- | --------- | ------------ |
+| 1   | Stage D points at wrong config file                 | Low-Medium | Open      | **Resolved** |
+| 2   | Metrics middleware order makes Option A non-trivial | Medium     | Open      | **Resolved** |
 
 ---
 
@@ -216,14 +223,14 @@ The factory (`createApi()`) is the correct location. Config creation may legitim
 
 ## Implementation Alignment (updated)
 
-| Area | Requirement |
-|---|---|
-| `core/api/src/config/env.js` | Add `blockBrowserOrigin` and `requireJwt` to `DEFAULTS` (default `false`); read from `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT` env vars |
-| `core/api/src/config/env.js` | Add `jwtSecret: env.JWT_SECRET ?? ''` and `jwtExpiresIn: env.JWT_EXPIRES_IN ?? '120s'` |
-| `core/api/src/api-factory.js` | At top of `createApi()`, throw if `config.requireJwt && !config.jwtSecret` |
-| `core/api/src/api-factory.js` | Register enforcement middleware before `metricsRoutes` (Option A1); not as a plugin |
+| Area                             | Requirement                                                                                                                                           |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/api/src/config/env.js`     | Add `blockBrowserOrigin` and `requireJwt` to `DEFAULTS` (default `false`); read from `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT` env vars        |
+| `core/api/src/config/env.js`     | Add `jwtSecret: env.JWT_SECRET ?? ''` and `jwtExpiresIn: env.JWT_EXPIRES_IN ?? '120s'`                                                                |
+| `core/api/src/api-factory.js`    | At top of `createApi()`, throw if `config.requireJwt && !config.jwtSecret`                                                                            |
+| `core/api/src/api-factory.js`    | Register enforcement middleware before `metricsRoutes` (Option A1); not as a plugin                                                                   |
 | App API client (not yet written) | Pre-generate token at factory time; rotate via `setInterval` at 90s; clear interval via registered shutdown hook; read token from closure per request |
-| Fail-fast guard | Use `!config.jwtSecret` (falsy), not `=== undefined`, to catch `JWT_SECRET=` (empty string from env) |
+| Fail-fast guard                  | Use `!config.jwtSecret` (falsy), not `=== undefined`, to catch `JWT_SECRET=` (empty string from env)                                                  |
 
 ---
 

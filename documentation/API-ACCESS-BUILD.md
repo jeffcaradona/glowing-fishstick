@@ -14,42 +14,50 @@ Enforce app-only access to API routes in staged rollout, while keeping health pr
 ## Add (Included in This Build)
 
 1. API feature flags
+
 - `API_BLOCK_BROWSER_ORIGIN` (default `false`)
 - `API_REQUIRE_JWT` (default `false`)
 - `JWT_SECRET` (required when `API_REQUIRE_JWT=true`)
 - `JWT_EXPIRES_IN` (default `120s`)
 
 2. Config contract in `core/api/src/config/env.js`
+
 - Add defaults for `blockBrowserOrigin` and `requireJwt` (`false` in rollout phase).
 - Add `jwtSecret: env.JWT_SECRET ?? ''`.
 - Add `jwtExpiresIn: env.JWT_EXPIRES_IN ?? '120s'`.
 
 3. API fail-fast guard in `core/api/src/api-factory.js`
+
 - At top of `createApi()`:
 - If `config.requireJwt && !config.jwtSecret`, throw startup error.
 - Guard must treat empty string as invalid (`!config.jwtSecret`).
 
 4. Enforcement middleware placement in `core/api/src/api-factory.js`
+
 - Mount enforcement middleware before both:
 - `metricsRoutes(config)`
 - `indexRoutes(config)`
 - Do not implement enforcement through plugin loop.
 
 5. Route policy
+
 - Always unauthenticated: `GET /healthz`, `GET /readyz`, `GET /livez`.
 - Conditionally protected: all other routes including `/metrics/*` and `/api/*`.
 - Evaluation order:
+
 1. If browser-origin blocking enabled and `Origin` header exists, return `403`.
 2. If JWT required, require valid bearer token or return `401`.
 3. Otherwise continue.
 
-6. App API client JWT behavior
+4. App API client JWT behavior
+
 - Pre-generate token at client factory initialization.
 - Rotate token on interval before expiry (90s for `120s` TTL baseline).
 - Read token from closure on each request.
 - Register shutdown hook to `clearInterval(rotationTimer)`.
 
 7. Tests and validations
+
 - Cover all flag combinations.
 - Verify health routes always bypass enforcement.
 - Verify `/metrics/*` enforcement with `Origin`.
@@ -57,6 +65,7 @@ Enforce app-only access to API routes in staged rollout, while keeping health pr
 - Verify app task flows still pass when JWT enabled.
 
 8. Stage D hardening target
+
 - After stability window, flip defaults to `true` in `core/api/src/config/env.js`.
 - Keep env overrides for rollback.
 

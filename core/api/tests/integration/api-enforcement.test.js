@@ -7,7 +7,8 @@ const SECRET = 'test-shared-secret';
 const validToken = () => generateToken(SECRET, '120s');
 
 // Helper — build a minimal API app with enforcement config baked in via overrides.
-const makeApp = (overrides = {}) => createApi(createApiConfig({ nodeEnv: 'test', ...overrides }, {}));
+const makeApp = (overrides = {}) =>
+  createApi(createApiConfig({ nodeEnv: 'test', ...overrides }, {}));
 
 // ── Stage A: all flags off ────────────────────────────────────────────────────
 
@@ -112,10 +113,7 @@ describe('Stage C — requireJwt=true', () => {
   });
 
   it('valid token allows access to API index', async () => {
-    await request(app)
-      .get('/')
-      .set('Authorization', `Bearer ${validToken()}`)
-      .expect(200);
+    await request(app).get('/').set('Authorization', `Bearer ${validToken()}`).expect(200);
   });
 });
 
