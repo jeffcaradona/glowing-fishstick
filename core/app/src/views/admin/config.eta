@@ -1,4 +1,4 @@
-<%- include('../layouts/header', { appName: 'Admin' }) %>
+<%~ include('../layouts/header', { appName: 'Admin' }) %>
 
   <h1>Configuration</h1>
   <p>Sensitive keys (SECRET, KEY, PASSWORD, TOKEN, CREDENTIAL) are hidden.</p>
@@ -73,4 +73,5 @@
 
   <p><a href="/admin">&larr; Back to Dashboard</a></p>
 
-<%- include('../layouts/footer') %>
+<%~ include('../layouts/footer') %>
+

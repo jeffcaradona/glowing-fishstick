@@ -1,4 +1,4 @@
-<%- include('layouts/header', { appName }) %>
+<%~ include('layouts/header', { appName }) %>
 
 <h1>Tasks</h1>
 
@@ -74,4 +74,5 @@
   <% }); %>
 <% } %>
 
-<%- include('layouts/footer') %>
+<%~ include('layouts/footer') %>
+

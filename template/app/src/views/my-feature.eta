@@ -1,11 +1,12 @@
-<%- include('layouts/header', { appName }) %>
+<%~ include('layouts/header', { appName }) %>
 
   <h1>My Feature</h1>
   <p>Welcome to <strong><%= appName %></strong> — powered by glowing-fishstick.</p>
 
   <div class="card">
     <h3>Getting Started</h3>
-    <p>Edit this template at <code>src/views/my-feature.ejs</code></p>
+    <p>Edit this template at <code>src/views/my-feature.eta</code></p>
   </div>
 
-<%- include('layouts/footer') %>
+<%~ include('layouts/footer') %>
+

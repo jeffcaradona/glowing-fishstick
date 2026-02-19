@@ -18,6 +18,7 @@ import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
 import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js';
+import { createEtaEngine } from './engines/eta-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /**
  * Build and return a fully configured Express application.
  *
- * 1. View engine (EJS) setup.
+ * 1. View engine (Eta) setup.
  * 2. Built-in middleware (body parsers, static files).
  * 3. Core routes (health, landing, admin).
  * 4. Consumer plugins (in array order).
@@ -56,21 +57,18 @@ export function createApp(config, plugins = []) {
   storeRegistries(app, startupRegistry, shutdownRegistry);
 
   // ── View engine ──────────────────────────────────────────────
-  app.set('view engine', 'ejs');
-
-  // Enable view caching to prevent EJS memory leak
-  // Express will cache compiled templates in both dev and prod
-  // (Requires nodemon restart to see template changes in development)
-  app.enable('view cache');
-
   const coreViewsDir = path.join(__dirname, 'views');
+  const viewDirs = config.viewsDir ? [config.viewsDir, coreViewsDir] : [coreViewsDir];
 
-  if (config.viewsDir) {
-    // Consumer views take priority; core views are the fallback.
-    app.set('views', [config.viewsDir, coreViewsDir]);
-  } else {
-    app.set('views', coreViewsDir);
-  }
+  app.engine('eta', createEtaEngine(viewDirs));
+  app.set('view engine', 'eta');
+
+  // Consumer views take priority; core views are the fallback.
+  app.set('views', viewDirs.length === 1 ? viewDirs[0] : viewDirs);
+
+  // Preserve explicit view caching behavior in all environments.
+  // (Requires nodemon restart to pick up template edits in development)
+  app.enable('view cache');
 
   // ── App locals ───────────────────────────────────────────────
   app.locals.navLinks = [
