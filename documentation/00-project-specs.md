@@ -192,7 +192,7 @@ Factory function that builds and returns a configured Express `app` instance.
 **Behavior:**
 
 1. Creates an Express app.
-2. Sets EJS as the view engine with `src/views/` as default views directory.
+2. Sets Eta as the view engine with `src/views/` as default views directory.
 3. Applies built-in middleware (JSON body parser, URL-encoded parser, static file serving).
 4. Mounts core routes: health (`/healthz`, `/readyz`, `/livez`), landing page (`/`), admin (`/admin`, `/admin/config`, `/admin/api-health`).
 5. Iterates `plugins`, calling each as `plugin(app, config)`.
@@ -415,7 +415,7 @@ glowing-fishstick/
 |       |           `-- list.js
 |       `-- views/
 |           `-- tasks/
-|               `-- list.ejs
+|               `-- list.eta
 |-- api/
 |   |-- package.json
 |   `-- src/
@@ -450,15 +450,15 @@ glowing-fishstick/
 |   |       |   |-- health.js
 |   |       |   `-- index.js
 |   |       `-- views/
-|   |           |-- index.ejs
+|   |           |-- index.eta
 |   |           |-- admin/
-|   |           |   |-- config.ejs
-|   |           |   `-- dashboard.ejs
+|   |           |   |-- config.eta
+|   |           |   `-- dashboard.eta
 |   |           |-- errors/
-|   |           |   `-- 404.ejs
+|   |           |   `-- 404.eta
 |   |           `-- layouts/
-|   |               |-- footer.ejs
-|   |               `-- header.ejs
+|   |               |-- footer.eta
+|   |               `-- header.eta
 |   |-- api/
 |   |   |-- index.js
 |   |   |-- package.json
@@ -523,14 +523,14 @@ All return HTTP 200 with `Content-Type: application/json`.
 
 | Route | Method | Response          | Purpose                                                   |
 | ----- | ------ | ----------------- | --------------------------------------------------------- |
-| `/`   | GET    | Rendered EJS view | Default index page with app name, welcome message, links. |
+| `/`   | GET    | Rendered Eta view | Default index page with app name, welcome message, links. |
 
 ### 7.3 Admin
 
 | Route               | Method | Response          | Purpose                                                                                       |
 | ------------------- | ------ | ----------------- | --------------------------------------------------------------------------------------------- |
-| `/admin`            | GET    | Rendered EJS view | Dashboard: app name, version, uptime, Node.js version, and memory usage for both app and API. |
-| `/admin/config`     | GET    | Rendered EJS view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`).     |
+| `/admin`            | GET    | Rendered Eta view | Dashboard: app name, version, uptime, Node.js version, and memory usage for both app and API. |
+| `/admin/config`     | GET    | Rendered Eta view | Config viewer: table of non-sensitive config values (filtered via `filterSensitiveKeys`).     |
 | `/admin/api-health` | GET    | JSON response     | Dashboard AJAX passthrough to API readiness probe (`/readyz`).                                |
 
 ---
@@ -543,7 +543,7 @@ All return HTTP 200 with `Content-Type: application/json`.
 | `express.urlencoded({ extended: true })` | Express built-in                  | Parses URL-encoded form data.                                                                                                    |
 | `express.static()`                       | Express built-in                  | Serves static files from `src/public/`.                                                                                          |
 | `notFoundHandler()`                      | `src/middlewares/errorHandler.js` | Catches unmatched routes, creates a 404 `AppError`, forwards to error handler.                                                   |
-| `errorHandler()`                         | `src/middlewares/errorHandler.js` | Express 4-arg error middleware. Content-negotiates: renders EJS error view for `text/html`, returns JSON for `application/json`. |
+| `errorHandler()`                         | `src/middlewares/errorHandler.js` | Express 4-arg error middleware. Content-negotiates: renders Eta error view for `text/html`, returns JSON for `application/json`. |
 
 Middleware is applied in this order:
 
@@ -556,32 +556,32 @@ Middleware is applied in this order:
 
 ---
 
-## 9. Views (EJS)
+## 9. Views (Eta)
 
-- **View engine:** EJS (`ejs` npm package).
+- **View engine:** Eta (`eta` npm package).
 - **Default views directory:** `src/views/` (resolved from the package root).
 - **Consumer override:** Pass `viewsDir` in config to point to additional views. The consumer's views directory is set as the primary, with the core views as fallback.
 
 ### 9.1 Layout Pattern
 
-EJS does not have a built-in layout/block system. We use `<%- include() %>` partials:
+Eta does not have a built-in layout/block system. We use `<%~ include() %>` partials:
 
-```ejs
-<%- include('../layouts/header') %>
+```eta
+<%~ include('../layouts/header') %>
   <!-- page-specific content -->
-<%- include('../layouts/footer') %>
+<%~ include('../layouts/footer') %>
 ```
 
 ### 9.2 View Inventory
 
 | View            | Path                  | Data                                                            |
 | --------------- | --------------------- | --------------------------------------------------------------- |
-| Layout header   | `layouts/header.ejs`  | `appName`, `navLinks`                                           |
-| Layout footer   | `layouts/footer.ejs`  | —                                                               |
-| Landing page    | `index.ejs`           | `appName`, `welcomeMessage`                                     |
-| Admin dashboard | `admin/dashboard.ejs` | `appName`, `appVersion`, `uptime`, `nodeVersion`, `memoryUsage` |
-| Admin config    | `admin/config.ejs`    | `config` (filtered)                                             |
-| 404 error       | `errors/404.ejs`      | `message`, `statusCode`                                         |
+| Layout header   | `layouts/header.eta`  | `appName`, `navLinks`                                           |
+| Layout footer   | `layouts/footer.eta`  | —                                                               |
+| Landing page    | `index.eta`           | `appName`, `welcomeMessage`                                     |
+| Admin dashboard | `admin/dashboard.eta` | `appName`, `appVersion`, `uptime`, `nodeVersion`, `memoryUsage` |
+| Admin config    | `admin/config.eta`    | `config` (filtered)                                             |
+| 404 error       | `errors/404.eta`      | `message`, `statusCode`                                         |
 
 ---
 
@@ -650,7 +650,7 @@ class AppError extends Error {
 
 ### 11.3 Error Middleware Behavior
 
-- If `req.accepts('html')` → render `errors/404.ejs` (or generic error view).
+- If `req.accepts('html')` → render `errors/404.eta` (or generic error view).
 - If `req.accepts('json')` → return `{ error: { code, message, statusCode } }`.
 - Non-operational errors (unexpected) log the stack and return a generic 500.
 
@@ -660,12 +660,12 @@ class AppError extends Error {
 
 ### 12.1 Test Levels
 
-| Level           | Directory                          | What's Tested                                                                                                  | Tools                               |
-| --------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Unit**        | `core/shared/tests/unit/`          | Pure shared utilities and helper functions (e.g., formatters, JWT, service container).                         | `vitest`                            |
-| **Integration** | `core/app/tests/integration/`      | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest`               |
-| **Integration** | `core/api/tests/integration/`      | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest`               |
-| **Stress**      | `autocannon` (optional, dev tool)  | Load testing against a running instance. Validates performance and stability under concurrency.                 | `autocannon`                        |
+| Level           | Directory                         | What's Tested                                                                                                  | Tools                 |
+| --------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- |
+| **Unit**        | `core/shared/tests/unit/`         | Pure shared utilities and helper functions (e.g., formatters, JWT, service container).                         | `vitest`              |
+| **Integration** | `core/app/tests/integration/`     | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest` |
+| **Integration** | `core/api/tests/integration/`     | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest` |
+| **Stress**      | `autocannon` (optional, dev tool) | Load testing against a running instance. Validates performance and stability under concurrency.                | `autocannon`          |
 
 ### 12.2 Testability by Design
 
@@ -686,7 +686,7 @@ The FP-first architecture directly supports testability:
 | Package        | Purpose                                            |
 | -------------- | -------------------------------------------------- |
 | `express`      | HTTP framework                                     |
-| `ejs`          | View/template engine                               |
+| `eta`          | View/template engine                               |
 | `dotenv`       | `.env` file loading                                |
 | `jsonwebtoken` | JWT signing/verification utilities (shared module) |
 

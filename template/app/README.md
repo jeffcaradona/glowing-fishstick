@@ -34,7 +34,7 @@ template/app/
     app.js
     config/env.js
     routes/router.js
-    views/my-feature.ejs
+    views/my-feature.eta
     public/
 ```
 
@@ -42,4 +42,4 @@ template/app/
 
 - `src/server.js` is a thin entrypoint using `createApp`, `createServer`, and `createConfig`.
 - `src/app.js` is the plugin where app-specific routes and lifecycle hooks are registered.
-- `npm run dev` watches template and core files (`core/app`, `core/shared`) including `.ejs`.
+- `npm run dev` watches template and core files (`core/app`, `core/shared`) including `.eta`.

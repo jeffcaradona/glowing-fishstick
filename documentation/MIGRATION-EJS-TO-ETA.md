@@ -1,6 +1,6 @@
 # Migration Plan: EJS to Eta (v0.1.0)
 
-**Status:** Draft for pre-approval review  
+**Status:** Draft implemented in working tree (pending final approval)  
 **Version Target:** 0.1.0 (breaking change)  
 **Last Reviewed:** 2026-02-19
 
@@ -18,13 +18,13 @@ In this repository, `npm audit` reports no non-breaking fix path for this chain.
 
 ## Current Repository Reality (as of 2026-02-19)
 
-- Runtime is still EJS in `core/app/src/app-factory.js` (`app.set('view engine', 'ejs')`).
-- Templates are still `.ejs` under:
+- Runtime is now Eta in `core/app/src/app-factory.js` (`app.set('view engine', 'eta')`).
+- Templates are now `.eta` under:
   - `core/app/src/views/`
   - `app/src/views/`
   - `template/app/src/views/`
-- `core/app/src/engines/eta-engine.js` exists but is not wired into `createApp`.
-- Existing Eta engine code currently uses sync filesystem APIs (`existsSync`, `readFileSync`) in render/include paths.
+- `core/app/src/engines/eta-engine.js` is wired into `createApp`.
+- Current Eta engine avoids sync FS calls in request-render paths; startup-only indexing is used for multi-directory template resolution.
 
 ## Pre-Approval Corrections to the Original Plan
 
@@ -46,18 +46,19 @@ In this repository, `npm audit` reports no non-breaking fix path for this chain.
 ## Phase 1: Dependency and Engine Wiring
 
 Files:
+
 - `core/app/package.json`
 - `core/app/src/app-factory.js`
 - `core/app/src/engines/eta-engine.js`
 
 Required changes:
+
 - Replace `ejs` dependency with `eta`.
 - Wire custom engine:
   - import `createEtaEngine`
   - `app.engine('eta', createEtaEngine(viewDirs))`
   - `app.set('view engine', 'eta')`
 - Preserve view directory precedence (consumer first, core fallback).
-- Prefer Eta's built-in multi-view resolution (`views` as array) before maintaining custom include-path override logic.
 - Remove sync filesystem calls from Eta engine hot path.
 
 ## Phase 2: Template Conversion
@@ -77,6 +78,7 @@ Rename all template files from `.ejs` to `.eta`:
 - `template/app/src/views/layouts/footer.ejs`
 
 Template syntax updates:
+
 - Include partials: `<%- include(...) %>` -> `<%~ include(...) %>`
 - Escaped output remains `<%= ... %>`
 - Raw HTML output remains raw form (`<%~ ... %>`)
@@ -84,6 +86,7 @@ Template syntax updates:
 ## Phase 3: Dev Workflow Updates
 
 Files:
+
 - `app/package.json`
 - `api/package.json`
 - `template/app/package.json`

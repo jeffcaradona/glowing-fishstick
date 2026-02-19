@@ -45,7 +45,7 @@ app/
     ├── routes/
     │   └── router.js          # Task manager routes
     └── views/
-        └── tasks/             # Task manager views (EJS templates)
+        └── tasks/             # Task manager views (Eta templates)
 ```
 
 ---
@@ -508,13 +508,13 @@ router.get('/tasks/:id', (req, res) => {
 });
 ```
 
-2. **Create the view** in `app/src/views/tasks/detail.ejs`:
+2. **Create the view** in `app/src/views/tasks/detail.eta`:
 
-```ejs
-<%- include('layouts/header', { appName }) %>
+```eta
+<%~ include('layouts/header', { appName }) %>
   <h1>Task Details</h1>
   <p>Task ID: <%= taskId %></p>
-<%- include('layouts/footer') %>
+<%~ include('layouts/footer') %>
 ```
 
 3. **Test it** by visiting `http://localhost:3000/tasks/123`
@@ -622,7 +622,7 @@ npm run dev:app  # Not start:app
 
 - Core views: `src/views/`
 - App views: `app/src/views/`
-- Use shared layout includes from the active views chain: `<%- include('layouts/header', { appName }) %>`
+- Use shared layout includes from the active views chain: `<%~ include('layouts/header', { appName }) %>`
 
 ---
 
