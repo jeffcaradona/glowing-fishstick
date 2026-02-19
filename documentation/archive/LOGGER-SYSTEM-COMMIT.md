@@ -45,9 +45,9 @@ Documentation:
 - app/DEV_APP_README.md (usage examples)
 - documentation/00-project-specs.md (Section 18: Logger Implementation)
 - documentation/01-application-development.md (plugin examples)
-- documentation/P3-LOGGER-IMPLEMENTATION.md (implementation plan)
+- documentation/archive/2026-02/P3-LOGGER-IMPLEMENTATION.md (implementation plan)
 - documentation/P3-LOGGER-IMPLEMENTATION-SUMMARY.md (summary)
-- documentation/REQUEST-LOGGING-IMPLEMENTATION.md (HTTP logging guide)
+- documentation/archive/2026-02/REQUEST-LOGGING-IMPLEMENTATION.md (HTTP logging guide)
 
 Dependencies Added:
 - pino@^9.0.0 (production, 34 packages total)
@@ -74,7 +74,7 @@ Co-authored-by: GitHub Copilot <noreply@github.com>
    - Environment-aware: dev (pretty + file) vs prod (JSON stdout)
    - Automatic logs/ directory creation in process.cwd()
 
-2. **documentation/P3-LOGGER-IMPLEMENTATION.md** (394 lines)
+2. **documentation/archive/2026-02/P3-LOGGER-IMPLEMENTATION.md** (394 lines)
    - Comprehensive implementation plan
    - Architecture decisions and rationale
    - Usage examples and migration notes
@@ -86,7 +86,7 @@ Co-authored-by: GitHub Copilot <noreply@github.com>
    - Metrics and verification results
    - Known issues and future enhancements
 
-4. **documentation/REQUEST-LOGGING-IMPLEMENTATION.md** (301 lines)
+4. **documentation/archive/2026-02/REQUEST-LOGGING-IMPLEMENTATION.md** (301 lines)
    - Request ID and HTTP logging implementation guide
    - Configuration examples
    - Integration patterns
@@ -167,10 +167,10 @@ Co-authored-by: GitHub Copilot <noreply@github.com>
    - Updated: Lifecycle hook examples with structured logging
    - Added: Logger parameter to startup/shutdown patterns
 
-5. **documentation/P3-LOGGER-IMPLEMENTATION.md** (new)
+5. **documentation/archive/2026-02/P3-LOGGER-IMPLEMENTATION.md** (new)
    - Complete implementation plan document
 
-6. **documentation/REQUEST-LOGGING-IMPLEMENTATION.md** (new)
+6. **documentation/archive/2026-02/REQUEST-LOGGING-IMPLEMENTATION.md** (new)
    - HTTP logging and request ID guide
 
 ## Implementation Metrics
@@ -394,9 +394,9 @@ const { server } = createServer(app, config);
 ## References
 
 - [Pino Documentation](https://getpino.io/)
-- [P3 Implementation Plan](documentation/P3-LOGGER-IMPLEMENTATION.md)
+- [P3 Implementation Plan](documentation/archive/2026-02/P3-LOGGER-IMPLEMENTATION.md)
 - [P3 Implementation Summary](documentation/P3-LOGGER-IMPLEMENTATION-SUMMARY.md)
-- [Request Logging Guide](documentation/REQUEST-LOGGING-IMPLEMENTATION.md)
+- [Request Logging Guide](documentation/archive/2026-02/REQUEST-LOGGING-IMPLEMENTATION.md)
 - [Project Specs - Logger Section](documentation/00-project-specs.md#18-logger-implementation)
 
 ---

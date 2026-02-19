@@ -1,6 +1,6 @@
 # API App Access Rollout Plan
 
-> Status: Active rollout plan (implementation in progress)
+> Status: Implemented in current codebase (rollout reference retained)
 > Internal Version: v3
 > Last Updated: 2026-02-19
 

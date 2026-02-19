@@ -57,7 +57,7 @@ export const createDatabase = (config) => {
 
     // Verify the database is operational before accepting traffic.
     const row = db.prepare('SELECT 1 AS health').get();
-    if (!row || row.health !== 1) {
+    if (row?.health !== 1) {
       throw new Error('SQLite health check failed — database may be corrupt or locked');
     }
 

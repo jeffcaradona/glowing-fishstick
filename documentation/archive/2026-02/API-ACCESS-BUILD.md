@@ -1,9 +1,9 @@
 # API Access Build Plan (Final Cut)
 
-> Status: Final implementation plan
+> Status: Implemented build reference
 > Version: v1
 > Last Updated: 2026-02-19
-> Source of truth inputs: `documentation/API-APP-ACCESS-ROLLOUT.md` (v3), `documentation/API-APP-ACCESS-RESPONSE.md` (v3)
+> Source of truth inputs: `documentation/API-APP-ACCESS-ROLLOUT.md` (v3), `documentation/archive/2026-02/API-APP-ACCESS-RESPONSE.md` (v3)
 
 ---
 

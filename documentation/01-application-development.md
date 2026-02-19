@@ -242,5 +242,5 @@ app.registerStartupHook(async () => {
 ## See Also
 
 - [00-project-specs.md](./00-project-specs.md) — Full API reference for `createApp()`, `createServer()`
-- [P0-STARTUP-HOOK-ORDERING-FIX.md](./P0-STARTUP-HOOK-ORDERING-FIX.md) — Technical details of the setImmediate() race condition fix
-- [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./P1-PRIVATE-LIFECYCLE-REGISTRITES.md) — WeakMap-based registry privacy implementation
+- [P0-STARTUP-HOOK-ORDERING-FIX.md](./archive/2026-02/P0-STARTUP-HOOK-ORDERING-FIX.md) — Technical details of the setImmediate() race condition fix
+- [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./archive/2026-02/P1-PRIVATE-LIFECYCLE-REGISTRITES.md) — WeakMap-based registry privacy implementation

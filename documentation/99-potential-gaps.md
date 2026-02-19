@@ -27,14 +27,14 @@ This document tracks potential server composability features and architectural g
 - **Issue**: `createServer()` IIFE executed synchronously during factory call, before consumer code could register hooks.
 - **Solution**: Wrap startup sequence in `setImmediate()` to defer to next event loop tick, guaranteeing consumer hook registration happens first.
 - **Impact**: Lifecycle API contract now reliable; plugins and consumers can depend on hook registration order without race conditions.
-- **Docs**: [P0-STARTUP-HOOK-ORDERING-FIX.md](./P0-STARTUP-HOOK-ORDERING-FIX.md)
+- **Docs**: [P0-STARTUP-HOOK-ORDERING-FIX.md](./archive/2026-02/P0-STARTUP-HOOK-ORDERING-FIX.md)
 
 **Fix Details (P1 — Private Lifecycle Registries)**:
 
 - **Issue**: Registries exposed via `app._startupRegistry` / `app._shutdownRegistry` underscore fields — externally mutable.
 - **Solution**: Replace underscore fields with a module-level `WeakMap` in `registry-store.js`. Only internal infrastructure can access registries.
 - **Impact**: True language-level privacy; external code cannot access or mutate registries. Auto-garbage-collection via WeakMap.
-- **Docs**: [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./P1-PRIVATE-LIFECYCLE-REGISTRITES.md)
+- **Docs**: [P1-PRIVATE-LIFECYCLE-REGISTRITES.md](./archive/2026-02/P1-PRIVATE-LIFECYCLE-REGISTRITES.md)
 
 **Benefit**: Cleaner API contract, prevents plugin bugs, keeps `app.locals` focused on observable state, reliable startup hook execution order, language-enforced registry privacy.
 
@@ -158,9 +158,54 @@ This document tracks potential server composability features and architectural g
 - `@glowing-fishstick/api` Thin MVP Slice — Implemented `createApi`/`createApiConfig`, core middleware stack, JSON-first error handling, and integration tests
 - API health passthrough (phase 1) — Implemented fixed app endpoint (`/admin/api-health`) to probe API readiness (`/readyz`) without exposing generic proxying
 - Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
+- API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `app/src/services/tasks-api.js`
 - Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
 
 **High Priority** (near-term):
+
+### Security: Resource Allocation Limits and Throttling (Snyk Code)
+
+**Status**: Planned - deferred to a future hardening update
+
+**Finding**: Snyk Code reports `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
+
+- `core/app/src/middlewares/errorHandler.js`
+- `core/app/src/controllers/admin-controller.js`
+
+**Risk Summary**:
+
+- Unthrottled expensive request paths can increase CPU, memory, and I/O pressure under burst traffic.
+- Error-path fallback behaviors and repeated dashboard rendering/fetch work can amplify denial-of-service risk when endpoints are hit at high frequency.
+
+**Planned Remediation Scope**:
+
+1. Add explicit request body allocation limits in app and API factories:
+- `express.json({ limit })`
+- `express.urlencoded({ limit, parameterLimit })`
+2. Add route-level throttling for admin endpoints:
+- `/admin`
+- `/admin/config`
+- `/admin/api-health`
+3. Eliminate request-path logger construction fallback in error handling so logger initialization is startup-only.
+4. Add integration tests validating:
+- `413` for oversized payloads
+- `429` when rate thresholds are exceeded
+- health endpoints remain available
+
+**Definition of Done**:
+
+- Snyk finding is resolved or reduced to documented accepted risk with rationale.
+- No per-request sync filesystem setup in request/error hot paths.
+- Throttling and payload limits are configurable via environment-backed config.
+- Documentation and examples reflect the new config surface.
+
+**Validation Commands**:
+
+```bash
+npm run lint
+npm run test:all
+rg -n "\\b(readFileSync|writeFileSync|appendFileSync|existsSync|readdirSync|statSync|lstatSync|mkdirSync|rmSync|unlinkSync|execSync|spawnSync|pbkdf2Sync|scryptSync)\\b" app core api
+```
 
 **Medium Priority** (mid-term):
 
@@ -172,7 +217,6 @@ This document tracks potential server composability features and architectural g
 - Error Handling Customization (#4)
 - Config Validation (#5)
 - Plugin Prerequisites / Ordering (#6)
-- Service-to-service JWT auth enablement on live app/api routes + strict passthrough request allowlists for expanded proxy scope
 
 ---
 

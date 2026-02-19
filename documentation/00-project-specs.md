@@ -597,6 +597,11 @@ APP_VERSION=0.0.1
 API_BASE_URL=http://localhost:3001
 API_HEALTH_PATH=/readyz
 API_HEALTH_TIMEOUT_MS=3000
+API_URL=http://localhost:3001
+API_BLOCK_BROWSER_ORIGIN=false
+API_REQUIRE_JWT=false
+JWT_SECRET=replace-with-random-secret
+JWT_EXPIRES_IN=120s
 ```
 
 ### 10.2 Config Layering
@@ -1017,6 +1022,9 @@ import { createServer } from '@glowing-fishstick/shared';
 - Optional request logging middleware
 - Health routes (`/healthz`, `/readyz`, `/livez`)
 - Memory metrics route (`/metrics/memory`)
+- App-access enforcement middleware (before metrics and index routes):
+  - If `API_BLOCK_BROWSER_ORIGIN=true` and `Origin` is present on non-health traffic, return `403`
+  - If `API_REQUIRE_JWT=true` and bearer token is missing/invalid on non-health traffic, return `401`
 - Shutdown-aware 503 guard for non-health traffic
 - Core JSON route (`/`) and plugin routes
 - JSON-first not-found and error handlers

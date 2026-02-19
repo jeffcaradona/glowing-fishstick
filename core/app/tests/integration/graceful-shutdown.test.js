@@ -10,7 +10,7 @@
  * - Allows in-flight requests to complete within timeout
  * - Force-destroys lingering connections after shutdown timeout
  *
- * Related: documentation/P1-GRACEFUL-SHUTDOWN.md
+ * Related: documentation/archive/2026-02/P1-GRACEFUL-SHUTDOWN.md
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

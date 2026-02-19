@@ -488,8 +488,11 @@ APP_VERSION=1.0.0
 API_BASE_URL=http://localhost:3001
 API_HEALTH_PATH=/readyz
 API_HEALTH_TIMEOUT_MS=3000
+API_URL=http://localhost:3001
+API_BLOCK_BROWSER_ORIGIN=false
+API_REQUIRE_JWT=false
 JWT_SECRET=replace-with-random-secret
-JWT_EXPIRES_IN=15m
+JWT_EXPIRES_IN=120s
 ```
 
 The app will use these values when it calls `createConfig()`.
