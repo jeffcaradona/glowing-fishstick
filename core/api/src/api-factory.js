@@ -10,6 +10,7 @@ import { healthRoutes } from './routes/health.js';
 import { metricsRoutes } from './routes/metrics.js';
 import { indexRoutes } from './routes/index.js';
 import { notFoundHandler, errorHandler } from './middlewares/error-handler.js';
+import { createEnforcementMiddleware } from './middlewares/enforcement.js';
 
 /**
  * @typedef {(app: import('express').Express, config: object) => void} Plugin
@@ -23,6 +24,10 @@ import { notFoundHandler, errorHandler } from './middlewares/error-handler.js';
  * @returns {import('express').Express}
  */
 export function createApi(config, plugins = []) {
+  if (config.requireJwt && !config.jwtSecret) {
+    throw new Error('JWT_SECRET is required when API_REQUIRE_JWT is enabled');
+  }
+
   const app = express();
 
   app.disable('x-powered-by');
@@ -54,8 +59,13 @@ export function createApi(config, plugins = []) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Health checks run before shutdown gate.
+  // Health checks run before enforcement and shutdown gate.
   app.use(healthRoutes(app));
+
+  // Enforcement: browser-origin block and JWT verification for all non-health routes.
+  // Must be mounted before metricsRoutes and indexRoutes — not via the plugin loop.
+  app.use(createEnforcementMiddleware(config));
+
   app.use(metricsRoutes(config));
 
   // Reject new non-health traffic during shutdown.

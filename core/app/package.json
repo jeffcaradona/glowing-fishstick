@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Core application factory and configuration module",
   "type": "module",
   "main": "index.js",
@@ -20,8 +20,8 @@
     "src/"
   ],
   "dependencies": {
-    "@glowing-fishstick/shared": "0.0.1",
-    "dotenv": "^17.2.4",
+    "@glowing-fishstick/shared": "0.0.2",
+    "dotenv": "^17.3.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1"
   }

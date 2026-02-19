@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/shared",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Core application factory and configuration module",
   "type": "module",
   "main": "index.js",
@@ -19,11 +19,11 @@
     "src/"
   ],
   "dependencies": {
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "jsonwebtoken": "^9.0.3",
-    "pino": "^9.0.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
-    "pino-pretty": "^11.0.0"
+    "pino-pretty": "^13.1.3"
   }
 }

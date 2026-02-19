@@ -1,6 +1,6 @@
 {
   "name": "glowing-fishstick",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An example of replacing distributed Express templates with a composable module",
   "keywords": [
     "template",
@@ -48,6 +48,14 @@
     "coverage:scan": "npm run coverage:shared && npm run coverage:app && npm run coverage:api",
     "lint": "eslint .",
     "format": "prettier --write ."
+  },
+  "overrides": {
+    "ajv": "^8.18.0",    
+    "minimatch": "^10.2.1",
+    
+    "glob":"^13.0.5"
+    
+    
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

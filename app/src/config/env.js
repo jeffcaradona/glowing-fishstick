@@ -26,4 +26,8 @@ export const appOverrides = {
   publicDir: path.join(__dirname, '..', 'public'),
   /** Base URL of the tasks REST API (api/ workspace). Override via API_URL env var. */
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
+  /** Shared secret for app→API JWT auth. Must match JWT_SECRET on the API side. */
+  jwtSecret: process.env.JWT_SECRET ?? '',
+  /** Token TTL passed to generateToken. Must match JWT_EXPIRES_IN on the API side. */
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '120s',
 };
