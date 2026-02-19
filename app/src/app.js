@@ -17,7 +17,8 @@ export function taskManagerApplicationPlugin(app, config) {
   const logger = config.logger;
 
   // HTTP client that talks to the tasks REST API (api/ workspace).
-  const tasksApiClient = createTasksApiClient(config);
+  // Pass `app` so the client can register its JWT rotation-timer shutdown hook.
+  const tasksApiClient = createTasksApiClient(config, app);
 
   app.registerStartupHook(async () => {
     logger?.info({ apiUrl: config.apiUrl }, 'Task manager connecting to API…');

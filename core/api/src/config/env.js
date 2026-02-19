@@ -23,6 +23,9 @@ const DEFAULTS = Object.freeze({
   enableRequestLogging: true,
   allowProcessExit: true,
   shutdownTimeout: 30000,
+  blockBrowserOrigin: false,
+  requireJwt: false,
+  jwtExpiresIn: '120s',
 });
 
 /**
@@ -51,6 +54,16 @@ export function createApiConfig(overrides = {}, env = process.env) {
     shutdownTimeout: Number(
       overrides.shutdownTimeout ?? env.SHUTDOWN_TIMEOUT ?? DEFAULTS.shutdownTimeout,
     ),
+    blockBrowserOrigin:
+      overrides.blockBrowserOrigin ??
+      (env.API_BLOCK_BROWSER_ORIGIN
+        ? env.API_BLOCK_BROWSER_ORIGIN === 'true'
+        : DEFAULTS.blockBrowserOrigin),
+    requireJwt:
+      overrides.requireJwt ??
+      (env.API_REQUIRE_JWT ? env.API_REQUIRE_JWT === 'true' : DEFAULTS.requireJwt),
+    jwtSecret: overrides.jwtSecret ?? env.JWT_SECRET ?? '',
+    jwtExpiresIn: overrides.jwtExpiresIn ?? env.JWT_EXPIRES_IN ?? DEFAULTS.jwtExpiresIn,
     logger: overrides.logger,
     services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
     ...overrides,
