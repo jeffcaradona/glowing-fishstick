@@ -32,7 +32,11 @@ export function createEnforcementMiddleware(config) {
 
     if (blockBrowserOrigin && req.headers.origin) {
       res.status(403).json({
-        error: { code: 'FORBIDDEN', message: 'Browser-origin requests are not permitted', statusCode: 403 },
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Browser-origin requests are not permitted',
+          statusCode: 403,
+        },
       });
       return;
     }
@@ -41,7 +45,11 @@ export function createEnforcementMiddleware(config) {
       const authHeader = req.headers.authorization;
       if (!authHeader?.startsWith('Bearer ')) {
         res.status(401).json({
-          error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header', statusCode: 401 },
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Missing or invalid authorization header',
+            statusCode: 401,
+          },
         });
         return;
       }

@@ -120,7 +120,7 @@ const app = createApp(config, [myPlugin]);
 
 **Built-in features:**
 
-- EJS view engine with layouts
+- Eta view engine with layouts
 - JSON and URL-encoded body parsing
 - Static file serving from `src/public/`
 - Core routes (health, admin, landing)
@@ -508,7 +508,7 @@ These roles reflect the current repository structure and are the intended mappin
 
 ### Using Custom Views
 
-Pass a `viewsDir` in your config to provide custom EJS templates:
+Pass a `viewsDir` in your config to provide custom Eta templates:
 
 ```js
 import { fileURLToPath } from 'node:url';
@@ -525,12 +525,12 @@ Your views will take priority, with the core module's views as fallback.
 
 ### View Structure
 
-The module uses EJS with partials for layouts:
+The module uses Eta with partials for layouts:
 
-```ejs
-<%- include('../layouts/header') %>
+```eta
+<%~ include('../layouts/header') %>
   <h1>My Custom Page</h1>
-<%- include('../layouts/footer') %>
+<%~ include('../layouts/footer') %>
 ```
 
 ---

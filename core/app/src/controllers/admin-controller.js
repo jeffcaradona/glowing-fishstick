@@ -97,7 +97,8 @@ export function createAdminController({
         appRuntimeResult.status === 'fulfilled'
           ? appRuntimeResult.value
           : { nodeVersion: process.version, uptime: 'Unavailable' };
-      const apiVersionData = apiVersionResult.status === 'fulfilled' ? apiVersionResult.value : null;
+      const apiVersionData =
+        apiVersionResult.status === 'fulfilled' ? apiVersionResult.value : null;
       const apiVersion = apiVersionData?.version ?? null;
       const apiFrameworkVersion = apiVersionData?.frameworkVersion ?? null;
       const apiMemoryUsage = apiMemoryResult.status === 'fulfilled' ? apiMemoryResult.value : null;

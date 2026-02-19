@@ -8,7 +8,7 @@
  * TTL). The rotation timer is cleared via a registered shutdown hook so it
  * does not hold the event loop open after the server begins draining.
  */
-
+import { setInterval, clearInterval } from 'node:timers';
 import { generateToken } from '@glowing-fishstick/shared';
 
 /**

@@ -6,7 +6,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon --watch src --watch ../core/api/src --watch ../core/shared/src --ext js,mjs,cjs,json,ejs src/server.js"
+    "dev": "nodemon --watch src --watch ../core/api/src --watch ../core/shared/src --ext js,mjs,cjs,json,eta src/server.js"
   },
   "dependencies": {
     "@glowing-fishstick/api": "0.0.2",

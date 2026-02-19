@@ -1,4 +1,4 @@
-<%- include('layouts/header', { appName }) %>
+<%~ include('layouts/header', { appName }) %>
 
   <h1><%= welcomeMessage %></h1>
   <p>Welcome to <strong><%= appName %></strong> — a task management app powered by glowing-fishstick. From the app plugin.</p>
@@ -16,4 +16,5 @@
     </div>    
   </div>
 
-<%- include('layouts/footer') %>
+<%~ include('layouts/footer') %>
+

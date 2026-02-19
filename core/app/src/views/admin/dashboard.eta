@@ -1,4 +1,4 @@
-<%- include('../layouts/header', { appName, scripts }) %>
+<%~ include('../layouts/header', { appName, scripts }) %>
 
   <h1>Admin Dashboard</h1>
 
@@ -70,4 +70,5 @@
       </ul>
     </div>
   </div>  
-<%- include('../layouts/footer', { scripts }) %>
+<%~ include('../layouts/footer', { scripts }) %>
+
