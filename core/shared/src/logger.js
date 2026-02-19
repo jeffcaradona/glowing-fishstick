@@ -184,9 +184,10 @@ export function createRequestLogger(logger, options = {}) {
       'Request received',
     );
 
-    // Capture response
-    const originalEnd = res.end;
-    res.end = function endWrapper(chunk, encoding) {
+    // Log response completion via lifecycle event instead of monkey-patching res.end.
+    // Using 'finish' preserves the full res.end contract and avoids conflicts with
+    // other middleware or APM tools that observe response methods.
+    res.once('finish', () => {
       const duration = Date.now() - startTime;
       const status = res.statusCode;
 
@@ -201,11 +202,7 @@ export function createRequestLogger(logger, options = {}) {
         },
         'Response sent',
       );
-
-      // Restore original and call it
-      res.end = originalEnd;
-      res.end(chunk, encoding);
-    };
+    });
 
     next();
   };
