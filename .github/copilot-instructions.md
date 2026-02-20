@@ -171,6 +171,8 @@ Use these when relevant to the change:
 - `rg -n "\\b(readFileSync|writeFileSync|appendFileSync|existsSync|readdirSync|statSync|lstatSync|mkdirSync|rmSync|unlinkSync|execSync|spawnSync|pbkdf2Sync|scryptSync)\\b" app core api`
 - `rg -n "res\\.end\\s*=|eval\\(|new Function\\(|with\\s*\\(" app core api`
 
+## J) Code Commenting (Mandatory, Non-negotiable)
+
 For performance-sensitive changes, include a brief note in PR description about expected latency/throughput impact.
 
 You are generating code in a legacy Node.js (Express) + ETA templates codebase with heavy technical debt.
