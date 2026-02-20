@@ -4,9 +4,16 @@
     "paths": {
       "@glowing-fishstick/shared": ["core/shared/index.js"],
       "@glowing-fishstick/app": ["core/app/index.js"],
-      "@glowing-fishstick/api": ["core/api/index.js"]
+      "@glowing-fishstick/api": ["core/api/index.js"],
+      "@glowing-fishstick/logger": ["core/modules/logger/index.js"]
     }
   },
-  "include": ["app/src/**/*.js", "core/app/src/**/*.js", "core/shared/src/**/*.js"],
+  "include": [
+    "app/src/**/*.js",
+    "api/src/**/*.js",
+    "core/app/src/**/*.js",
+    "core/shared/src/**/*.js",
+    "core/modules/logger/src/**/*.js"
+  ],
   "exclude": ["node_modules"]
 }

@@ -21,6 +21,8 @@ The `app/` directory simulates a real-world consumer application (like a "Task M
 npm install @glowing-fishstick/app @glowing-fishstick/shared
 ```
 
+`@glowing-fishstick/shared` is the compatibility layer and primary public entry for logger utilities; logger implementation ownership lives in `@glowing-fishstick/logger`.
+
 **For local development**, the `app/` directory simulates a consumer importing the package by name:
 
 ```js
@@ -319,6 +321,8 @@ The framework provides a Pino-based logger that's automatically available via co
 - **Development**: Pretty console output + JSON file logs in `logs/` directory
 - **Production**: JSON-formatted logs to stdout for container log collection
 
+Logger imports in this guide use `@glowing-fishstick/shared` (curated API). Internally, those exports are sourced from the dedicated `@glowing-fishstick/logger` module.
+
 ### Basic Logger Usage
 
 The logger is passed through the config and is available in all plugins:
@@ -387,7 +391,8 @@ Request logging is **enabled by default** when you provide a logger via config. 
 **To disable request logging:**
 
 ```js
-import { createLogger, createConfig } from '@glowing-fishstick/app';
+import { createConfig } from '@glowing-fishstick/app';
+import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({ name: 'my-app' });
 const config = createConfig({

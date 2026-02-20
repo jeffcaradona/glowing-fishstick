@@ -15,14 +15,14 @@ Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that 
 
 ## Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| **Deduplicate health routes** | Move to `core/shared`; both factories import from there | `core/app` and `core/api` have identical copies today — single source of truth eliminates drift |
-| **`/healthz` behavior** | Stays static (`{ status: "ok" }`, always 200) | Liveness probes must be cheap and must never flap due to dependency state; K8s will kill the pod if liveness fails |
-| **Critical vs non-critical** | Critical failure → 503 on `/readyz`; non-critical → reported but still 200 | Enables graceful degradation; K8s stops routing traffic only for critical failures |
-| **Per-check timeout** | Default 5 s per check, overridable at registration | Prevents a hung dependency (e.g., unresponsive DB) from blocking the entire health response |
-| **Registry storage** | Separate `storeHealthRegistry`/`getHealthRegistry` alongside existing store functions | No breaking changes to `storeRegistries`/`getRegistries` signatures |
-| **`/livez` role** | Runs all checks and returns full aggregate for deep health verification | Fulfills the spec promise in `00-project-specs.md` Section 7.1 |
+| Decision                      | Choice                                                                                | Rationale                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Deduplicate health routes** | Move to `core/shared`; both factories import from there                               | `core/app` and `core/api` have identical copies today — single source of truth eliminates drift                    |
+| **`/healthz` behavior**       | Stays static (`{ status: "ok" }`, always 200)                                         | Liveness probes must be cheap and must never flap due to dependency state; K8s will kill the pod if liveness fails |
+| **Critical vs non-critical**  | Critical failure → 503 on `/readyz`; non-critical → reported but still 200            | Enables graceful degradation; K8s stops routing traffic only for critical failures                                 |
+| **Per-check timeout**         | Default 5 s per check, overridable at registration                                    | Prevents a hung dependency (e.g., unresponsive DB) from blocking the entire health response                        |
+| **Registry storage**          | Separate `storeHealthRegistry`/`getHealthRegistry` alongside existing store functions | No breaking changes to `storeRegistries`/`getRegistries` signatures                                                |
+| **`/livez` role**             | Runs all checks and returns full aggregate for deep health verification               | Fulfills the spec promise in `00-project-specs.md` Section 7.1                                                     |
 
 ---
 
@@ -32,25 +32,33 @@ Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that 
 
 ```javascript
 // In a plugin function: (app, config) => void
-app.registerHealthCheck('database', async () => {
-  const ok = await db.ping();
-  return { healthy: ok, message: ok ? 'connected' : 'unreachable' };
-}, { critical: true, timeout: 3000 });
+app.registerHealthCheck(
+  'database',
+  async () => {
+    const ok = await db.ping();
+    return { healthy: ok, message: ok ? 'connected' : 'unreachable' };
+  },
+  { critical: true, timeout: 3000 },
+);
 
-app.registerHealthCheck('cache', async () => {
-  const ok = await redis.ping();
-  return { healthy: ok };
-}, { critical: false }); // non-critical — degraded but still serving
+app.registerHealthCheck(
+  'cache',
+  async () => {
+    const ok = await redis.ping();
+    return { healthy: ok };
+  },
+  { critical: false },
+); // non-critical — degraded but still serving
 ```
 
 #### `app.registerHealthCheck(name, checkFn, opts?)`
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `name` | `string` | Yes | Unique identifier for the check |
-| `checkFn` | `async () => { healthy: boolean, message?: string }` | Yes | Async function that performs the check |
-| `opts.critical` | `boolean` | No (default: `true`) | Whether failure makes `/readyz` return 503 |
-| `opts.timeout` | `number` | No (default: `5000`) | Per-check timeout in milliseconds |
+| Parameter       | Type                                                 | Required             | Description                                |
+| --------------- | ---------------------------------------------------- | -------------------- | ------------------------------------------ |
+| `name`          | `string`                                             | Yes                  | Unique identifier for the check            |
+| `checkFn`       | `async () => { healthy: boolean, message?: string }` | Yes                  | Async function that performs the check     |
+| `opts.critical` | `boolean`                                            | No (default: `true`) | Whether failure makes `/readyz` return 503 |
+| `opts.timeout`  | `number`                                             | No (default: `5000`) | Per-check timeout in milliseconds          |
 
 - Duplicate `name` throws `HealthCheckAlreadyRegisteredError`.
 - Non-function `checkFn` or missing `name` throws `TypeError`.
@@ -74,24 +82,24 @@ const result = await registry.execute(logger);
 
 #### `createHealthCheckRegistry(options?)`
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `defaultTimeout` | `number` | `5000` | Default per-check timeout in ms |
+| Option           | Type     | Default | Description                     |
+| ---------------- | -------- | ------- | ------------------------------- |
+| `defaultTimeout` | `number` | `5000`  | Default per-check timeout in ms |
 
 Returns `{ register, execute, getChecks }`:
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `register` | `(name, checkFn, opts?) → void` | Register a named health check |
-| `execute` | `(logger?) → Promise<{ healthy, checks[] }>` | Run all checks concurrently, return aggregate |
-| `getChecks` | `() → [{ name, critical, timeout }]` | Introspect registered checks (no execution) |
+| Method      | Signature                                    | Description                                   |
+| ----------- | -------------------------------------------- | --------------------------------------------- |
+| `register`  | `(name, checkFn, opts?) → void`              | Register a named health check                 |
+| `execute`   | `(logger?) → Promise<{ healthy, checks[] }>` | Run all checks concurrently, return aggregate |
+| `getChecks` | `() → [{ name, critical, timeout }]`         | Introspect registered checks (no execution)   |
 
 ### Error Classes
 
-| Class | Thrown When |
-|-------|-----------|
-| `HealthCheckAlreadyRegisteredError` | `register()` called with a name that already exists |
-| `HealthCheckTimeoutError` | Internal — used to signal per-check timeout (caught and converted to `{ healthy: false, message: 'Health check timed out' }`) |
+| Class                               | Thrown When                                                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `HealthCheckAlreadyRegisteredError` | `register()` called with a name that already exists                                                                           |
+| `HealthCheckTimeoutError`           | Internal — used to signal per-check timeout (caught and converted to `{ healthy: false, message: 'Health check timed out' }`) |
 
 ---
 
@@ -251,7 +259,9 @@ export function healthRoutes(app) {
   let isShuttingDown = false;
 
   if (app) {
-    app.on('shutdown', () => { isShuttingDown = true; });
+    app.on('shutdown', () => {
+      isShuttingDown = true;
+    });
   }
 
   // /healthz — static liveness (never runs checks)
@@ -344,24 +354,24 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 **New file**: `core/shared/tests/unit/health-check-registry.test.js`
 
-| # | Test Case | Assertion |
-|---|-----------|-----------|
-| 1 | Register and execute a single healthy check | `result.healthy === true`, checks array has 1 entry |
-| 2 | Register and execute a single unhealthy check | `result.healthy === false` (critical by default) |
-| 3 | Concurrent execution | Multiple checks run in parallel (verify via timing, not sequentially) |
-| 4 | Duplicate name throws | `HealthCheckAlreadyRegisteredError` on second `register()` with same name |
-| 5 | Check that throws is treated as unhealthy | `check.healthy === false`, `check.message` contains error info |
-| 6 | Per-check timeout | Slow check returns `{ healthy: false, message: 'Health check timed out' }` within timeout window |
-| 7 | Critical check failure → aggregate unhealthy | `result.healthy === false` |
-| 8 | Non-critical check failure → aggregate still healthy | `result.healthy === true` |
-| 9 | Mixed critical/non-critical | Aggregate follows critical checks only |
-| 10 | `getChecks()` introspection | Returns registered check metadata without executing |
-| 11 | `execute()` returns duration per check | Each check has a numeric `duration` field |
-| 12 | Empty registry | `{ healthy: true, checks: [] }` |
-| 13 | Invalid registration — non-function | Throws `TypeError` |
-| 14 | Invalid registration — missing name | Throws `TypeError` |
-| 15 | Invalid registration — empty string name | Throws `TypeError` |
-| 16 | Default timeout is overridden by per-check timeout | Per-check timeout takes precedence |
+| #   | Test Case                                            | Assertion                                                                                        |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1   | Register and execute a single healthy check          | `result.healthy === true`, checks array has 1 entry                                              |
+| 2   | Register and execute a single unhealthy check        | `result.healthy === false` (critical by default)                                                 |
+| 3   | Concurrent execution                                 | Multiple checks run in parallel (verify via timing, not sequentially)                            |
+| 4   | Duplicate name throws                                | `HealthCheckAlreadyRegisteredError` on second `register()` with same name                        |
+| 5   | Check that throws is treated as unhealthy            | `check.healthy === false`, `check.message` contains error info                                   |
+| 6   | Per-check timeout                                    | Slow check returns `{ healthy: false, message: 'Health check timed out' }` within timeout window |
+| 7   | Critical check failure → aggregate unhealthy         | `result.healthy === false`                                                                       |
+| 8   | Non-critical check failure → aggregate still healthy | `result.healthy === true`                                                                        |
+| 9   | Mixed critical/non-critical                          | Aggregate follows critical checks only                                                           |
+| 10  | `getChecks()` introspection                          | Returns registered check metadata without executing                                              |
+| 11  | `execute()` returns duration per check               | Each check has a numeric `duration` field                                                        |
+| 12  | Empty registry                                       | `{ healthy: true, checks: [] }`                                                                  |
+| 13  | Invalid registration — non-function                  | Throws `TypeError`                                                                               |
+| 14  | Invalid registration — missing name                  | Throws `TypeError`                                                                               |
+| 15  | Invalid registration — empty string name             | Throws `TypeError`                                                                               |
+| 16  | Default timeout is overridden by per-check timeout   | Per-check timeout takes precedence                                                               |
 
 **Estimated**: ~16 test cases, ~200–250 lines
 
@@ -369,16 +379,16 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 **New file**: `core/app/tests/integration/health-check-extensibility.test.js`
 
-| # | Test Case | Assertion |
-|---|-----------|-----------|
-| 1 | Plugin registers a health check → `/readyz` includes it | Response body contains `checks` array with the registered check |
-| 2 | Critical unhealthy check → `/readyz` returns 503 | Status 503, `status: "not-ready"` |
-| 3 | Non-critical unhealthy check → `/readyz` returns 200 | Status 200, `status: "ready"`, check listed as unhealthy |
-| 4 | `/livez` returns full check details | All checks present in response |
-| 5 | `/healthz` unaffected by registered checks | Always 200 `{ status: "ok" }` regardless of check state |
-| 6 | Shutdown overrides check results | `/readyz` returns 503 during shutdown even if all checks pass |
-| 7 | No checks registered → backward compatible | Existing response format preserved |
-| 8 | Multiple plugins register checks → all aggregated | All checks from all plugins appear in response |
+| #   | Test Case                                               | Assertion                                                       |
+| --- | ------------------------------------------------------- | --------------------------------------------------------------- |
+| 1   | Plugin registers a health check → `/readyz` includes it | Response body contains `checks` array with the registered check |
+| 2   | Critical unhealthy check → `/readyz` returns 503        | Status 503, `status: "not-ready"`                               |
+| 3   | Non-critical unhealthy check → `/readyz` returns 200    | Status 200, `status: "ready"`, check listed as unhealthy        |
+| 4   | `/livez` returns full check details                     | All checks present in response                                  |
+| 5   | `/healthz` unaffected by registered checks              | Always 200 `{ status: "ok" }` regardless of check state         |
+| 6   | Shutdown overrides check results                        | `/readyz` returns 503 during shutdown even if all checks pass   |
+| 7   | No checks registered → backward compatible              | Existing response format preserved                              |
+| 8   | Multiple plugins register checks → all aggregated       | All checks from all plugins appear in response                  |
 
 **Estimated**: ~8 test cases, ~150–200 lines
 
@@ -416,23 +426,23 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 ## Files Changed Summary
 
-| File | Action | Description |
-|------|--------|-------------|
-| `core/shared/src/health-check-registry.js` | **Create** | Health check registry factory + error classes |
-| `core/shared/src/registry-store.js` | **Modify** | Add `storeHealthRegistry` / `getHealthRegistry` |
-| `core/shared/src/routes/health.js` | **Create** | Deduplicated + extended health routes |
-| `core/shared/index.js` | **Modify** | Export new factory, store functions, error classes, health routes |
-| `core/app/src/app-factory.js` | **Modify** | Create health registry, expose `app.registerHealthCheck`, store it |
-| `core/app/src/routes/health.js` | **Delete or re-export** | Replaced by shared implementation |
-| `core/app/src/config/env.js` | **Modify** | Add `healthCheckTimeout` config key |
-| `core/api/src/api-factory.js` | **Modify** | Mirror app-factory health registry wiring |
-| `core/api/src/routes/health.js` | **Delete** | Replaced by shared implementation |
-| `core/shared/tests/unit/health-check-registry.test.js` | **Create** | ~16 unit tests |
-| `core/app/tests/integration/health-check-extensibility.test.js` | **Create** | ~8 integration tests |
-| `documentation/00-project-specs.md` | **Modify** | Update Section 7.1 with extensibility API |
-| `documentation/99-potential-gaps.md` | **Modify** | Mark #3 as completed |
-| `README.md` | **Modify** | Note extensible health checks (if applicable) |
-| `app/DEV_APP_README.md` | **Modify** | Add plugin health check example |
+| File                                                            | Action                  | Description                                                        |
+| --------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| `core/shared/src/health-check-registry.js`                      | **Create**              | Health check registry factory + error classes                      |
+| `core/shared/src/registry-store.js`                             | **Modify**              | Add `storeHealthRegistry` / `getHealthRegistry`                    |
+| `core/shared/src/routes/health.js`                              | **Create**              | Deduplicated + extended health routes                              |
+| `core/shared/index.js`                                          | **Modify**              | Export new factory, store functions, error classes, health routes  |
+| `core/app/src/app-factory.js`                                   | **Modify**              | Create health registry, expose `app.registerHealthCheck`, store it |
+| `core/app/src/routes/health.js`                                 | **Delete or re-export** | Replaced by shared implementation                                  |
+| `core/app/src/config/env.js`                                    | **Modify**              | Add `healthCheckTimeout` config key                                |
+| `core/api/src/api-factory.js`                                   | **Modify**              | Mirror app-factory health registry wiring                          |
+| `core/api/src/routes/health.js`                                 | **Delete**              | Replaced by shared implementation                                  |
+| `core/shared/tests/unit/health-check-registry.test.js`          | **Create**              | ~16 unit tests                                                     |
+| `core/app/tests/integration/health-check-extensibility.test.js` | **Create**              | ~8 integration tests                                               |
+| `documentation/00-project-specs.md`                             | **Modify**              | Update Section 7.1 with extensibility API                          |
+| `documentation/99-potential-gaps.md`                            | **Modify**              | Mark #3 as completed                                               |
+| `README.md`                                                     | **Modify**              | Note extensible health checks (if applicable)                      |
+| `app/DEV_APP_README.md`                                         | **Modify**              | Add plugin health check example                                    |
 
 ---
 
@@ -479,13 +489,13 @@ rg "from '../../index.js'" README.md app/DEV_APP_README.md documentation/*.md
 
 ## Estimated Effort
 
-| Phase | Estimate |
-|-------|----------|
-| Phase 1 — Registry factory | ~100–130 lines |
-| Phase 2 — Registry storage | ~20 lines (modifications) |
-| Phase 3 — Route deduplication | ~50 lines (new shared route) |
-| Phase 4 — Factory wiring | ~15 lines per factory (2 factories) |
-| Phase 5 — Tests | ~400–450 lines (unit + integration) |
-| Phase 6 — Documentation | ~50–100 lines of doc updates |
-| Phase 7 — Security scan | Scan + fix cycle |
-| **Total new code** | **~650–800 lines** |
+| Phase                         | Estimate                            |
+| ----------------------------- | ----------------------------------- |
+| Phase 1 — Registry factory    | ~100–130 lines                      |
+| Phase 2 — Registry storage    | ~20 lines (modifications)           |
+| Phase 3 — Route deduplication | ~50 lines (new shared route)        |
+| Phase 4 — Factory wiring      | ~15 lines per factory (2 factories) |
+| Phase 5 — Tests               | ~400–450 lines (unit + integration) |
+| Phase 6 — Documentation       | ~50–100 lines of doc updates        |
+| Phase 7 — Security scan       | Scan + fix cycle                    |
+| **Total new code**            | **~650–800 lines**                  |

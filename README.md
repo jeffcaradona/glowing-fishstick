@@ -7,7 +7,8 @@
 > - The root package provides documentation, development scripts, and a monorepo structure.
 > - The main application logic is in [`core/app`](core/app), distributed as `@glowing-fishstick/app`.
 > - The JSON-first API module is in [`core/api`](core/api), distributed as `@glowing-fishstick/api`.
-> - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared`.
+> - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared` (including logger re-exports).
+> - Logger implementation lives in [`core/modules/logger`](core/modules/logger), distributed as `@glowing-fishstick/logger`.
 >
 > See the individual module READMEs for usage details.
 
@@ -52,6 +53,12 @@ If you import shared helpers directly (for example `formatUptime`, JWT helpers, 
 
 ```bash
 npm install @glowing-fishstick/shared
+```
+
+If you need the logger module directly (instead of via shared re-exports):
+
+```bash
+npm install @glowing-fishstick/logger
 ```
 
 **Requirements:**
@@ -498,7 +505,8 @@ const config = createConfig();
 **Workspace Package Map**
 
 - `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
-- `core/shared` — Shared utilities and supporting code used by `core/app` and `core/api` (logging, request IDs, lifecycle registries, formatters, JWT helpers). Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/shared` — Compatibility layer + curated public API used by `core/app` and `core/api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/modules/logger` — Implementation ownership boundary for logging (Pino logger factory + request logging middleware). Published as `@glowing-fishstick/logger`.
 - `core/api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
 - `app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
 - `api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.

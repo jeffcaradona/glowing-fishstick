@@ -1,0 +1,28 @@
+{
+  "name": "@glowing-fishstick/logger",
+  "version": "0.0.3",
+  "description": "A logging module for the core system.",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    }
+  },
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "vitest run --reporter=verbose tests/unit"
+  },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "pino-pretty": "^13.1.3"
+  }
+}

@@ -72,14 +72,14 @@ export {
 } from './src/errors/appError.js';
 ```
 
-`createServer` and logger utilities are re-exported through the shared package boundary:
+`createServer` and logger utilities are re-exported through the shared compatibility package boundary:
 
 ```js
 // core/shared/index.js
 export { createServer } from './src/server-factory.js';
 export { createHookRegistry } from './src/hook-registry.js';
 export { storeRegistries } from './src/registry-store.js';
-export { createLogger, createRequestLogger } from './src/logger.js';
+export { createLogger, createRequestLogger } from '@glowing-fishstick/logger';
 export { createRequestIdMiddleware } from './src/request-id.js';
 export { formatUptime } from './src/utils/formatters.js';
 export { generateToken, verifyToken } from './src/auth/jwt.js';
@@ -92,7 +92,7 @@ Source-of-truth file mapping for this public API surface:
 - `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
 - `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
 - `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
-- `createLogger` / `createRequestLogger` → `core/shared/src/logger.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
+- `createLogger` / `createRequestLogger` → `core/modules/logger/src/logger.js` (re-exported via the `@glowing-fishstick/shared` compatibility package boundary)
 - `generateToken` / `verifyToken` → `core/shared/src/auth/jwt.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `jwtAuthMiddleware` → `core/shared/src/middlewares/jwt-auth.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `createServiceContainer` / error classes → `core/shared/src/service-container.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
@@ -475,6 +475,15 @@ glowing-fishstick/
 |   |       `-- routes/
 |   |           |-- health.js
 |   |           `-- index.js
+|   |-- modules/
+|   |   `-- logger/
+|   |       |-- index.js
+|   |       |-- package.json
+|   |       |-- tests/
+|   |       |   `-- unit/
+|   |       |       `-- request-logger.test.js
+|   |       `-- src/
+|   |           `-- logger.js
 |   `-- shared/
 |       |-- index.js
 |       |-- package.json
@@ -488,7 +497,6 @@ glowing-fishstick/
 |           |-- server-factory.js
 |           |-- hook-registry.js
 |           |-- registry-store.js
-|           |-- logger.js
 |           |-- request-id.js
 |           |-- service-container.js
 |           |-- auth/
@@ -827,6 +835,8 @@ import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 The framework includes a Pino-based logger with environment-aware formatting and optional HTTP request logging middleware.
 
+Implementation ownership lives in `core/modules/logger` (`@glowing-fishstick/logger`), while `@glowing-fishstick/shared` remains the primary compatibility/public import boundary for logger usage.
+
 ### Features
 
 - **Development mode**: Pretty-printed console output + JSON file logs
@@ -856,7 +866,7 @@ Factory function that creates a Pino logger instance.
 **Example**:
 
 ```js
-import { createLogger } from '@glowing-fishstick/app';
+import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({
   name: 'my-service',
@@ -883,7 +893,7 @@ Factory function that creates Express middleware for HTTP request/response loggi
 **Example**:
 
 ```js
-import { createLogger, createRequestLogger } from '@glowing-fishstick/app';
+import { createLogger, createRequestLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({ name: 'http' });
 app.use(createRequestLogger(logger));
@@ -905,7 +915,8 @@ const { server } = createServer(app, config);
 **Custom logger**:
 
 ```js
-import { createApp, createServer, createConfig, createLogger } from '@glowing-fishstick/app';
+import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
+import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({ name: 'my-app', logLevel: 'debug' });
 const config = createConfig({ port: 3000, logger });
@@ -972,7 +983,11 @@ const config = createConfig({
 **Standalone usage:**
 
 ```js
-import { createRequestIdMiddleware, createRequestLogger } from '@glowing-fishstick/app';
+import {
+  createRequestIdMiddleware,
+  createRequestLogger,
+  createLogger,
+} from '@glowing-fishstick/shared';
 
 // Request ID generation (always recommended)
 app.use(createRequestIdMiddleware());
