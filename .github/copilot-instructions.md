@@ -172,3 +172,33 @@ Use these when relevant to the change:
 - `rg -n "res\\.end\\s*=|eval\\(|new Function\\(|with\\s*\\(" app core api`
 
 For performance-sensitive changes, include a brief note in PR description about expected latency/throughput impact.
+
+You are generating code in a legacy Node.js (Express) + ETA templates codebase with heavy technical debt.
+Default to documenting rationale (“why”), not mechanics (“what”).
+
+WHY-comment rules:
+- Do NOT write comments that restate what the code does.
+- DO write short comments that explain why the code exists, what constraint it satisfies, and what would break if changed.
+- Add WHY-comments proactively for: conditionals, error handling choices, fallbacks, workarounds, performance/caching, security decisions, and anything “weird but necessary.”
+- If the code is clear but the decision isn’t, comment anyway.
+
+Preferred format (use when non-trivial):
+WHY: <constraint / rationale>
+TRADEOFF: <downside accepted>
+VERIFY IF CHANGED: <what to re-test / what might break>
+
+Architecture constraints (must follow):
+- Express: keep routes thin; put decisions in service/modules; middleware order matters—leave WHY-comments when order is important.
+- ETA: pass a minimal, explicit view-model; avoid embedding business logic in templates; comment WHY if template receives precomputed fields.
+- MSSQL: access data via stored procedures only. Do not write ad-hoc SQL queries in Node.
+  - Use parameterized stored procedure calls and explicit parameter types.
+  - If you must query, only query approved views and still parameterize (but prefer stored procs).
+- Error handling: return consistent HTTP errors; add WHY-comments for status-code choices and what clients rely on.
+- Security: validate/normalize input; avoid leaking internal errors; add WHY-comments for any security-related constraint.
+
+Code quality:
+- Prefer boring, explicit code over cleverness.
+- Use descriptive names that encode intent (reduce need for comments).
+- When adding logging, explain WHY the log exists (diagnostics, audit, tracing).
+
+“When you add a non-trivial block, include at least one WHY-comment explaining the decision.”
