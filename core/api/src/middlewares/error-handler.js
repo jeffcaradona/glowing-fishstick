@@ -31,6 +31,7 @@ export function notFoundHandler(req, _res, next) {
 export function errorHandler(err, req, res, _next) {
   const statusCode = err.statusCode || 500;
   const code = err.code || 'INTERNAL_ERROR';
+  // WHY: Non-operational failures are intentionally hidden from callers.
   const message = err.isOperational ? err.message : 'Internal server error';
   const logger = req.app?.locals?.logger || createLogger({ name: 'api-error-handler' });
 
@@ -46,6 +47,7 @@ export function errorHandler(err, req, res, _next) {
     );
   }
 
+  // WHY: API clients depend on a stable error envelope for retries/telemetry.
   res.status(statusCode).json({
     error: {
       code,

@@ -12,6 +12,8 @@ import { formatUptime } from '@glowing-fishstick/shared';
  */
 export function createAbortControllerWithTimeout(timeoutMs) {
   const controller = new globalThis.AbortController();
+  // WHY: Bound upstream latency for admin endpoints so stalled dependencies do
+  // not pin event-loop work and block dashboard responses.
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   return { controller, timeoutId };
 }
@@ -39,6 +41,7 @@ export async function readApiMemoryUsage(fetchImpl, apiMemoryUrl, requestOptions
     throw new Error(`API memory endpoint failed with status ${response.status}`);
   }
   const payload = await response.json();
+  // WHY: Validate shape at boundary so templates never consume unchecked data.
   if (!payload?.memoryUsage) {
     throw new Error('API memory payload missing memoryUsage');
   }

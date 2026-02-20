@@ -18,6 +18,8 @@ export function adminRoutes(config) {
   const controller = createAdminController({
     config,
     filterSensitiveKeys,
+    // WHY: Keep route wiring thin and centralize upstream-call behavior in one
+    // place so auth/header policies can be changed without touching handlers.
     buildApiRequestOptions: (_req, context) => ({
       method: 'GET',
       signal: context.signal,

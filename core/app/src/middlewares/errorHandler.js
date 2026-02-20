@@ -35,6 +35,7 @@ export function notFoundHandler(req, res, next) {
 export function errorHandler(err, req, res, _next) {
   const statusCode = err.statusCode || 500;
   const code = err.code || 'INTERNAL_ERROR';
+  // WHY: Non-operational errors are masked to avoid leaking internals.
   const message = err.isOperational ? err.message : 'Internal server error';
   const logger = req.app?.locals?.logger || createLogger({ name: 'error-handler' });
 
@@ -52,6 +53,7 @@ export function errorHandler(err, req, res, _next) {
 
   res.status(statusCode);
 
+  // WHY: Browser endpoints prefer HTML; machine callers still get JSON.
   if (req.accepts('html')) {
     res.render('errors/404', { message, statusCode }, (renderErr, html) => {
       if (renderErr) {

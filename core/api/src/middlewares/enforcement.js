@@ -26,10 +26,14 @@ export function createEnforcementMiddleware(config) {
   const { blockBrowserOrigin, requireJwt, jwtSecret } = config;
 
   return (req, res, next) => {
+    // WHY: Health probes must stay reachable without auth/origin constraints so
+    // orchestrators can determine liveness/readiness during rollouts.
     if (HEALTH_PATHS.has(req.path)) {
       return next();
     }
 
+    // WHY: Browser-origin traffic is explicitly disallowed for this API surface;
+    // same-origin protections are handled in app-tier routes instead.
     if (blockBrowserOrigin && req.headers.origin) {
       res.status(403).json({
         error: {
@@ -43,6 +47,8 @@ export function createEnforcementMiddleware(config) {
 
     if (requireJwt) {
       const authHeader = req.headers.authorization;
+      // WHY: Returning a single 401 shape for missing/malformed auth keeps client
+      // retry behavior deterministic and avoids leaking token parsing details.
       if (!authHeader?.startsWith('Bearer ')) {
         res.status(401).json({
           error: {
@@ -57,6 +63,8 @@ export function createEnforcementMiddleware(config) {
       try {
         verifyToken(authHeader.slice(7), jwtSecret);
       } catch {
+        // WHY: Invalid/expired tokens intentionally map to the same response to
+        // prevent token-state probing by unauthenticated callers.
         res.status(401).json({
           error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token', statusCode: 401 },
         });

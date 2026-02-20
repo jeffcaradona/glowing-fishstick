@@ -58,6 +58,8 @@ export function createAdminController({
       const apiMemoryUrl = new globalThis.URL('/metrics/memory', config.apiBaseUrl);
       const apiRuntimeUrl = new globalThis.URL('/metrics/runtime', config.apiBaseUrl);
 
+      // WHY: The dashboard is informational; partial upstream failure should not
+      // break page rendering, so each source resolves independently.
       const [
         appMemoryResult,
         appRuntimeResult,
@@ -105,6 +107,8 @@ export function createAdminController({
       const apiRuntime = apiRuntimeResult.status === 'fulfilled' ? apiRuntimeResult.value : null;
 
       if (apiVersionResult.status === 'rejected') {
+        // WHY: Keep warnings structured so operators can distinguish which
+        // upstream panel failed without reproducing locally.
         logger?.warn(
           {
             type: 'api.version.fetch',
@@ -196,6 +200,8 @@ export function createAdminController({
           'Completed API health passthrough check',
         );
 
+        // WHY: Preserve the existing admin contract: any non-2xx upstream health
+        // response is surfaced as unhealthy to avoid false-green UI state.
         if (upstreamResponse.ok) {
           res.status(200).json({ status: 'healthy' });
           return;
@@ -212,6 +218,8 @@ export function createAdminController({
           },
           'API health passthrough failed',
         );
+        // WHY: 502 indicates gateway/upstream failure, which is distinct from
+        // explicit unhealthy status responses (mapped to 503 above).
         res.status(502).json({ status: 'unhealthy' });
       } finally {
         clearTimeout(timeoutId);

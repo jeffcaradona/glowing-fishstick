@@ -24,12 +24,14 @@ import { createEnforcementMiddleware } from './middlewares/enforcement.js';
  * @returns {import('express').Express}
  */
 export function createApi(config, plugins = []) {
+  // WHY: Fail fast at boot so we never run with a policy/config mismatch.
   if (config.requireJwt && !config.jwtSecret) {
     throw new Error('JWT_SECRET is required when API_REQUIRE_JWT is enabled');
   }
 
   const app = express();
 
+  // WHY: Hide framework fingerprinting header to reduce low-effort probing.
   app.disable('x-powered-by');
 
   const startupRegistry = createHookRegistry();
@@ -71,6 +73,7 @@ export function createApi(config, plugins = []) {
   // Reject new non-health traffic during shutdown.
   app.use((_req, res, next) => {
     if (isShuttingDown) {
+      // WHY: 503 + Connection: close tells callers to fail over during drain.
       res.status(503).set('Connection', 'close').json({
         error: 'Server is shutting down',
         message: 'Please retry your request',

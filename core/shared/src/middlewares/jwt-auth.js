@@ -15,6 +15,8 @@ export function jwtAuthMiddleware(secret) {
   return (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;
+      // WHY: Keep the auth contract strict at middleware boundary so downstream
+      // handlers can assume req.auth exists when this middleware passes.
       if (!authHeader?.startsWith('Bearer ')) {
         res.status(401).json({
           error: {
@@ -31,6 +33,8 @@ export function jwtAuthMiddleware(secret) {
       next();
     } catch (error) {
       let message = null;
+      // WHY: Token parsing outcomes are collapsed into auth-domain messages that
+      // clients already key on for refresh/re-auth behavior.
       if (error.name === 'TokenExpiredError') {
         message = 'Token expired';
       } else if (error.name === 'JsonWebTokenError') {

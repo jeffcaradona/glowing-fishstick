@@ -42,6 +42,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp(config, plugins = []) {
   const app = express();
 
+  // WHY: Hide framework fingerprinting header to reduce low-effort probing.
   app.disable('x-powered-by');
 
   // ── Startup/shutdown hook registries ────────────────────────
@@ -116,6 +117,8 @@ export function createApp(config, plugins = []) {
   app.use((_req, res, next) => {
     // Check if shutdown has started
     if (isShuttingDown) {
+      // WHY: Use 503 + Connection: close so clients and load balancers stop
+      // routing traffic to this instance while in-flight requests drain.
       // New request during shutdown - reject with 503
       res.status(503).set('Connection', 'close').json({
         error: 'Server is shutting down',
