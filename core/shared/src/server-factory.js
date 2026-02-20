@@ -7,7 +7,7 @@
 import http from 'node:http';
 
 import { getRegistries } from './registry-store.js';
-import { createLogger } from './logger.js';
+import { createLogger } from '@glowing-fishstick/logger';
 
 /**
  * Start an HTTP server for the given Express app.

@@ -6,6 +6,22 @@ This document tracks potential server composability features and architectural g
 
 ## Current / In-Flight Work
 
+### Refactor: Logger Module Extraction (`core/modules/*` ownership boundary)
+
+**Status**: ✓ Complete — logger implementation moved to `core/modules/logger` and published as `@glowing-fishstick/logger`
+
+**Description**: Extracted logger implementation ownership from shared internals into `core/modules/logger`. `core/shared` remains the compatibility layer and curated public API, continuing to re-export logger utilities as the primary consumer import boundary.
+
+**Changes Implemented**:
+
+- [logger.js](../core/modules/logger/src/logger.js): Canonical logger implementation (`createLogger`, `createRequestLogger`) ✓
+- [package.json](../core/modules/logger/package.json): Dedicated logger package boundary `@glowing-fishstick/logger` ✓
+- [index.js](../core/shared/index.js): Re-export logger API from `@glowing-fishstick/logger` to preserve compatibility ✓
+
+**Benefit**: Clear ownership boundaries (`core/modules/*`) for implementation code while preserving stable consumer ergonomics through `core/shared`.
+
+---
+
 ### Refactor: Migrate Startup/Shutdown Hooks from `app.locals` to Closures
 
 **Status**: ✓ Complete — Encapsulation implemented (P0 startup ordering race fix + P1 WeakMap privacy)
@@ -160,6 +176,7 @@ This document tracks potential server composability features and architectural g
 - Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
 - API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `app/src/services/tasks-api.js`
 - Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
+- Logger module extraction (`core/modules/*` ownership boundary) — Moved logger implementation to `core/modules/logger` / `@glowing-fishstick/logger`; kept `@glowing-fishstick/shared` as compatibility + curated public API
 
 **High Priority** (near-term):
 
@@ -180,14 +197,19 @@ This document tracks potential server composability features and architectural g
 **Planned Remediation Scope**:
 
 1. Add explicit request body allocation limits in app and API factories:
+
 - `express.json({ limit })`
 - `express.urlencoded({ limit, parameterLimit })`
+
 2. Add route-level throttling for admin endpoints:
+
 - `/admin`
 - `/admin/config`
 - `/admin/api-health`
+
 3. Eliminate request-path logger construction fallback in error handling so logger initialization is startup-only.
 4. Add integration tests validating:
+
 - `413` for oversized payloads
 - `429` when rate thresholds are exceeded
 - health endpoints remain available

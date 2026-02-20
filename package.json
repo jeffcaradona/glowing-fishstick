@@ -13,6 +13,7 @@
     "core/app",
     "core/api",
     "core/shared",
+    "core/modules/logger",
     "template/app",
     "template/api"
   ],
@@ -46,6 +47,7 @@
     "coverage:app": "npm run coverage --workspace core/app",
     "coverage:api": "npm run coverage --workspace core/api",
     "coverage:scan": "npm run coverage:shared && npm run coverage:app && npm run coverage:api",
+    "benchmark:core": "node core/benchmarks/run.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

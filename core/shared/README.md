@@ -1,10 +1,10 @@
 # @glowing-fishstick/shared
 
-> Shared utilities and types for the glowing-fishstick framework.
+> Shared compatibility layer and curated public API for the glowing-fishstick framework.
 
 ## Overview
 
-This package contains shared code, utilities, and type definitions used by the core application module and other packages in the glowing-fishstick ecosystem.
+This package contains shared code, utilities, and type definitions used by the core application module and other packages in the glowing-fishstick ecosystem. It also acts as the primary compatibility/public import boundary for logger utilities.
 
 ## Usage
 
@@ -35,13 +35,15 @@ When consuming via `@glowing-fishstick/app`, `createServer` is re-exported from 
 - `server-factory.js` — HTTP server factory with graceful shutdown and lifecycle hooks
 - `hook-registry.js` — Generic hook registry for sequential async lifecycle execution
 - `registry-store.js` — WeakMap-based private storage for app lifecycle registries
-- `logger.js` — Pino-based logger factory with development/production modes
+- Logger utilities re-exported from `@glowing-fishstick/logger` (implementation in `core/modules/logger`)
 - Common type definitions
 - Reusable helpers for core/app and downstream modules
 
 ## Logger
 
 The package provides a Pino-based logger factory with environment-aware formatting:
+
+`@glowing-fishstick/shared` is the recommended consumer import point for logger APIs. Implementation ownership is in `@glowing-fishstick/logger`.
 
 ```js
 import { createLogger } from '@glowing-fishstick/shared';
