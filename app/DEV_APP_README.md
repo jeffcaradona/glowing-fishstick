@@ -4,6 +4,8 @@
 
 This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
 
+> **Current Next Work**: The next framework milestone is security hardening (payload limits, admin throttling, and error-path logger hardening). See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
+
 ---
 
 ## Overview
@@ -696,6 +698,7 @@ describe('App', () => {
 
 - [Main README](../README.md) — Module overview and API reference
 - [Project Specification](../documentation/00-project-specs.md) — Detailed architecture and design decisions
+- [API Development README](../api/DEV_API_README.md) — Local development guide for the API workspace
 
 ---
 

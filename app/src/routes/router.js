@@ -23,7 +23,7 @@ export function taskRoutes(config, tasksApiClient) {
     try {
       const { tasks } = await tasksApiClient.getTasks();
       res.render('tasks/list', {
-        appName: config.appName,
+        appName: 'Task Manager', //config.appName,
         tasks,
         error: req.query.error ?? null,
         styles: ['/css/tasks/list.css'],

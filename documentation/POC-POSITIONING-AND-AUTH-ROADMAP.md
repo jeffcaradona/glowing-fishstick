@@ -6,7 +6,7 @@ This document packages the current intent of the `glowing-fishstick` project for
 
 1. What this project is (and is not)
 2. How to communicate release maturity (`0.1.0` vs `1.0.0`)
-3. What the next high-value feature should be (pluggable auth with defaults + overrides)
+3. What the next milestones are (security hardening first, then pluggable auth)
 
 ---
 
@@ -55,11 +55,21 @@ Use `1.0.0` only when:
 
 ---
 
-## Next Big Feature: Pluggable Authentication
+## Immediate Next Milestone: Security Hardening
+
+Before new feature tracks, complete request-path hardening for payload limits, admin throttling, and error-path logger behavior.
+
+- Plan of record: [SECURITY-HARDENING-PLAN.md](./SECURITY-HARDENING-PLAN.md)
+- Priority: immediate next implementation milestone
+- Outcome: reduced risk from unbounded expensive request operations
+
+---
+
+## Following Feature Track: Pluggable Authentication
 
 ### Goal
 
-Provide a default external authenticator (e.g., GitHub OAuth) in core while allowing consuming apps to override login behavior with custom providers (e.g., IIQ-like internal identity flow).
+Provide a default external authenticator (for example GitHub OAuth) in core while allowing consuming apps to override login behavior with custom providers (for example IIQ-like internal identity flow).
 
 ### Design principle
 
@@ -110,25 +120,25 @@ createApp(config, {
 
 ## Suggested Rollout Plan
 
-### Phase 1 — Contract + Skeleton (low risk)
+### Phase 1 - Contract + Skeleton (low risk)
 
 - Add auth interfaces and no-op defaults in core
 - Expose route registration hooks for `/login` and callback handling
 - Add tests for deterministic async behavior and single-path error handling
 
-### Phase 2 — GitHub Default Provider
+### Phase 2 - GitHub Default Provider
 
 - Implement external provider flow in core
 - Add minimal docs for environment config and callback URLs
 - Ensure request-path performance avoids blocking APIs
 
-### Phase 3 — Custom Provider Override (IIQ-style)
+### Phase 3 - Custom Provider Override (IIQ-style)
 
 - Implement app-side custom provider package/example
 - Demonstrate override without modifying core internals
 - Publish example flow diagram + claims mapping notes
 
-### Phase 4 — Hardening and Readiness Review
+### Phase 4 - Hardening and Readiness Review
 
 - Validate rate limits/payload limits/error handling expectations
 - Revisit versioning decision (`0.1.0` or later)
@@ -140,11 +150,11 @@ createApp(config, {
 
 - "This proves we can ship the template as versioned modules instead of copy/paste repos."
 - "Core owns stable contracts; apps own business-specific behavior."
-- "Authentication is the next proof point: default external provider plus internal override path."
+- "Security hardening is the immediate next milestone; authentication is the following proof point."
 - "We can stop template drift while preserving team-level flexibility."
 
 ---
 
 ## Copy/Paste Summary for Team Chat
 
-We should frame `glowing-fishstick` as a PoC/reference architecture, not a full production framework yet. The right next milestone is a pluggable auth contract: ship a default GitHub flow in core and allow app-level override for an internal IIQ-style login. That demonstrates the key platform value (stable core + customizable app behavior) and sets us up for a credible `0.1.0` milestone once docs/tests/hardening gates are aligned.
+We should frame `glowing-fishstick` as a PoC/reference architecture, not a full production framework yet. The immediate next milestone is security hardening (payload limits, admin throttling, and error-path logger hardening). After that, the next feature milestone is a pluggable auth contract: ship a default GitHub flow in core and allow app-level override for an internal IIQ-style login. That sequence preserves platform safety while demonstrating the core value (stable core + customizable app behavior).
