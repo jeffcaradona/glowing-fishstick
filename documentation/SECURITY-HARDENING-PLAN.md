@@ -53,21 +53,21 @@ Related API error path behavior also uses request-path logger fallback construct
 
 ### App (`createConfig()`)
 
-| Config Key | Env Var | Default | Purpose |
-| --- | --- | --- | --- |
-| `jsonBodyLimit` | `APP_JSON_BODY_LIMIT` | `100kb` | `express.json({ limit })` ceiling |
-| `urlencodedBodyLimit` | `APP_URLENCODED_BODY_LIMIT` | `100kb` | `express.urlencoded({ limit })` ceiling |
-| `urlencodedParameterLimit` | `APP_URLENCODED_PARAMETER_LIMIT` | `1000` | `express.urlencoded({ parameterLimit })` ceiling |
-| `adminRateLimitWindowMs` | `APP_ADMIN_RATE_LIMIT_WINDOW_MS` | `60000` | Fixed-window duration for admin throttle |
-| `adminRateLimitMax` | `APP_ADMIN_RATE_LIMIT_MAX` | `60` | Max admin requests per window |
+| Config Key                 | Env Var                          | Default | Purpose                                          |
+| -------------------------- | -------------------------------- | ------- | ------------------------------------------------ |
+| `jsonBodyLimit`            | `APP_JSON_BODY_LIMIT`            | `100kb` | `express.json({ limit })` ceiling                |
+| `urlencodedBodyLimit`      | `APP_URLENCODED_BODY_LIMIT`      | `100kb` | `express.urlencoded({ limit })` ceiling          |
+| `urlencodedParameterLimit` | `APP_URLENCODED_PARAMETER_LIMIT` | `1000`  | `express.urlencoded({ parameterLimit })` ceiling |
+| `adminRateLimitWindowMs`   | `APP_ADMIN_RATE_LIMIT_WINDOW_MS` | `60000` | Fixed-window duration for admin throttle         |
+| `adminRateLimitMax`        | `APP_ADMIN_RATE_LIMIT_MAX`       | `60`    | Max admin requests per window                    |
 
 ### API (`createApiConfig()`)
 
-| Config Key | Env Var | Default | Purpose |
-| --- | --- | --- | --- |
-| `jsonBodyLimit` | `API_JSON_BODY_LIMIT` | `100kb` | `express.json({ limit })` ceiling |
-| `urlencodedBodyLimit` | `API_URLENCODED_BODY_LIMIT` | `100kb` | `express.urlencoded({ limit })` ceiling |
-| `urlencodedParameterLimit` | `API_URLENCODED_PARAMETER_LIMIT` | `1000` | `express.urlencoded({ parameterLimit })` ceiling |
+| Config Key                 | Env Var                          | Default | Purpose                                          |
+| -------------------------- | -------------------------------- | ------- | ------------------------------------------------ |
+| `jsonBodyLimit`            | `API_JSON_BODY_LIMIT`            | `100kb` | `express.json({ limit })` ceiling                |
+| `urlencodedBodyLimit`      | `API_URLENCODED_BODY_LIMIT`      | `100kb` | `express.urlencoded({ limit })` ceiling          |
+| `urlencodedParameterLimit` | `API_URLENCODED_PARAMETER_LIMIT` | `1000`  | `express.urlencoded({ parameterLimit })` ceiling |
 
 No breaking signature changes are planned. Existing defaults continue to work, with new safety ceilings applied by default.
 

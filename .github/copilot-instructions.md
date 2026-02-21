@@ -179,6 +179,7 @@ You are generating code in a legacy Node.js (Express) + ETA templates codebase w
 Default to documenting rationale (“why”), not mechanics (“what”).
 
 WHY-comment rules:
+
 - Do NOT write comments that restate what the code does.
 - DO write short comments that explain why the code exists, what constraint it satisfies, and what would break if changed.
 - Add WHY-comments proactively for: conditionals, error handling choices, fallbacks, workarounds, performance/caching, security decisions, and anything “weird but necessary.”
@@ -190,6 +191,7 @@ TRADEOFF: <downside accepted>
 VERIFY IF CHANGED: <what to re-test / what might break>
 
 Architecture constraints (must follow):
+
 - Express: keep routes thin; put decisions in service/modules; middleware order matters—leave WHY-comments when order is important.
 - ETA: pass a minimal, explicit view-model; avoid embedding business logic in templates; comment WHY if template receives precomputed fields.
 - MSSQL: access data via stored procedures only. Do not write ad-hoc SQL queries in Node.
@@ -199,6 +201,7 @@ Architecture constraints (must follow):
 - Security: validate/normalize input; avoid leaking internal errors; add WHY-comments for any security-related constraint.
 
 Code quality:
+
 - Prefer boring, explicit code over cleverness.
 - Use descriptive names that encode intent (reduce need for comments).
 - When adding logging, explain WHY the log exists (diagnostics, audit, tracing).
