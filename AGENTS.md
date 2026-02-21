@@ -2,19 +2,6 @@
 
 This document outlines the expectations and constraints for working with this repository. All contributions must adhere to these guidelines unless explicitly stated otherwise.
 
-## Table of Contents
-
-- [Repository Structure](#repository-structure)
-- [Documentation Requirements](#documentation-requirements)
-- [Event Loop Safety](#event-loop-safety)
-- [I/O Patterns](#io-patterns)
-- [CPU-bound Work](#cpu-bound-work)
-- [Async Consistency](#async-consistency)
-- [V8 Optimization](#v8-optimization)
-- [Logging Guidelines](#logging-guidelines)
-- [PR Review Checklist](#pr-review-checklist)
-- [Validation Commands](#validation-commands)
-
 ## Repository Structure
 
 This repository is a **monorepo workspace** with the following key directories:
@@ -178,6 +165,38 @@ If any exception is necessary, document:
 - Why it is safe
 - Why alternatives were not used
 - Scope of impact (startup-only, dev-only, low-frequency path)
+
+## Code Commenting (Mandatory, Non-negotiable)
+
+Default to documenting rationale ("why"), not mechanics ("what").
+
+### WHY-comment rules
+
+- Do NOT write comments that restate what the code does.
+- DO write short comments explaining why the code exists, what constraint it satisfies, what would break if changed.
+- Add WHY-comments proactively for: conditionals, error handling, fallbacks, workarounds, performance/caching, security, and anything "weird but necessary."
+- If the code is clear but the decision isn't, comment anyway.
+
+Preferred format (use when non-trivial):
+WHY: <constraint / rationale>
+TRADEOFF: <downside accepted>
+VERIFY IF CHANGED: <what to re-test / what might break>
+
+### Architecture constraints
+
+- **Express:** keep routes thin; put decisions in services/modules; WHY-comment middleware order when it matters.
+- **ETA:** pass minimal, explicit view-models; no business logic in templates; WHY-comment precomputed fields.
+- **MSSQL:** stored procedures only — no ad-hoc SQL. Parameterized calls with explicit types. If querying, use approved views only.
+- **Error handling:** consistent HTTP errors; WHY-comment status-code choices and client expectations.
+- **Security:** validate/normalize input; never leak internal errors; WHY-comment security constraints.
+
+### Code quality
+
+- Prefer boring, explicit code over cleverness.
+- Use descriptive names that encode intent (reduce need for comments).
+- When adding logging, explain WHY the log exists (diagnostics, audit, tracing).
+
+"When you add a non-trivial block, include at least one WHY-comment explaining the decision."
 
 ## Validation Commands
 
