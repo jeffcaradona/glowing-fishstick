@@ -18,7 +18,7 @@ import { Router } from 'express';
 export function taskRoutes(config, tasksApiClient) {
   const router = Router();
 
-  // GET /tasks — render task list
+  // GET /tasks - render task list
   router.get('/tasks', async (req, res, next) => {
     try {
       const { tasks } = await tasksApiClient.getTasks();
@@ -26,6 +26,7 @@ export function taskRoutes(config, tasksApiClient) {
         appName: config.appName,
         tasks,
         error: req.query.error ?? null,
+        styles: ['/css/tasks/list.css'],
         scripts: ['/js/tasks/list.js'],
       });
     } catch (err) {
@@ -33,7 +34,7 @@ export function taskRoutes(config, tasksApiClient) {
     }
   });
 
-  // POST /tasks — create a new task, redirect back to list
+  // POST /tasks - create a new task, redirect back to list
   router.post('/tasks', async (req, res, next) => {
     try {
       const { title, description } = req.body ?? {};
@@ -47,7 +48,7 @@ export function taskRoutes(config, tasksApiClient) {
     }
   });
 
-  // POST /tasks/:id/toggle — flip the done flag, redirect back to list
+  // POST /tasks/:id/toggle - flip the done flag, redirect back to list
   router.post('/tasks/:id/toggle', async (req, res, next) => {
     try {
       // done arrives as the string 'true' or 'false' from the hidden input.
@@ -59,7 +60,7 @@ export function taskRoutes(config, tasksApiClient) {
     }
   });
 
-  // POST /tasks/:id/delete — delete a task, redirect back to list
+  // POST /tasks/:id/delete - delete a task, redirect back to list
   router.post('/tasks/:id/delete', async (req, res, next) => {
     try {
       await tasksApiClient.deleteTask(Number(req.params.id));

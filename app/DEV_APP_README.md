@@ -603,11 +603,23 @@ const { server, close } = createServer(app, config);
 **Check the port:**
 
 ```bash
-# See if something is already running on port 3000
+# macOS/Linux: see if something is already running on port 3000
 lsof -i :3000
+```
 
-# Use a different port
+```powershell
+# Windows PowerShell: see if something is already running on port 3000
+Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
+```
+
+```bash
+# macOS/Linux: use a different port
 PORT=8080 npm run start:app
+```
+
+```powershell
+# Windows PowerShell: use a different port
+$env:PORT=8080; npm run start:app
 ```
 
 ### Changes not reflected
@@ -637,6 +649,8 @@ npm run dev:app  # Not start:app
 ## Testing the App
 
 You can test the app just like you would test any Express app:
+
+Local app-only example (inside this repository's `app/` workspace):
 
 ```js
 import { describe, it, expect } from 'vitest';

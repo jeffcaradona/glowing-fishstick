@@ -1,0 +1,95 @@
+.task-error-card {
+  border-left: 4px solid #e53e3e;
+  background: #fff5f5;
+  margin-bottom: 1rem;
+}
+
+.task-error-text {
+  color: #e53e3e;
+  margin: 0;
+}
+
+.task-form-card {
+  margin-bottom: 1.5rem;
+}
+
+.task-form-title {
+  margin-top: 0;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-input {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.task-submit-btn {
+  align-self: flex-start;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+}
+
+.task-empty-text {
+  margin: 0;
+  color: #666;
+}
+
+.task-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.task-item-card-done {
+  opacity: 0.55;
+}
+
+.task-inline-form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.task-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.task-toggle-btn {
+  font-size: 1.25rem;
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title-done {
+  text-decoration: line-through;
+}
+
+.task-description {
+  margin: 0.2rem 0 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.task-created-at {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.task-delete-btn {
+  color: #e53e3e;
+  font-size: 1.1rem;
+}
