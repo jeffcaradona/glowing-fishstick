@@ -20,7 +20,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@glowing-fishstick/shared": "workspace:^",
+    "@glowing-fishstick/shared": "0.0.3",
     "express": "^5.2.1"
   }
 }

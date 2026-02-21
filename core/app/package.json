@@ -20,7 +20,7 @@
     "src/"
   ],
   "dependencies": {
-    "@glowing-fishstick/shared": "workspace:^",
+    "@glowing-fishstick/shared": "0.0.3",
     "dotenv": "^17.3.1",
     "eta": "^4.5.1",
     "express": "^5.2.1"
