@@ -9,6 +9,19 @@ import { formatUptime } from '@glowing-fishstick/shared';
 /**
  * @param {number} timeoutMs
  * @returns {{ controller: AbortController, timeoutId: ReturnType<typeof setTimeout> }}
+ *
+ * SIGNAL MECHANISM:
+ * AbortController.signal is passed to fetch() in the request options.
+ * When controller.abort() is called (by the timeout), it:
+ *   1. Sets the signal's `aborted` flag to true
+ *   2. Triggers fetch's abort handling → fetch promise rejects with AbortError
+ *   3. Immediately terminates the in-flight HTTP request (no TCP cleanup needed)
+ *   4. Frees the event loop from waiting on that I/O operation
+ *
+ * WHY: Bound upstream latency for admin endpoints so stalled dependencies do
+ * not pin event-loop work and block dashboard responses.
+ * TRADEOFF: Slow-but-healthy APIs get cut off just like dead ones.
+ * Acceptable for informational dashboards; partial data better than hanging.
  */
 export function createAbortControllerWithTimeout(timeoutMs) {
   const controller = new globalThis.AbortController();

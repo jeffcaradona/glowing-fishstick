@@ -53,6 +53,10 @@ export function createAdminController({
   return {
     async renderDashboard(req, res) {
       const timeoutMs = config.apiHealthTimeoutMs ?? 3000;
+      // SIGNAL MECHANISM: AbortController here will abort all downstream fetch()
+      // calls that receive its .signal in request options. After timeoutMs,
+      // setTimeout fires → controller.abort() → signal flags aborted → all
+      // fetch() promises reject with AbortError → cleanup happens automatically.
       const { controller, timeoutId } = createAbortControllerWithTimeout(timeoutMs);
       const apiVersionUrl = new globalThis.URL('/', config.apiBaseUrl);
       const apiMemoryUrl = new globalThis.URL('/metrics/memory', config.apiBaseUrl);
