@@ -1,5 +1,6 @@
 {
   "name": "my-glowing-fishstick-app",
+  "private": true,
   "description": "A starter application using the glowing-fishstick core module",
   "version": "0.0.3",
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "glowing-fishstick-tasks-api",
+  "private": true,
   "version": "1.0.0",
   "description": "A local development application to help build the core modules",
   "type": "module",

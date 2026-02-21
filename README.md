@@ -676,6 +676,42 @@ See [api/DEV_API_README.md](api/DEV_API_README.md) for information on running th
 
 ---
 
+## Versioning & Publishing
+
+This monorepo uses [Changesets](https://github.com/changesets/changesets) to manage coordinated version bumps across workspace packages and automate `CHANGELOG.md` generation.
+
+> **Note:** Internal `@glowing-fishstick/*` dependencies use standard npm semver version strings (e.g. `"0.0.3"`). Running `changeset version` automatically rewrites those strings in all dependent `package.json` files when a package is bumped. The `workspace:^` protocol (pnpm/yarn) is **not** used here — npm workspaces do not support it.
+
+### Publishable packages
+
+| Package | npm name |
+|---|---|
+| `core/app` | `@glowing-fishstick/app` |
+| `core/api` | `@glowing-fishstick/api` |
+| `core/shared` | `@glowing-fishstick/shared` |
+| `core/modules/logger` | `@glowing-fishstick/logger` |
+
+`app/`, `api/`, `template/app`, and `template/api` are marked `"private": true` and are never published.
+
+### Local workflow
+
+1. **Author a changeset** — describe what changed and at what semver level (`patch`/`minor`/`major`):
+   ```sh
+   npm run cs
+   ```
+2. Commit the generated `.changeset/*.md` file alongside your code changes.
+3. **Apply versions** — bumps `package.json` versions and updates internal dependency strings in all dependents:
+   ```sh
+   npm run version-packages
+   ```
+4. **Commit** the version bumps and updated `CHANGELOG.md` files.
+5. *(Optional)* **Publish to npm** via CI:
+   ```sh
+   npm run release
+   ```
+
+---
+
 ## Project Status
 
 This is a **proof of concept** and demonstration project showing how to build a composable Express.js framework distributed as an npm module. It is not intended for production use without significant additional development work.
