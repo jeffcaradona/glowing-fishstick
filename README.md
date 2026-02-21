@@ -669,6 +669,40 @@ Request → Body Parsers → Static Files → Core Routes → Plugins → 404 Ha
 
 ---
 
+## Versioning & Publishing
+
+This monorepo uses [Changesets](https://github.com/changesets/changesets) to manage semver bumps and keep internal dependency ranges in sync across workspace packages.
+
+### Local flow
+
+1. **Make your changes** to one or more packages under `core/`.
+2. **Add a changeset** describing the bump:
+   ```sh
+   npm run cs
+   ```
+   The interactive prompt will ask you to select which packages changed and whether the bump is `patch`, `minor`, or `major`.
+3. **Apply versions** — this bumps `package.json` versions and updates any `workspace:^` ranges in dependent packages automatically:
+   ```sh
+   npm run version-packages
+   ```
+4. **Commit** the version bumps and updated `CHANGELOG.md` files.
+5. *(Optional)* **Publish to npm** via CI:
+   ```sh
+   npm run release
+   ```
+
+### Publishable vs. private packages
+
+| Workspace | Published? |
+|-----------|-----------|
+| `core/app` (`@glowing-fishstick/app`) | ✅ public |
+| `core/api` (`@glowing-fishstick/api`) | ✅ public |
+| `core/shared` (`@glowing-fishstick/shared`) | ✅ public |
+| `core/modules/logger` (`@glowing-fishstick/logger`) | ✅ public |
+| `app/`, `api/`, `template/*` | 🔒 private — never published |
+
+---
+
 ## Development
 
 See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running the app for local development.
