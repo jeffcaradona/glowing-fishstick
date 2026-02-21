@@ -19,6 +19,21 @@ This repository is a **monorepo workspace** with the following key directories:
 - Root package is NOT runtime-installable unless it has explicit runtime `exports/main` and intended `files`
 - Do not assume root package can be imported directly
 
+## Instruction File Parity (Required)
+
+To avoid guidance loss during token-reduction refactors:
+
+- `AGENTS.md` is the canonical source of constraints.
+- `CLAUDE.md` and `.github/copilot-instructions.md` may be shorter, but MUST NOT weaken or contradict `AGENTS.md`.
+- Any condensed instruction file must include, at minimum, explicit pointers to:
+  1. documentation sync requirements,
+  2. event-loop safety / no blocking sync APIs in request paths,
+  3. async-consistency and deterministic error handling expectations,
+  4. mandatory WHY-commenting for non-trivial decisions,
+  5. validation command execution before finalizing.
+
+If parity cannot be preserved in a condensed file, restore detail instead of dropping constraints.
+
 ## Documentation Requirements
 
 ### Canonical Truth Sources

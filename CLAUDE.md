@@ -21,6 +21,14 @@ app/ → consumer example | api/ → API consumer scaffold | template/ → start
 
 **Graceful shutdown sequence:** SIGTERM → app 'shutdown' event → health returns 503 → reject new requests → drain in-flight → run shutdown hooks (FIFO) → stop listening → timeout (30s) → destroy lingering connections → exit.
 
+## Non-negotiables snapshot
+
+- `AGENTS.md` is canonical; this file is a compact map, not a substitute.
+- Keep consumer examples on published package boundaries (`@glowing-fishstick/*`), not root imports.
+- No blocking sync APIs in request paths; preserve async-consistent contracts and single-path error handling.
+- Keep routes thin and move heavy work to services/workers.
+- WHY-comments are mandatory for non-trivial decisions.
+
 ## Critical files
 
 ### Core infrastructure
