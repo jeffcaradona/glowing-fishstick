@@ -29,6 +29,8 @@ export function healthRoutes(app) {
 
   /** Readiness check — returns not-ready during shutdown. */
   router.get('/readyz', (_req, res) => {
+    // WHY: Readiness must flip before process exit so load balancers stop new
+    // routing while existing requests are allowed to drain.
     if (isShuttingDown) {
       return res.status(503).json({ status: 'not-ready', reason: 'shutdown in progress' });
     }

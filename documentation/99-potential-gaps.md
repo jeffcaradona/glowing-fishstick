@@ -182,7 +182,11 @@ This document tracks potential server composability features and architectural g
 
 ### Security: Resource Allocation Limits and Throttling (Snyk Code)
 
-**Status**: Planned - deferred to a future hardening update
+**Status**: Planned and queued as immediate next implementation
+
+**Tag**: `CURRENT NEXT WORK ITEM`
+
+**Implementation Plan**: [SECURITY-HARDENING-PLAN.md](./SECURITY-HARDENING-PLAN.md)
 
 **Finding**: Snyk Code reports `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
 

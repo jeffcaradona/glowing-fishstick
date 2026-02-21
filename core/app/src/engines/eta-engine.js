@@ -26,11 +26,16 @@ export function createEtaEngine(viewDirs) {
   const eta = new Eta({
     views: dirs[0],
     autoEscape: true,
+    // WHY: Eta templates in this codebase rely on lexical `with` access patterns.
+    // TRADEOFF: Slightly looser scoping than explicit locals-only references.
+    // VERIFY IF CHANGED: Re-test nested includes and legacy templates for missing vars.
     useWith: true,
     cache: process.env.NODE_ENV === 'production',
   });
 
   // Startup-only index for fast existence checks during template resolution.
+  // WHY: We do sync fs traversal only at startup to keep per-request rendering
+  // free of sync I/O in hot paths.
   const knownTemplates = new Set();
   for (const dir of dirs) {
     indexTemplates(dir, knownTemplates);

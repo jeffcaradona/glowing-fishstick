@@ -58,6 +58,8 @@ export function createServer(app, config) {
           { shutdownTimeout, remainingConnections: activeConnections.size },
           'Shutdown timeout exceeded; forcing remaining connections closed.',
         );
+        // WHY: Destroying sockets is a last resort to prevent pods from hanging
+        // indefinitely and missing orchestrator termination deadlines.
         // Destroy all remaining sockets
         for (const socket of activeConnections) {
           socket.destroy();
@@ -115,6 +117,7 @@ export function createServer(app, config) {
   let shuttingDown = false;
   const shutdown = async () => {
     if (shuttingDown) {
+      // WHY: Signals can arrive multiple times; shutdown must be idempotent.
       return;
     }
     shuttingDown = true;
@@ -130,6 +133,8 @@ export function createServer(app, config) {
         try {
           await hook();
         } catch (err) {
+          // WHY: Best-effort hook execution avoids one cleanup failure blocking
+          // the rest of shutdown and server close.
           logger.error({ err }, 'Error in shutdown hook');
         }
       }

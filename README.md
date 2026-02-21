@@ -672,12 +672,15 @@ Request → Body Parsers → Static Files → Core Routes → Plugins → 404 Ha
 ## Development
 
 See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running the app for local development.
+See [api/DEV_API_README.md](api/DEV_API_README.md) for information on running the API for local development.
 
 ---
 
 ## Project Status
 
 This is a **proof of concept** and demonstration project showing how to build a composable Express.js framework distributed as an npm module. It is not intended for production use without significant additional development work.
+
+**Current Next Work**: Security hardening is the immediate engineering milestone before new feature tracks (health extensibility/auth). See [documentation/SECURITY-HARDENING-PLAN.md](documentation/SECURITY-HARDENING-PLAN.md).
 
 Feel free to explore the concepts and patterns demonstrated here and apply them to your own projects as they best fit your needs.
 
@@ -693,3 +696,4 @@ MIT © Jeff Caradona
 
 - [Project Specification](documentation/00-project-specs.md) — Detailed architectural decisions and design principles
 - [App Development README](app/DEV_APP_README.md) — How to use the `app/` directory for local development
+- [API Development README](api/DEV_API_README.md) — How to use the `api/` directory for local development

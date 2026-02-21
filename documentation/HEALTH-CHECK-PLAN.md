@@ -2,7 +2,7 @@
 
 **Date**: 2026-02-19
 **Status**: Proposed
-**Priority**: Medium (next in queue after completed items)
+**Priority**: Medium (queued after security hardening)
 **Tracks**: [99-potential-gaps.md](./99-potential-gaps.md) § Health Check Extensibility (#3)
 
 ---

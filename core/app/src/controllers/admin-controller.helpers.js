@@ -9,9 +9,24 @@ import { formatUptime } from '@glowing-fishstick/shared';
 /**
  * @param {number} timeoutMs
  * @returns {{ controller: AbortController, timeoutId: ReturnType<typeof setTimeout> }}
+ *
+ * SIGNAL MECHANISM:
+ * AbortController.signal is passed to fetch() in the request options.
+ * When controller.abort() is called (by the timeout), it:
+ *   1. Sets the signal's `aborted` flag to true
+ *   2. Triggers fetch's abort handling → fetch promise rejects with AbortError
+ *   3. Immediately terminates the in-flight HTTP request (no TCP cleanup needed)
+ *   4. Frees the event loop from waiting on that I/O operation
+ *
+ * WHY: Bound upstream latency for admin endpoints so stalled dependencies do
+ * not pin event-loop work and block dashboard responses.
+ * TRADEOFF: Slow-but-healthy APIs get cut off just like dead ones.
+ * Acceptable for informational dashboards; partial data better than hanging.
  */
 export function createAbortControllerWithTimeout(timeoutMs) {
   const controller = new globalThis.AbortController();
+  // WHY: Bound upstream latency for admin endpoints so stalled dependencies do
+  // not pin event-loop work and block dashboard responses.
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   return { controller, timeoutId };
 }
@@ -39,6 +54,7 @@ export async function readApiMemoryUsage(fetchImpl, apiMemoryUrl, requestOptions
     throw new Error(`API memory endpoint failed with status ${response.status}`);
   }
   const payload = await response.json();
+  // WHY: Validate shape at boundary so templates never consume unchecked data.
   if (!payload?.memoryUsage) {
     throw new Error('API memory payload missing memoryUsage');
   }
