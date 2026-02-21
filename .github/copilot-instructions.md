@@ -13,6 +13,7 @@ For performance-sensitive changes, include a brief note in PR description about 
 ## Critical fallback rules (if context is constrained)
 
 - Keep request paths non-blocking: no `*Sync` filesystem/child-process/crypto APIs in routes/middleware.
+- Keep async contracts consistent: public APIs must be uniformly async; never mix sync/async callback timing; surface errors through one mechanism only (throw/reject/callback(err)) — never multiple paths.
 - Keep docs synchronized when changing package names/exports/entrypoints: `README.md`, `app/DEV_APP_README.md`, `documentation/00-project-specs`, `documentation/99-potential-gaps.md`.
 - Keep routes thin and async; delegate heavier work to services/workers.
 - Add WHY-comments for non-trivial decisions (error handling, fallback, perf/security/legal tradeoffs).
