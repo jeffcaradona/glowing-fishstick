@@ -1,0 +1,81 @@
+gantt
+    title glowing-fishstick Project Roadmap
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+    todayMarker stroke-width:3px,stroke:#f00
+
+    section Completed (P0-P3)
+    P0 Startup Hook Fix              :done, p0,  2026-01-15, 3d
+    P1 WeakMap Private Registries    :done, p1a, after p0,   3d
+    P1 Graceful Shutdown Draining    :done, p1b, after p0,   3d
+    P2 Tooling Baseline (Lint/Test)  :done, p2,  after p1a,  5d
+    P3 Logger (Pino)                 :done, p3,  after p2,   5d
+    EJS to Eta Migration             :done, eta, after p3,   4d
+    Logger Module Extraction         :done, logx,after p3,   2d
+    Request Logging and Request ID   :done, rid, after logx, 3d
+    API Thin MVP                     :done, api, after eta,  5d
+    API Access Phases 1-3            :done, acc, after api,  7d
+    DI Service Container v1          :done, di,  after acc,  5d
+
+    section Security Hardening (HIGH)
+    Ph1 Config and Env Parsing       :active, sh1, 2026-02-24, 2d
+    Ph2 Request Parser Limits        :sh2, after sh1, 2d
+    Ph3 Admin Throttle Middleware    :sh3, after sh2, 3d
+    Ph4 Error Logger Hardening       :sh4, after sh3, 2d
+    Ph5 Tests and Verification       :sh5, after sh4, 3d
+    Ph6 Docs and Final Validation    :sh6, after sh5, 2d
+
+    section Milestone v0.1.0
+    v0.1.0 Release Gate              :milestone, m010, after sh6, 0d
+
+    section Health Check Extensibility (Medium)
+    Ph1 Health Check Registry        :hc1, after sh6, 3d
+    Ph2 Registry Storage WeakMap     :hc2, after hc1, 1d
+    Ph3 Deduplicate Routes to Shared :hc3, after hc2, 2d
+    Ph4 Wire into App and API        :hc4, after hc3, 2d
+    Ph5 Tests unit and integration   :hc5, after hc4, 4d
+    Ph6 Documentation                :hc6, after hc5, 1d
+    Ph7 Security Scan                :hc7, after hc6, 1d
+
+    section API Access Stage D Default Flip
+    Stability observation window     :stab, after sh6, 14d
+    Flip defaults to true plus tests :flip, after stab, 2d
+
+    section AsyncLocalStorage Request Context
+    Design and spike                 :als1, after hc7, 3d
+    Implementation                   :als2, after als1, 5d
+    Tests and docs                   :als3, after als2, 3d
+
+    section Pluggable Auth (Next Feature Track)
+    Ph1 Contract and Skeleton        :au1, after hc7, 5d
+    Ph2 GitHub Default Provider      :au2, after au1, 7d
+    Ph3 Custom Provider Override     :au3, after au2, 5d
+    Ph4 Hardening and Review         :au4, after au3, 5d
+
+    section Milestone v1.0.0
+    v1.0.0 Release Gate              :milestone, m100, after au4, 0d
+
+    section Feature Flag Admin (Proposed)
+    Ph1a Schema plus CI rules        :ff1, after au4, 4d
+    Ph1b Service wrapper contract    :ff2, after ff1, 3d
+    Ph1c Read-only API auth audit    :ff3, after ff2, 5d
+    Ph1d Admin UI table evaluation   :ff4, after ff3, 5d
+    Ph1e SP signature validation CI  :ff5, after ff4, 3d
+    Ph2 Lifecycle dashboard expiry   :ff6, after ff5, 5d
+    Ph3a Write controls enable/disable :ff7, after ff6, 5d
+    Ph3b Full audit logging          :ff8, after ff7, 3d
+
+    section Template Generator CLI (Independent)
+    Ph1 MVP CLI scaffolding          :gen1, after m010, 10d
+    Ph2 Template rendering           :gen2, after gen1, 5d
+    Ph3 Polish and npm publishing    :gen3, after gen2, 5d
+
+    section Workflows SSE Pattern (Conceptual)
+    Design and architecture          :wf1, after ff6, 5d
+    Core workflow runner             :wf2, after wf1, 10d
+    SSE notifications persistence    :wf3, after wf2, 7d
+
+    section Future Enhancements (Low-Med)
+    Error Handling Customization     :fut1, after au4, 5d
+    Config Validation schema         :fut2, after fut1, 5d
+    Plugin Prerequisites Ordering    :fut3, after fut2, 5d

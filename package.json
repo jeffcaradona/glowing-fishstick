@@ -12,8 +12,10 @@
     "app",
     "core/app",
     "core/api",
+    "core/generator",
     "core/shared",
     "core/modules/logger",
+    "core/workflows",
     "template/app",
     "template/api"
   ],
