@@ -18,6 +18,7 @@ import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
 import { adminRoutes } from './routes/admin.js';
 import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js';
+import { createAdminThrottle } from './middlewares/admin-throttle.js';
 import { createEtaEngine } from './engines/eta-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -99,8 +100,16 @@ export function createApp(config, plugins = []) {
     app.use(createRequestLogger(config.logger, { generateRequestId: false }));
   }
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // WHY: Enforce payload ceilings to prevent OOM from unbounded body parsing.
+  // Express returns 413 Payload Too Large when limits are breached.
+  app.use(express.json({ limit: config.jsonBodyLimit }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: config.urlencodedBodyLimit,
+      parameterLimit: config.urlencodedParameterLimit,
+    }),
+  );
   app.use(express.static(path.join(__dirname, 'public')));
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
@@ -132,6 +141,18 @@ export function createApp(config, plugins = []) {
 
   // ── Core routes ──────────────────────────────────────────────
   app.use(indexRoutes(config));
+
+  // WHY: Admin endpoints are expensive (dashboard fetches upstream metrics,
+  // config viewer reads full config, API health probes external service).
+  // Throttle to prevent burst-driven resource exhaustion.
+  // Mounted after health routes so /healthz, /readyz, /livez stay available.
+  app.use(
+    createAdminThrottle({
+      windowMs: config.adminRateLimitWindowMs,
+      max: config.adminRateLimitMax,
+      paths: ['/admin', '/admin/config', '/admin/api-health'],
+    }),
+  );
   app.use(adminRoutes(config));
 
   // ── Plugins ──────────────────────────────────────────────────

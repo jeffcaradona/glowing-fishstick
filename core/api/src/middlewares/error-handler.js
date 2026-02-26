@@ -3,8 +3,6 @@
  * @description JSON-first error handling middleware for API routes.
  */
 
-import { createLogger } from '@glowing-fishstick/shared';
-
 /**
  * Create and forward a 404 error for unmatched routes.
  *
@@ -33,10 +31,16 @@ export function errorHandler(err, req, res, _next) {
   const code = err.code || 'INTERNAL_ERROR';
   // WHY: Non-operational failures are intentionally hidden from callers.
   const message = err.isOperational ? err.message : 'Internal server error';
-  const logger = req.app?.locals?.logger || createLogger({ name: 'api-error-handler' });
+  // WHY: Logger is startup-injected via app.locals to avoid per-request
+  // object instantiation on error paths (Snyk javascript/NoRateLimitingForExpensiveWebOperation).
+  // Fallback to console.error preserves error visibility without allocation overhead.
+  const logger = req.app?.locals?.logger;
+  const logError = logger
+    ? (meta, msg) => logger.error(meta, msg)
+    : (meta, msg) => console.error(msg, meta);
 
   if (!err.isOperational) {
-    logger.error(
+    logError(
       {
         err,
         method: req.method,

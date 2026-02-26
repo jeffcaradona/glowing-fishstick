@@ -5,7 +5,6 @@
  */
 
 import { createNotFoundError } from '../errors/appError.js';
-import { createLogger } from '@glowing-fishstick/shared';
 
 /**
  * Catch-all middleware that creates a 404 AppError for any unmatched
@@ -37,10 +36,16 @@ export function errorHandler(err, req, res, _next) {
   const code = err.code || 'INTERNAL_ERROR';
   // WHY: Non-operational errors are masked to avoid leaking internals.
   const message = err.isOperational ? err.message : 'Internal server error';
-  const logger = req.app?.locals?.logger || createLogger({ name: 'error-handler' });
+  // WHY: Logger is startup-injected via app.locals to avoid per-request
+  // object instantiation on error paths (Snyk javascript/NoRateLimitingForExpensiveWebOperation).
+  // Fallback to console.error preserves error visibility without allocation overhead.
+  const logger = req.app?.locals?.logger;
+  const logError = logger
+    ? (meta, msg) => logger.error(meta, msg)
+    : (meta, msg) => console.error(msg, meta);
 
   if (!err.isOperational) {
-    logger.error(
+    logError(
       {
         err,
         method: req.method,

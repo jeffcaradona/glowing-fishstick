@@ -11,6 +11,7 @@ import { metricsRoutes } from './routes/metrics.js';
 import { indexRoutes } from './routes/index.js';
 import { notFoundHandler, errorHandler } from './middlewares/error-handler.js';
 import { createEnforcementMiddleware } from './middlewares/enforcement.js';
+import { createAdminThrottle } from './middlewares/admin-throttle.js';
 
 /**
  * @typedef {(app: import('express').Express, config: object) => void} Plugin
@@ -58,8 +59,16 @@ export function createApi(config, plugins = []) {
     app.use(createRequestLogger(config.logger, { generateRequestId: false }));
   }
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // WHY: Enforce payload ceilings to prevent OOM from unbounded body parsing.
+  // Express returns 413 Payload Too Large when limits are breached.
+  app.use(express.json({ limit: config.jsonBodyLimit }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: config.urlencodedBodyLimit,
+      parameterLimit: config.urlencodedParameterLimit,
+    }),
+  );
 
   // Health checks run before enforcement and shutdown gate.
   app.use(healthRoutes(app));
@@ -67,6 +76,18 @@ export function createApi(config, plugins = []) {
   // Enforcement: browser-origin block and JWT verification for all non-health routes.
   // Must be mounted before metricsRoutes and indexRoutes — not via the plugin loop.
   app.use(createEnforcementMiddleware(config));
+
+  // WHY: Metrics endpoints are expensive (process.memoryUsage, runtime data).
+  // Throttle to prevent burst-driven resource exhaustion.
+  // Mounted after health routes and enforcement so health stays available
+  // and enforcement still gates unauthenticated traffic.
+  app.use(
+    createAdminThrottle({
+      windowMs: config.adminRateLimitWindowMs,
+      max: config.adminRateLimitMax,
+      paths: ['/metrics/memory', '/metrics/runtime'],
+    }),
+  );
 
   app.use(metricsRoutes(config));
 

@@ -4,7 +4,7 @@
 
 This document explains how to use the `api/` directory to run the local JSON API workspace. It demonstrates how a consuming API service would use `@glowing-fishstick/api` in production while composing custom plugin routes.
 
-> **Current Next Work**: Security hardening is the immediate next milestone. The plan adds API payload-limit config (`API_JSON_BODY_LIMIT`, `API_URLENCODED_BODY_LIMIT`, `API_URLENCODED_PARAMETER_LIMIT`). See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
+> **Security Hardening**: Payload limits, metrics throttling, and error handler hardening are implemented. See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
 
 ---
 
@@ -165,6 +165,165 @@ Shutdown (`close()`):
 
 ---
 
+## Deployment Pattern: API as an Authenticated Proxy
+
+### Use Case: Secure Proxying to Proxmox, Kubernetes, or Other Backends
+
+The API can sit in front of an existing backend system (e.g., Proxmox cluster, Kubernetes API, ClickHouse, custom microservices) to provide authentication, payload limits, request logging, and rate-limiting without modifying the backend itself.
+
+#### Agents Call the Proxy
+
+**Instead of:**
+```bash
+# ❌ Direct agent access (no audit, no limits, risk)
+curl -H "Authorization: Bearer proxmox-token" https://proxmox.internal:8006/api2/json/nodes
+```
+
+**Use:**
+```bash
+# ✅ Via glowing-fishstick API (audit log, payload limits, throttling)
+curl http://localhost:3001/nodes
+```
+
+#### Configuration
+
+Create a `.env.local` (or CI secrets) with appropriate settings based on your network:
+
+**Option 1: Internal Agents (Same VPC, No JWT Required)**
+```bash
+# Agents are trusted; JWTs not needed
+API_REQUIRE_JWT=false
+
+# Block web browsers to prevent accidental access
+API_BLOCK_BROWSER_ORIGIN=true
+
+# Enforce payload limits to prevent OOM/amplification attacks
+API_JSON_BODY_LIMIT=100kb
+API_URLENCODED_BODY_LIMIT=100kb
+API_URLENCODED_PARAMETER_LIMIT=1000
+
+# Optional: rate-limit expensive operations
+API_ADMIN_RATE_LIMIT_WINDOW_MS=60000
+API_ADMIN_RATE_LIMIT_MAX=60
+```
+
+**Option 2: Strict Multi-Tenant (All Requests Require JWT)**
+```bash
+# All non-health endpoints require valid JWT
+API_REQUIRE_JWT=true
+JWT_SECRET=your-secret-from-vault
+JWT_EXPIRES_IN=7d
+
+# Allow browser requests (or block if only agents)
+API_BLOCK_BROWSER_ORIGIN=false
+
+# Payload limits
+API_JSON_BODY_LIMIT=100kb
+API_URLENCODED_BODY_LIMIT=100kb
+```
+
+**Option 3: Hybrid (JWT Optional, Origin Blocked)**
+```bash
+# JWT is optional; useful for self-hosted deployments
+API_REQUIRE_JWT=false
+
+# Only allow non-browser clients (agents, services, tools)
+API_BLOCK_BROWSER_ORIGIN=true
+
+# Payload limits
+API_JSON_BODY_LIMIT=100kb
+```
+
+#### Wiring Proxmox Routes (Example)
+
+In your API plugin (`api/src/api.js`), register a route that proxies to Proxmox:
+
+```javascript
+import express from 'express';
+
+export function setupProxmoxPlugin(app, config) {
+  const router = express.Router();
+
+  const proxmoxBaseUrl = config.proxmoxUrl || 'https://proxmox.internal:8006';
+  const proxmoxApiToken = config.proxmoxApiToken; // from env/vault
+
+  // WHY: Proxy GET /nodes to Proxmox with token auth
+  // All requests are logged via req.log; payload limits enforced upstream
+  router.get('/nodes', async (req, res, next) => {
+    try {
+      const response = await fetch(`${proxmoxBaseUrl}/api2/json/nodes`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `PVEAPIToken=${proxmoxApiToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: `Proxmox returned ${response.status}`,
+        });
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      req.log.error({ err }, 'Proxmox /nodes request failed');
+      next(err);
+    }
+  });
+
+  // Similar proxies for other Proxmox endpoints
+  // router.post('/nodes', ...)
+  // router.delete('/nodes/:node', ...)
+
+  app.use('/', router);
+}
+```
+
+Then register in `api/src/api.js`:
+
+```javascript
+import { taskApiPlugin } from './routes/tasks.js';
+import { setupProxmoxPlugin } from './routes/proxmox.js';
+
+export const plugins = [
+  taskApiPlugin,
+  setupProxmoxPlugin, // New proxy plugin
+];
+```
+
+#### Environment Variables for Backend Config
+
+Add to your config override (`api/src/config/env.js`):
+
+```javascript
+export function apiConfigOverrides() {
+  return {
+    // Proxmox backend
+    proxmoxUrl: process.env.PROXMOX_URL || 'https://proxmox.internal:8006',
+    proxmoxApiToken: process.env.PROXMOX_API_TOKEN,
+    
+    // Or other backend
+    backendUrl: process.env.BACKEND_URL,
+    backendApiKey: process.env.BACKEND_API_KEY,
+  };
+}
+```
+
+#### Advantages of This Pattern
+
+✅ **Audit Logging**: All requests and responses logged via Pino (structured, queryable)  
+✅ **Payload Validation**: Oversized requests return `413` before reaching backend  
+✅ **Resource Protection**: Requests throttled via fixed-window rate limits  
+✅ **Request Tracing**: Built-in request IDs correlate logs across services  
+✅ **Graceful Shutdown**: In-flight proxied requests drain before process exit  
+✅ **No Backend Changes**: Existing backends (Proxmox, Kubernetes, etc.) remain untouched  
+✅ **No Agent-Side Auth Logic**: Agents call the proxy; the proxy handles secrets  
+✅ **Flexible Auth**: JWT toggle allows same deployment to serve internal agents or strict tenants  
+
+---
+
 ## Environment Variables
 
 Create `.env` in the repository root:
@@ -188,7 +347,41 @@ Notes:
 - `API_REQUIRE_JWT=true` requires `JWT_SECRET`.
 - `API_BLOCK_BROWSER_ORIGIN=true` rejects non-health requests that include an `Origin` header.
 - Health routes stay available even when enforcement is enabled.
-- Upcoming hardening keys tracked in the current plan: `API_JSON_BODY_LIMIT`, `API_URLENCODED_BODY_LIMIT`, `API_URLENCODED_PARAMETER_LIMIT`.
+- Upcoming hardening keys tracked in the current plan: `API_JSON_BODY_LIMIT`, `API_URLENCODED_BODY_LIMIT`, `API_URLENCODED_PARAMETER_LIMIT`.\n  These are now implemented with defaults of `100kb` / `100kb` / `1000`. See config table above.
+
+### JWT Configuration Reference
+
+The API supports optional JWT enforcement via environment variables:
+
+| Env Var          | Default | Behavior                                          |
+| ---------------- | ------- | ------------------------------------------------- |
+| `API_REQUIRE_JWT`       | `false` | If `true`, all non-health endpoints require valid JWT |
+| `API_BLOCK_BROWSER_ORIGIN` | `false` | If `true`, reject requests with `Origin` header (prevents browser-based misuse) |
+| `JWT_SECRET`     | (none)  | Secret key for signing/verifying JWTs; required if `API_REQUIRE_JWT=true` |
+| `JWT_EXPIRES_IN` | `7d`    | JWT expiration duration                           |
+
+**Example 1: Internal Proxy (No JWT Required)**
+```bash
+API_REQUIRE_JWT=false
+API_BLOCK_BROWSER_ORIGIN=true
+# Agents call API directly without tokens
+```
+
+**Example 2: Strict Access (JWT Required)**
+```bash
+API_REQUIRE_JWT=true
+JWT_SECRET=super-secret-key-from-vault
+# All non-health requests require `Authorization: Bearer <token>`
+```
+
+**Example 3: Hybrid (JWT Optional, Origin Blocked)**
+```bash
+API_REQUIRE_JWT=false
+API_BLOCK_BROWSER_ORIGIN=true
+# Agents or services can call the API. Browsers cannot.
+```
+
+Health endpoints (`/healthz`, `/readyz`, `/livez`) always bypass JWT and origin checks.
 
 ---
 

@@ -67,6 +67,11 @@ const DEFAULTS = Object.freeze({
   appVersion: '0.0.0',
   apiHealthPath: '/readyz',
   apiHealthTimeoutMs: 3000,
+  jsonBodyLimit: '100kb',
+  urlencodedBodyLimit: '100kb',
+  urlencodedParameterLimit: 1000,
+  adminRateLimitWindowMs: 60000,
+  adminRateLimitMax: 60,
 });
 
 /**
@@ -98,6 +103,26 @@ export function createConfig(overrides = {}, env = process.env) {
     apiHealthPath: overrides.apiHealthPath ?? env.API_HEALTH_PATH ?? DEFAULTS.apiHealthPath,
     apiHealthTimeoutMs: Number(
       overrides.apiHealthTimeoutMs ?? env.API_HEALTH_TIMEOUT_MS ?? DEFAULTS.apiHealthTimeoutMs,
+    ),
+    // WHY: Enforce request payload ceilings to prevent OOM from unbounded body parsing.
+    jsonBodyLimit:
+      overrides.jsonBodyLimit ?? env.APP_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
+    urlencodedBodyLimit:
+      overrides.urlencodedBodyLimit ?? env.APP_URLENCODED_BODY_LIMIT ?? DEFAULTS.urlencodedBodyLimit,
+    urlencodedParameterLimit: Number(
+      overrides.urlencodedParameterLimit ??
+        env.APP_URLENCODED_PARAMETER_LIMIT ??
+        DEFAULTS.urlencodedParameterLimit,
+    ),
+    // WHY: Admin endpoints are expensive (dashboard fetches, config reads).
+    // Fixed-window throttle prevents burst-driven resource exhaustion.
+    adminRateLimitWindowMs: Number(
+      overrides.adminRateLimitWindowMs ??
+        env.APP_ADMIN_RATE_LIMIT_WINDOW_MS ??
+        DEFAULTS.adminRateLimitWindowMs,
+    ),
+    adminRateLimitMax: Number(
+      overrides.adminRateLimitMax ?? env.APP_ADMIN_RATE_LIMIT_MAX ?? DEFAULTS.adminRateLimitMax,
     ),
     services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
     ...overrides,

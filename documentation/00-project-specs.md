@@ -178,6 +178,49 @@ export function myPlugin(app, config) {
 - `dispose()` only tracks initialized singletons (transients are not tracked).
 - No strict-mode toggle.
 
+## 5. Deployment Patterns
+
+### 5.1 API as an Authenticated Proxy
+
+The `@glowing-fishstick/api` package can serve as a thin authentication and resource-limit layer in front of existing backend systems (e.g., Proxmox, ClickHouse, Kubernetes API, custom microservices).
+
+**Use Case**: Agents or LLM tools need access to a backend cluster API, but direct access is not desired for security, audit, or rate-limiting reasons.
+
+**Pattern**:
+
+1. Deploy `@glowing-fishstick/api` as a reverse proxy between agents and the backend
+2. Configure JWT enforcement based on deployment context:
+   - **Internal agents (same VPC/network)**: `API_REQUIRE_JWT=false`, `API_BLOCK_BROWSER_ORIGIN=true` — agents call the proxy directly
+   - **Strict multi-tenant**: `API_REQUIRE_JWT=true`, `JWT_SECRET=<vault-managed>` — all non-health endpoints require tokens
+3. Configure payload and rate limits to prevent amplification attacks:
+   - `API_JSON_BODY_LIMIT=100kb`, `API_URLENCODED_BODY_LIMIT=100kb` — prevent OOM
+   - `API_ADMIN_RATE_LIMIT_WINDOW_MS=60000`, `API_ADMIN_RATE_LIMIT_MAX=60` — throttle expensive operations
+4. Route requests through the API to the backend via plugin routes
+5. Benefit: All requests are logged (audit trail), payload-validated, throttled, and gracefully shut down
+
+**Example Environment** (internal agents, no JWT):
+
+```bash
+API_REQUIRE_JWT=false
+API_BLOCK_BROWSER_ORIGIN=true
+API_JSON_BODY_LIMIT=100kb
+API_URLENCODED_BODY_LIMIT=100kb
+API_ADMIN_RATE_LIMIT_WINDOW_MS=60000
+API_ADMIN_RATE_LIMIT_MAX=60
+```
+
+**Example Environment** (strict, all requests require JWT):
+
+```bash
+API_REQUIRE_JWT=true
+JWT_SECRET=your-secret-from-vault
+JWT_EXPIRES_IN=7d
+API_BLOCK_BROWSER_ORIGIN=false
+API_JSON_BODY_LIMIT=100kb
+```
+
+**Benefit**: Centralized logging, payload validation, graceful shutdown, and rate-limiting without modifying the backend system. Agents or internal tools communicate with the proxy API; the proxy forwards sanitized, logged requests to the backend.
+
 ### 4.1 `createApp(config, plugins = [])`
 
 Factory function that builds and returns a configured Express `app` instance.
@@ -1045,3 +1088,143 @@ import { createServer } from '@glowing-fishstick/shared';
 - JSON-first not-found and error handlers
 
 `createApiConfig(overrides = {}, env = process.env)` returns a frozen API config object with API defaults and env/override layering, following the same contract style as `createConfig` in `@glowing-fishstick/app`.
+
+### 19.1 Database Migrations & Schema Management
+
+The API includes a production-grade, version-tracked migration system (`api/src/database/db.js`) for SQLite schema evolution with built-in data validation and rollback protection.
+
+**Schema versioning:**
+- Tracks applied migrations in a `schema_versions` table with columns: `version` (PRIMARY KEY), `applied_at` (timestamp), `description` (text)
+- Migrations defined as an array of `{ version, description, up }` objects in module scope
+- `up` is a function that receives the `DatabaseSync` handle and executes schema changes
+- Runs automatically during the `open()` startup hook, **before traffic arrives**
+- Each migration runs in an explicit `BEGIN TRANSACTION / COMMIT / ROLLBACK` block for atomicity
+
+**Migration execution flow:**
+
+1. Query max applied version from `schema_versions` table
+2. Identify pending migrations (version > max applied)
+3. For each pending migration (in order):
+   - Log: "Running migration v{n} — {description}"
+   - Execute `BEGIN TRANSACTION`
+   - Run validation checks (e.g., scan for data violations)
+   - If validation fails, throw error with detailed sample data → triggers `ROLLBACK` → app startup fails
+   - If validation passes, execute schema changes (e.g., `CREATE TABLE... INSERT... DROP... ALTER... RENAME`)
+   - Insert version into `schema_versions` table
+   - Execute `COMMIT`
+   - Log: "Migration applied successfully"
+4. If any migration fails at any step:
+   - `ROLLBACK` is executed (schema remains unchanged)
+   - Error is logged and re-thrown
+   - App startup fails (operator must investigate)
+
+**Current migrations:**
+
+**Migration v1**: Rebuild tasks table with CHECK constraints
+
+Pre-migration validation checks (before schema change):
+```sql
+SELECT id, length(title) FROM tasks WHERE length(title) > 255      -- Fail if violations found
+SELECT id, length(description) FROM tasks WHERE length(description) > 4000
+SELECT id, done FROM tasks WHERE done NOT IN (0, 1)
+```
+
+Schema rebuild (if validation passes):
+```sql
+CREATE TABLE tasks_new (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT    NOT NULL CHECK(length(title) <= 255),
+  description TEXT    CHECK(length(description) <= 4000),
+  done        INTEGER NOT NULL DEFAULT 0 CHECK(done IN (0, 1)),
+  created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+INSERT INTO tasks_new SELECT * FROM tasks;
+DROP TABLE tasks;
+ALTER TABLE tasks_new RENAME TO tasks;
+```
+
+**Error handling on constraint violation:**
+
+If existing data violates the new constraints (e.g., a task has a 300-char title), the migration fails during validation with a clear error message that includes:
+- Which constraint is violated (field name + constraint description)
+- Count of violating records
+- Samples (first 3 records) with `id` and violation details
+- Actionable fix instructions (DELETE or UPDATE options)
+- Pointer to delete `api/data/tasks.db` for a fresh start
+
+Example error output:
+```
+Migration v1 failed: existing data violates new constraints:
+  title (max 255 characters): 2 record(s)
+    Samples: id=5, length=320 | id=8, length=1024
+  description (max 4000 characters): 1 record(s)
+    Samples: id=10, length=5000
+
+Fix the data manually:
+  Option A: DELETE FROM tasks WHERE length(title) > 255;
+  Option B: UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
+Then restart the app to retry migration.
+Or delete api/data/tasks.db for a fresh start.
+```
+
+The app **refuses to start** until the operator fixes the data or deletes the database.
+
+**Base schema** (v0, applied via CREATE TABLE IF NOT EXISTS):
+
+Fresh databases get the base schema with all constraints already included:
+```sql
+CREATE TABLE IF NOT EXISTS tasks (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT    NOT NULL CHECK(length(title) <= 255),
+  description TEXT    CHECK(length(description) <= 4000),
+  done        INTEGER NOT NULL DEFAULT 0 CHECK(done IN (0, 1)),
+  created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+**WHY this design?**
+
+- **Pre-migration validation**: Prevents silent data corruption. If data violates constraints, the operator has full visibility and control.
+- **Atomic transactions**: Schema is never partially upgraded; migration either fully succeeds or fully reverts.
+- **Fail-on-startup**: Broken migrations block app startup, forcing operator intervention (not silent data loss or runtime errors).
+- **Reversible**: Migrations don't execute if schema is already up-to-date; if a migration fails, the schema is unchanged.
+- **SQLite compatibility**: Mimics the official SQLite 12-step table rebuild pattern for adding constraints (SQLite doesn't support `ALTER TABLE ADD CONSTRAINT NAME`).
+- **Production-grade**: Handles data cleanup as an explicit, operator-driven step—standard practice in mature systems.
+
+**Management notes:**
+
+- **Synchronous SQLite calls accepted here**: Migrations run at startup, before traffic, so synchronous `DatabaseSync` is acceptable per AGENTS.md startup exception.
+- **Performance**: Table rebuilds acquire brief exclusive locks. On large tables, may take seconds.
+- **Idempotency**: `runMigrations()` is safe to call multiple times; already-applied migrations are skipped.
+- **Testing**: Test migrations with both empty databases (fresh install) and pre-populated databases (constraint violations).
+
+### 19.2 Input Validation
+
+Application-level input validation complements database CHECK constraints, providing user-friendly error responses before data reaches SQLite.
+
+**Validation module** (`api/src/validation/task-validation.js`):
+- Exports frozen `LIMITS` object: `{ TITLE_MAX: 255, DESCRIPTION_MAX: 4000 }`
+- `validateTaskInput(data, opts)` checks type, length, and presence; returns `{ valid, errors: string[] }`
+- `validateId(raw)` parses and validates numeric IDs; rejects NaN, negative, non-integer values
+- Reusable across routes and services
+
+**Route integration** (`api/src/routes/router.js`):
+- POST `/api/tasks`: Validates title presence/length/type; returns 400 with errors if invalid
+- PATCH `/api/tasks/:id`: Validates all provided fields (title, description, done) with per-field error reporting
+- All ID-based routes (GET, PATCH, DELETE): Validate `:id` parameter; return 400 for invalid format, 404 for not-found record
+- Database layer executes only after all validation succeeds
+
+**Input constraints:**
+| Field | Max Length | Type | Required | Notes |
+|-------|---|---|---|---|
+| `title` | 255 chars | string | Yes | Must be non-empty after trim |
+| `description` | 4000 chars | string | No | Nullable, stored in database |
+| `done` | — | boolean/0/1 | No | Defaults to 0 (false) |
+| `id` (URL param) | — | integer | Yes | Must be positive; NaN/negative returns 400 |
+
+**Defense in depth:**
+1. Application validation (400 errors, user-friendly messages, fast feedback)
+2. Database CHECK constraints (safety net, prevents malformed data at storage layer)
+3. SQLite TEXT limit (effectively unbounded ~1 GB default, last resort)

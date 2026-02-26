@@ -26,6 +26,11 @@ const DEFAULTS = Object.freeze({
   blockBrowserOrigin: false,
   requireJwt: false,
   jwtExpiresIn: '120s',
+  jsonBodyLimit: '100kb',
+  urlencodedBodyLimit: '100kb',
+  urlencodedParameterLimit: 1000,
+  adminRateLimitWindowMs: 60000,
+  adminRateLimitMax: 60,
 });
 
 /**
@@ -64,6 +69,28 @@ export function createApiConfig(overrides = {}, env = process.env) {
       (env.API_REQUIRE_JWT ? env.API_REQUIRE_JWT === 'true' : DEFAULTS.requireJwt),
     jwtSecret: overrides.jwtSecret ?? env.JWT_SECRET ?? '',
     jwtExpiresIn: overrides.jwtExpiresIn ?? env.JWT_EXPIRES_IN ?? DEFAULTS.jwtExpiresIn,
+    // WHY: Enforce request payload ceilings to prevent OOM from unbounded body parsing.
+    jsonBodyLimit:
+      overrides.jsonBodyLimit ?? env.API_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
+    urlencodedBodyLimit:
+      overrides.urlencodedBodyLimit ??
+        env.API_URLENCODED_BODY_LIMIT ??
+        DEFAULTS.urlencodedBodyLimit,
+    urlencodedParameterLimit: Number(
+      overrides.urlencodedParameterLimit ??
+        env.API_URLENCODED_PARAMETER_LIMIT ??
+        DEFAULTS.urlencodedParameterLimit,
+    ),
+    // WHY: Expensive endpoints (metrics, data queries) need burst protection.
+    // Fixed-window throttle prevents resource exhaustion without external state.
+    adminRateLimitWindowMs: Number(
+      overrides.adminRateLimitWindowMs ??
+        env.API_ADMIN_RATE_LIMIT_WINDOW_MS ??
+        DEFAULTS.adminRateLimitWindowMs,
+    ),
+    adminRateLimitMax: Number(
+      overrides.adminRateLimitMax ?? env.API_ADMIN_RATE_LIMIT_MAX ?? DEFAULTS.adminRateLimitMax,
+    ),
     logger: overrides.logger,
     services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
     ...overrides,
