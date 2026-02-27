@@ -2,6 +2,17 @@
  * @module middlewares/errorHandler
  * @description Express error-handling middleware for 404 catch-all and
  * generic error responses. Content-negotiates between HTML and JSON.
+ *
+ * WHY (intentional duplication): The API counterpart lives at
+ * core/api/src/middlewares/error-handler.js and is JSON-only. This app
+ * version adds HTML content-negotiation via Eta view rendering, which
+ * the API package does not need. Consolidating would require a template-
+ * method abstraction that obscures two simple, clear implementations.
+ * Sonar flags ~85% similarity; the difference (HTML rendering) is the
+ * reason both exist.
+ *
+ * VERIFY IF CHANGED: Keep the logging/error-envelope structure aligned
+ * with the API counterpart; diverge only on response format.
  */
 
 import { createNotFoundError } from '../errors/appError.js';

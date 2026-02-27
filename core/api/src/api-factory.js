@@ -1,3 +1,21 @@
+/**
+ * @module api
+ * @description Express API factory. Composes middleware, enforcement,
+ * metrics routes, consumer plugins, and error handling into a single
+ * API app instance.
+ *
+ * WHY (intentional parity with core/app/src/app-factory.js): Both
+ * factories share ~40 lines of middleware linking (hook registries,
+ * request ID, body parsers, health routes, shutdown rejection, throttle
+ * mounting, plugin loop). This duplication is deliberate — middleware
+ * order is load-bearing and differs (JWT enforcement and origin blocking
+ * are API-only; view engine, static files, navLinks are app-only).
+ * Abstracting the shared lines into a base function would require
+ * callback hooks that obscure the explicit, auditable middleware stack.
+ *
+ * VERIFY IF CHANGED: Review app-factory.js for parallel changes that
+ * should stay in sync (body-parser config, health routes, shutdown gate).
+ */
 import express from 'express';
 
 import {
@@ -5,13 +23,13 @@ import {
   storeRegistries,
   createRequestIdMiddleware,
   createRequestLogger,
+  createAdminThrottle,
 } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { metricsRoutes } from './routes/metrics.js';
 import { indexRoutes } from './routes/index.js';
 import { notFoundHandler, errorHandler } from './middlewares/error-handler.js';
 import { createEnforcementMiddleware } from './middlewares/enforcement.js';
-import { createAdminThrottle } from './middlewares/admin-throttle.js';
 
 /**
  * @typedef {(app: import('express').Express, config: object) => void} Plugin

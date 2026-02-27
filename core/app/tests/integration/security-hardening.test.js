@@ -5,6 +5,13 @@
  * WHY: Validates that oversized payloads return 413, burst traffic
  * to admin routes returns 429, and health endpoints remain available
  * under throttle pressure.
+ *
+ * WHY (intentional parity with core/api/tests/integration/security-hardening.test.js):
+ * Both test suites validate the same security contract (payload limits,
+ * throttling, health availability) for their respective frameworks.
+ * This duplication is deliberate — each package must independently
+ * prove its own hardening. A shared test harness would obscure which
+ * framework implementation is under test.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

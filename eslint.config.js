@@ -17,6 +17,8 @@ const nodeTimerGlobals = {
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   setImmediate: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
 };
 
 const testGlobals = {

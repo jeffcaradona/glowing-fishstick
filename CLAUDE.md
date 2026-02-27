@@ -78,6 +78,18 @@ Run: `npm run lint` · `npm run format` · `npm run test:all`
 
 **Adding config:** Spread `coreCreateConfig(overrides, env)` + consumer-specific fields in consumer's `config/env.js`.
 
+## Intentional code duplication
+
+Some code appears in both `core/app` and `core/api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
+
+### Consolidated (shared)
+- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/app` and `core/api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
+
+### Intentionally separate (do not consolidate)
+- **Error handlers** (`core/app/src/middlewares/errorHandler.js` vs `core/api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
+- **Factories** (`core/app/src/app-factory.js` vs `core/api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
+- **Security hardening tests** (`core/*/tests/integration/security-hardening.test.js`): Parallel test structure validates each framework independently. Each package must prove its own security contract; shared harness would obscure which implementation is under test.
+
 ## When in doubt
 
 Read `core/app/src/app-factory.js` and `app/src/app.js` for canonical patterns.
