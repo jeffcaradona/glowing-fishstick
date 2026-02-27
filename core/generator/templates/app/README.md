@@ -27,7 +27,7 @@ Template route:
 ## Structure
 
 ```text
-template/app/
+core/generator/templates/app/
   package.json
   src/
     server.js
@@ -42,4 +42,4 @@ template/app/
 
 - `src/server.js` is a thin entrypoint using `createApp`, `createServer`, and `createConfig`.
 - `src/app.js` is the plugin where app-specific routes and lifecycle hooks are registered.
-- `npm run dev` watches template and core files (`core/app`, `core/shared`) including `.eta`.
+- `npm run dev` watches source files including `.eta`.

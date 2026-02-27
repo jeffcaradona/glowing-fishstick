@@ -22,7 +22,7 @@ In this repository, `npm audit` reports no non-breaking fix path for this chain.
 - Templates are now `.eta` under:
   - `core/app/src/views/`
   - `app/src/views/`
-  - `template/app/src/views/`
+  - `core/generator/templates/app/src/views/`
 - `core/app/src/engines/eta-engine.js` is wired into `createApp`.
 - Current Eta engine avoids sync FS calls in request-render paths; startup-only indexing is used for multi-directory template resolution.
 
@@ -73,9 +73,9 @@ Rename all template files from `.ejs` to `.eta`:
 - `core/app/src/views/layouts/footer.ejs`
 - `app/src/views/index.ejs`
 - `app/src/views/tasks/list.ejs`
-- `template/app/src/views/my-feature.ejs`
-- `template/app/src/views/layouts/header.ejs`
-- `template/app/src/views/layouts/footer.ejs`
+- `core/generator/templates/app/src/views/my-feature.ejs`
+- `core/generator/templates/app/src/views/layouts/header.ejs`
+- `core/generator/templates/app/src/views/layouts/footer.ejs`
 
 Template syntax updates:
 
@@ -89,8 +89,8 @@ Files:
 
 - `app/package.json`
 - `api/package.json`
-- `template/app/package.json`
-- `template/api/package.json`
+- `core/generator/templates/app/package.json`
+- `core/generator/templates/api/package.json`
 
 Update nodemon extension watch lists to include `.eta` (and optionally keep `.ejs` during transition window).
 
@@ -102,7 +102,7 @@ Update all canonical docs for consistency:
 - `app/DEV_APP_README.md`
 - `documentation/00-project-specs.md`
 - `documentation/99-potential-gaps.md` (status wording if implementation state changes)
-- Any package README that states EJS behavior (for example `template/app/README.md`)
+- Any package README that states EJS behavior (for example `core/generator/templates/app/README.md`)
 
 ## Phase 5: Versioning
 
@@ -131,7 +131,7 @@ npm run dev:app
 Doc consistency checks:
 
 ```bash
-rg -n "\\.ejs|EJS|<%- include\\(" README.md app/DEV_APP_README.md documentation/*.md template/app/README.md
+rg -n "\.ejs|EJS|<%- include\\(" README.md app/DEV_APP_README.md documentation/*.md core/generator/templates/app/README.md
 rg -n "view engine" core/app/src/app-factory.js documentation/*.md
 ```
 

@@ -50,18 +50,18 @@ Currently, developers who want to use glowing-fishstick must:
 │   └── cli.js                    # Entry point (symlinked as `fishstick-create`)
 ├── src/
 │   ├── prompt-engine.js          # Interactive questions
-│   ├── template-renderer.js      # EJS/Handlebars rendering
+│   ├── template-renderer.js      # Handlebars rendering
 │   ├── file-scaffolder.js        # Directory & file creation
 │   └── validators.js             # Input validation
 ├── templates/
 │   ├── app/                      # Express app template files
 │   │   ├── src/
-│   │   │   ├── server.js.ejs
-│   │   │   ├── app.js.ejs
-│   │   │   └── config/env.js.ejs
+│   │   │   ├── server.js
+│   │   │   ├── app.js
+│   │   │   └── config/env.js
 │   │   ├── views/
 │   │   ├── public/
-│   │   └── package.json.ejs
+│   │   └── package.json
 │   └── api/                      # Express API template (optional)
 ├── package.json
 └── README.md
@@ -71,16 +71,12 @@ Currently, developers who want to use glowing-fishstick must:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `commander` | ^12.0.0 | CLI argument parsing (what Express Generator uses) |
-| `inquirer` | ^9.0.0 | Interactive terminal prompts |
-| `chalk` | ^5.0.0 | Colored console output |
-| `fs-extra` | ^11.0.0 | Enhanced file system operations |
-| `ejs` | ^3.1.8 | Template rendering |
+| `commander` | ^14.0.3 | CLI argument parsing (what Express Generator uses) |
+| `handlebars` | ^4.7.8 | Template rendering (`{{ }}` syntax, avoids Eta `<%= %>` conflicts) |
 
-**Total size impact:** ~2-3 MB (acceptable for dev tooling)
+All other functionality uses Node.js >= 22 built-ins (`node:readline/promises`, `node:fs/promises`, `node:child_process`).
 
----
-
+**Total size impact:** < 1 MB (minimal for dev tooling)
 ## Core Features
 
 ### 1. **Interactive Prompts**
@@ -105,12 +101,12 @@ $ fishstick-create my-app
 
 ### 2. **Template Rendering**
 
-Use your existing `template/app` and `template/api` directories as source:
+Use the `core/generator/templates/app` and `core/generator/templates/api` directories as source:
 
 ```
-Input template: template/app/src/server.js.ejs
+Input template: core/generator/templates/app/src/server.js
 Variables: { appName: "my-app", port: 3000 }
-↓ 
+↓  (Handlebars renders {{ }} placeholders)
 Output: my-app/src/server.js
 ```
 
@@ -159,10 +155,10 @@ my-app/
 
 ### **Phase 2: Template Rendering (1 week)**
 - [x] Move template files to `core/generator/templates/`
-- [x] Add `.ejs` extensions where placeholders needed
-- [x] Implement `template-renderer.js` using EJS
+- [x] Add Handlebars `{{ }}` placeholders where dynamic values are needed
+- [x] Implement `template-renderer.js` using Handlebars
 - [x] Pass user variables through render engine
-- [x] Update `package.json.ejs` with user values
+- [x] Update `package.json` template with user values
 
 **Deliverable:** Generated app has correct app name, description, port in files
 
@@ -246,7 +242,7 @@ my-tasks-app/
 
 ### **Approach 1: Symlink Strategy (Recommended)**
 
-The generator references your existing `template/app` and `template/api` directories:
+The generator uses `core/generator/templates/app` and `core/generator/templates/api` directories:
 
 ```javascript
 // core/generator/src/scaffolder.js
@@ -265,7 +261,7 @@ export function scaffoldApp(projectDir, config) {
 - Minimal duplication
 
 **Cons:**
-- Must keep `template/app` in sync with what generator publishes
+- Must keep `core/generator/templates/app` in sync with what generator publishes
 - When published to npm, templates must be included via `.npmignore`
 
 ### **Approach 2: Duplicate Strategy (Simpler)**
@@ -273,8 +269,7 @@ export function scaffoldApp(projectDir, config) {
 Keep separate template copies in `core/generator/templates/`:
 
 ```
-core/generator/templates/app/  ← Independent copy
-template/app/                  ← Your dev reference
+core/generator/templates/app/  ← Self-contained templates
 ```
 
 **Pros:**
@@ -320,9 +315,7 @@ Add to root `package.json` workspaces:
     "core/modules/logger",
     "core/generator",     // ← NEW
     "app",
-    "api",
-    "template/app",
-    "template/api"
+    "api"
   ]
 }
 ```
@@ -359,7 +352,7 @@ fishstick-create test-app
 | **Total** | **3-4 weeks** | **32-48 hours** |
 
 **Risk factors:**
-- EJS template syntax edge cases (+2h)
+- Handlebars/Eta delimiter separation (mitigated: `{{ }}` vs `<%= %>`)
 - Cross-platform path handling (+2h)
 - npm registry publishing first-time (+1h)
 

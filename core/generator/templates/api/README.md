@@ -27,7 +27,7 @@ Template API route:
 ## Structure
 
 ```text
-template/api/
+core/generator/templates/api/
   package.json
   src/
     server.js
@@ -40,4 +40,4 @@ template/api/
 
 - `src/server.js` is the thin API entrypoint using `createApi`, `createApiConfig`, and `createServer`.
 - `src/api.js` is the plugin where API-specific routes and lifecycle hooks are registered.
-- `npm run dev` watches template and core files (`core/api`, `core/shared`).
+- `npm run dev` watches source files.

@@ -757,7 +757,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 | `core/shared` | `@glowing-fishstick/shared` |
 | `core/modules/logger` | `@glowing-fishstick/logger` |
 
-`app/`, `api/`, `template/app`, and `template/api` are marked `"private": true` and are never published.
+`app/` and `api/` are marked `"private": true` and are never published. Starter templates live in `core/generator/templates/` and ship as part of the `@glowing-fishstick/generator` package.
 
 ### Local workflow
 

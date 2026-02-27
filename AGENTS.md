@@ -8,9 +8,8 @@ This repository is a **monorepo workspace** with the following key directories:
 
 - `api/` - Local Development API package
 - `app/` - Local Development Application package
-- `core/` - Core libraries
+- `core/` - Core libraries (includes `core/generator/templates/` — starter scaffolds)
 - `documentation/` - Project documentation
-- `template/` - Project templates
 - `tests/` - Integration tests
 
 ### Package Boundaries

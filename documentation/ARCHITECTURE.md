@@ -118,7 +118,7 @@
 │   ├── 00-project-specs.md Full public API surface and design decisions
 │   └── 99-potential-gaps.md Backlog and implementation status
 │
-└── template/               Starter scaffold for new consumer apps
+└── core/generator/         CLI scaffolding tool + starter templates
 ```
 
 ---

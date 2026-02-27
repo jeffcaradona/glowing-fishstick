@@ -15,9 +15,7 @@
     "core/generator",
     "core/shared",
     "core/modules/logger",
-    "core/workflows",
-    "template/app",
-    "template/api"
+    "core/workflows"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {

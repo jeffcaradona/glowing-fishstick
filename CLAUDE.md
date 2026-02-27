@@ -5,7 +5,7 @@ POC Express.js framework distributed as npm modules. Solves "template drift" via
 ## Repository (npm workspaces monorepo)
 
 core/app/ → @glowing-fishstick/app | core/shared/ → @glowing-fishstick/shared | core/api/ → @glowing-fishstick/api
-app/ → consumer example | api/ → API consumer scaffold | template/ → starter templates | tests/ → Vitest integration tests
+app/ → consumer example | api/ → API consumer scaffold | core/generator/ → CLI scaffolding tool + starter templates | tests/ → Vitest integration tests
 
 - Root package is NOT runtime-installable. Consumer examples import from `@glowing-fishstick/*` packages.
 - `app/` demonstrates how external projects consume the published modules.

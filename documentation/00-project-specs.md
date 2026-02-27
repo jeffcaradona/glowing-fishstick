@@ -551,9 +551,12 @@ glowing-fishstick/
 |-- documentation/
 |   |-- 00-project-specs.md
 |   `-- 99-potential-gaps.md
-`-- template/
-    |-- app/
-    `-- api/
+`-- core/generator/
+    |-- templates/
+    |   |-- app/
+    |   `-- api/
+    |-- bin/
+    `-- src/
 ```
 
 ---
