@@ -1,17 +1,17 @@
 {
-  "name": "my-glowing-fishstick-app",
+  "name": "{{projectName}}",
   "private": true,
-  "description": "A starter application using the glowing-fishstick core module",
-  "version": "0.0.3",
+  "description": "{{description}}",
+  "version": "0.0.1",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon --watch src --watch ../core/app/src --watch ../core/shared/src --ext js,mjs,cjs,json,eta src/server.js"
+    "dev": "nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/app": "^0.0.3",
-    "@glowing-fishstick/shared": "^0.0.3",
+    "@glowing-fishstick/app": "^{{coreVersion}}",
+    "@glowing-fishstick/shared": "^{{coreVersion}}",
     "express": "^5.2.1"
   },
   "devDependencies": {

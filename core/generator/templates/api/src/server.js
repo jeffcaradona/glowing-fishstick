@@ -8,7 +8,7 @@ import { createServer, createLogger } from '@glowing-fishstick/shared';
 import { myApiPlugin } from './api.js';
 import { apiOverrides } from './config/env.js';
 
-const logger = createLogger({ name: 'my-api' });
+const logger = createLogger({ name: '{{appName}}' });
 const config = createApiConfig({ ...apiOverrides, logger });
 const app = createApi(config, [myApiPlugin]);
 

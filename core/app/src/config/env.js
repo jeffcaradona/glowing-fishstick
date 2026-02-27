@@ -105,10 +105,11 @@ export function createConfig(overrides = {}, env = process.env) {
       overrides.apiHealthTimeoutMs ?? env.API_HEALTH_TIMEOUT_MS ?? DEFAULTS.apiHealthTimeoutMs,
     ),
     // WHY: Enforce request payload ceilings to prevent OOM from unbounded body parsing.
-    jsonBodyLimit:
-      overrides.jsonBodyLimit ?? env.APP_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
+    jsonBodyLimit: overrides.jsonBodyLimit ?? env.APP_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
     urlencodedBodyLimit:
-      overrides.urlencodedBodyLimit ?? env.APP_URLENCODED_BODY_LIMIT ?? DEFAULTS.urlencodedBodyLimit,
+      overrides.urlencodedBodyLimit ??
+      env.APP_URLENCODED_BODY_LIMIT ??
+      DEFAULTS.urlencodedBodyLimit,
     urlencodedParameterLimit: Number(
       overrides.urlencodedParameterLimit ??
         env.APP_URLENCODED_PARAMETER_LIMIT ??

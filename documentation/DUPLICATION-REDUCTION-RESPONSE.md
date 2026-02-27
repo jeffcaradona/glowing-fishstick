@@ -38,7 +38,7 @@ That said, this project will also serve as a foundation for internal homelab use
 
 ### Intentional duplication is a feature, not a bug
 
-The AGENTS.md policy already documents *why* the flagged files are separate:
+The AGENTS.md policy already documents _why_ the flagged files are separate:
 
 - **Factories** have load-bearing middleware-ordering differences. Abstracting them hides security-relevant configuration from audit view.
 - **Security hardening tests** must independently prove each package's security contract. Shared test generators would obscure which implementation is under test.

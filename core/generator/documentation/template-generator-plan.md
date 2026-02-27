@@ -15,13 +15,13 @@ Build a CLI tool at `core/generator/` that scaffolds new glowing-fishstick proje
 
 ## Key Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| **Template engine** | Handlebars (`{{ }}`) | Won't collide with Eta's `<%= %>` syntax in `.eta` view files; eliminates need for delimiter customization or selective rendering |
-| **Dependencies** | `commander` + `handlebars` only | Node >= 22 provides `node:readline/promises`, `node:fs/promises`, `node:child_process` built-in; minimizes install footprint |
-| **Template strategy** | Self-contained (templates inside generator) | Templates moved into `core/generator/templates/`; no cross-directory workspace dependencies; old `template/` workspace entries removed |
-| **`.eta` file handling** | Copied verbatim (no Handlebars processing) | `.eta` expressions (`<%= appName %>`) are Eta runtime variables resolved at request time, not generator-time placeholders |
-| **Dev scripts** | Transformed for standalone use | Generated `package.json` dev scripts remove monorepo-relative `--watch ../core/*` paths since standalone projects install from npm |
+| Decision                 | Choice                                      | Rationale                                                                                                                              |
+| ------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Template engine**      | Handlebars (`{{ }}`)                        | Won't collide with Eta's `<%= %>` syntax in `.eta` view files; eliminates need for delimiter customization or selective rendering      |
+| **Dependencies**         | `commander` + `handlebars` only             | Node >= 22 provides `node:readline/promises`, `node:fs/promises`, `node:child_process` built-in; minimizes install footprint           |
+| **Template strategy**    | Self-contained (templates inside generator) | Templates moved into `core/generator/templates/`; no cross-directory workspace dependencies; old `template/` workspace entries removed |
+| **`.eta` file handling** | Copied verbatim (no Handlebars processing)  | `.eta` expressions (`<%= appName %>`) are Eta runtime variables resolved at request time, not generator-time placeholders              |
+| **Dev scripts**          | Transformed for standalone use              | Generated `package.json` dev scripts remove monorepo-relative `--watch ../core/*` paths since standalone projects install from npm     |
 
 ---
 
@@ -81,14 +81,14 @@ core/generator/
 
 Variables collected from CLI arguments or interactive prompts, passed to Handlebars:
 
-| Variable | Source | Default | Used In |
-|----------|--------|---------|---------|
-| `projectName` | CLI arg or prompt | *(required)* | `package.json` name, `README.md` |
-| `appName` | Derived from `projectName` | Same as `projectName` | `config/env.js`, `server.js` logger name |
-| `description` | Prompt or default | `"A starter [app\|API] using glowing-fishstick"` | `package.json` description |
-| `port` | `--port` flag or default | `3000` (app) / `3001` (api) | `config/env.js` |
-| `templateType` | `--template` flag | `"app"` | Selects template directory |
-| `coreVersion` | Read from generator's own `package.json` | Current version | Dependency versions in generated `package.json` |
+| Variable       | Source                                   | Default                                          | Used In                                         |
+| -------------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `projectName`  | CLI arg or prompt                        | _(required)_                                     | `package.json` name, `README.md`                |
+| `appName`      | Derived from `projectName`               | Same as `projectName`                            | `config/env.js`, `server.js` logger name        |
+| `description`  | Prompt or default                        | `"A starter [app\|API] using glowing-fishstick"` | `package.json` description                      |
+| `port`         | `--port` flag or default                 | `3000` (app) / `3001` (api)                      | `config/env.js`                                 |
+| `templateType` | `--template` flag                        | `"app"`                                          | Selects template directory                      |
+| `coreVersion`  | Read from generator's own `package.json` | Current version                                  | Dependency versions in generated `package.json` |
 
 ---
 
@@ -98,28 +98,28 @@ These files in `core/generator/templates/` need Handlebars placeholders replacin
 
 ### App Template (`templates/app/`)
 
-| File | Hardcoded Value | Replacement |
-|------|----------------|-------------|
-| `package.json` | `"my-glowing-fishstick-app"` | `"{{projectName}}"` |
-| `package.json` | `"A starter application..."` | `"{{description}}"` |
-| `package.json` | `"^0.0.3"` (dep versions) | `"^{{coreVersion}}"` |
-| `package.json` | `--watch ../core/app/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
-| `src/server.js` | `createLogger({ name: 'my-app' })` | `createLogger({ name: '{{appName}}' })` |
-| `src/config/env.js` | `appName: 'my-app'` | `appName: '{{appName}}'` |
-| `README.md` | Title and structure references | Use `{{projectName}}` and `{{appName}}` |
+| File                | Hardcoded Value                                                    | Replacement                                                                          |
+| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `package.json`      | `"my-glowing-fishstick-app"`                                       | `"{{projectName}}"`                                                                  |
+| `package.json`      | `"A starter application..."`                                       | `"{{description}}"`                                                                  |
+| `package.json`      | `"^0.0.3"` (dep versions)                                          | `"^{{coreVersion}}"`                                                                 |
+| `package.json`      | `--watch ../core/app/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
+| `src/server.js`     | `createLogger({ name: 'my-app' })`                                 | `createLogger({ name: '{{appName}}' })`                                              |
+| `src/config/env.js` | `appName: 'my-app'`                                                | `appName: '{{appName}}'`                                                             |
+| `README.md`         | Title and structure references                                     | Use `{{projectName}}` and `{{appName}}`                                              |
 
 ### API Template (`templates/api/`)
 
-| File | Hardcoded Value | Replacement |
-|------|----------------|-------------|
-| `package.json` | `"my-glowing-fishstick-api"` | `"{{projectName}}"` |
-| `package.json` | `"A starter API..."` | `"{{description}}"` |
-| `package.json` | `"^0.0.3"` (dep versions) | `"^{{coreVersion}}"` |
-| `package.json` | `--watch ../core/api/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
-| `src/server.js` | `createLogger({ name: 'my-api' })` | `createLogger({ name: '{{appName}}' })` |
-| `src/config/env.js` | `appName: 'my-api'` | `appName: '{{appName}}'` |
-| `src/config/env.js` | `port: Number(process.env.PORT \|\| 3001)` | `port: Number(process.env.PORT \|\| {{port}})` |
-| `README.md` | Title and structure references | Use `{{projectName}}` and `{{appName}}` |
+| File                | Hardcoded Value                                                    | Replacement                                                                          |
+| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `package.json`      | `"my-glowing-fishstick-api"`                                       | `"{{projectName}}"`                                                                  |
+| `package.json`      | `"A starter API..."`                                               | `"{{description}}"`                                                                  |
+| `package.json`      | `"^0.0.3"` (dep versions)                                          | `"^{{coreVersion}}"`                                                                 |
+| `package.json`      | `--watch ../core/api/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
+| `src/server.js`     | `createLogger({ name: 'my-api' })`                                 | `createLogger({ name: '{{appName}}' })`                                              |
+| `src/config/env.js` | `appName: 'my-api'`                                                | `appName: '{{appName}}'`                                                             |
+| `src/config/env.js` | `port: Number(process.env.PORT \|\| 3001)`                         | `port: Number(process.env.PORT \|\| {{port}})`                                       |
+| `README.md`         | Title and structure references                                     | Use `{{projectName}}` and `{{appName}}`                                              |
 
 ### Files NOT Modified
 
@@ -252,22 +252,22 @@ Package README with:
 
 ### Step 10: Update documentation for the move + new generator
 
-| Document | Change |
-|----------|--------|
-| Root `README.md` | Update references from `template/app` and `template/api` to `core/generator/templates/` |
-| `documentation/00-project-specs.md` | Add "Generator Package" section |
-| `documentation/99-potential-gaps.md` | Add generator as a tracked feature (in progress) |
-| `AGENTS.md` | Update repository structure to list `core/generator/` properly; remove `template/` references |
-| `CLAUDE.md` | Add generator to repository description |
-| `core/generator/templates/app/README.md` | Update structure diagram from `template/app/` to reflect new location |
-| `core/generator/templates/api/README.md` | Update structure diagram from `template/api/` to reflect new location |
+| Document                                 | Change                                                                                        |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Root `README.md`                         | Update references from `template/app` and `template/api` to `core/generator/templates/`       |
+| `documentation/00-project-specs.md`      | Add "Generator Package" section                                                               |
+| `documentation/99-potential-gaps.md`     | Add generator as a tracked feature (in progress)                                              |
+| `AGENTS.md`                              | Update repository structure to list `core/generator/` properly; remove `template/` references |
+| `CLAUDE.md`                              | Add generator to repository description                                                       |
+| `core/generator/templates/app/README.md` | Update structure diagram from `template/app/` to reflect new location                         |
+| `core/generator/templates/api/README.md` | Update structure diagram from `template/api/` to reflect new location                         |
 
 ### Step 11: Add tests
 
-| Test File | Coverage |
-|-----------|----------|
-| `tests/unit/validators.test.js` | Name validation, port validation, directory checks |
-| `tests/unit/scaffolder.test.js` | File rendering with Handlebars, directory creation, `.eta` passthrough |
+| Test File                       | Coverage                                                                                                                                             |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/unit/validators.test.js` | Name validation, port validation, directory checks                                                                                                   |
+| `tests/unit/scaffolder.test.js` | File rendering with Handlebars, directory creation, `.eta` passthrough                                                                               |
 | `tests/integration/cli.test.js` | Full scaffold flow into temp directory; verify generated files have correct content; verify `npm install && node src/server.js` starts without error |
 
 ### Step 12: Add generator to root test pipeline
@@ -294,15 +294,15 @@ fishstick-create [options] [project-directory]
 
 ### Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--template <type>` | Template type: `app` or `api` | `app` |
-| `--port <number>` | Override default port | `3000` (app) / `3001` (api) |
-| `--no-install` | Skip `npm install` | `false` |
-| `--no-git` | Skip `git init` | `false` |
-| `--force` | Overwrite existing directory | `false` |
-| `--help` | Show usage information | — |
-| `--version` | Show CLI version | — |
+| Flag                | Description                   | Default                     |
+| ------------------- | ----------------------------- | --------------------------- |
+| `--template <type>` | Template type: `app` or `api` | `app`                       |
+| `--port <number>`   | Override default port         | `3000` (app) / `3001` (api) |
+| `--no-install`      | Skip `npm install`            | `false`                     |
+| `--no-git`          | Skip `git init`               | `false`                     |
+| `--force`           | Overwrite existing directory  | `false`                     |
+| `--help`            | Show usage information        | —                           |
+| `--version`         | Show CLI version              | —                           |
 
 ### Examples
 
@@ -386,11 +386,11 @@ After implementation, verify:
 
 ## Dependencies
 
-| Package | Version | Purpose | Type |
-|---------|---------|---------|------|
-| `commander` | ^14.0.3 | CLI argument parsing | runtime |
-| `handlebars` | ^4.7.8 | Template rendering (`{{ }}` syntax) | runtime |
-| `vitest` | (workspace) | Test runner | dev (inherited from root) |
+| Package      | Version     | Purpose                             | Type                      |
+| ------------ | ----------- | ----------------------------------- | ------------------------- |
+| `commander`  | ^14.0.3     | CLI argument parsing                | runtime                   |
+| `handlebars` | ^4.7.8      | Template rendering (`{{ }}` syntax) | runtime                   |
+| `vitest`     | (workspace) | Test runner                         | dev (inherited from root) |
 
 All other functionality uses Node.js >= 22 built-ins:
 

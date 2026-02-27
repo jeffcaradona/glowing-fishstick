@@ -31,9 +31,11 @@ The proposal is strong and implementation-oriented. It clearly separates **flag 
 ## 1) Registry format and validation
 
 ### Risk
+
 A single YAML file is easy initially but can drift without strict validation.
 
 ### Recommendation
+
 - Define and enforce a JSON Schema for `flags/registry.yaml` in CI.
 - Require normalized fields:
   - `key` pattern (e.g., `^[a-z0-9_.-]+$`)
@@ -48,10 +50,13 @@ A single YAML file is easy initially but can drift without strict validation.
 ## 2) Runtime-provider contract clarity
 
 ### Risk
+
 `getProviderState(keys)` may return inconsistent metadata across providers, making UI results ambiguous.
 
 ### Recommendation
+
 Define a normalized provider contract:
+
 - `enabled` / `variant`
 - `targetingSummary`
 - `lastChangedAt`
@@ -64,9 +69,11 @@ This keeps explainability consistent even with mixed backends.
 ## 3) Event-loop and hot-path safety
 
 ### Risk
+
 If `evaluate`/`explain` run expensive lookups on-demand, admin endpoints can become latent, and shared logic may accidentally leak into request hot paths.
 
 ### Recommendation
+
 - Keep evaluation logic async-only.
 - Cache immutable registry data in memory with controlled refresh.
 - Avoid sync filesystem and sync crypto/process APIs in all runtime paths.
@@ -75,9 +82,11 @@ If `evaluate`/`explain` run expensive lookups on-demand, admin endpoints can bec
 ## 4) Security and auditability details are underspecified
 
 ### Risk
+
 Admin visibility endpoints can leak targeting and internal rollout logic if not tightly scoped.
 
 ### Recommendation
+
 - Require authenticated admin role with explicit authorization middleware.
 - Log evaluation requests with request-id, actor, flagKey, and redacted context.
 - Redact sensitive context fields (`email`, tokens, PII) before persistence.
@@ -86,9 +95,11 @@ Admin visibility endpoints can leak targeting and internal rollout logic if not 
 ## 5) Stored procedure routing safeguards
 
 ### Risk
+
 Showing dynamic procedure selection is useful, but any mismatch in parameter signatures can create runtime failure risks.
 
 ### Recommendation
+
 - Maintain explicit per-version signature metadata in registry effects or companion config.
 - Add CI check validating declared signatures against approved stored-procedure metadata source.
 - Treat signature mismatch as deploy-blocking.
@@ -96,9 +107,11 @@ Showing dynamic procedure selection is useful, but any mismatch in parameter sig
 ## 6) Flag lifecycle policy needs hard limits
 
 ### Risk
+
 Without strict policy, temporary release flags become permanent debt.
 
 ### Recommendation
+
 - Enforce max TTL by type:
   - `release`: short TTL
   - `experiment`: medium TTL
@@ -111,19 +124,24 @@ Without strict policy, temporary release flags become permanent debt.
 ## Suggested API Refinements
 
 ### `GET /admin/flags`
+
 Include:
+
 - `registry`: authoritative metadata
 - `runtime`: normalized provider state
 - `status`: `healthy | degraded | unavailable`
 - `compliance`: `expired`, `missingOwner`, `missingRemovalIssue`
 
 ### `POST /admin/flags/evaluate`
+
 Add:
+
 - `traceId` for diagnostics
 - `sourceDecisions[]` to show which rule/provider branch resolved value
 - `latencyMs` and `providerLatencyMs`
 
 ### Optional `GET /admin/flags/audit`
+
 - Keep read model pagination-ready (`cursor`, `limit`)
 - Include actor, action, before/after (for phase 3 write controls)
 

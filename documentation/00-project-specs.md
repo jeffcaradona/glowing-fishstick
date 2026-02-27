@@ -178,7 +178,57 @@ export function myPlugin(app, config) {
 - `dispose()` only tracks initialized singletons (transients are not tracked).
 - No strict-mode toggle.
 
-## 5. Deployment Patterns
+## 5. Generator Package (`@glowing-fishstick/generator`)
+
+The generator is a globally-installable CLI tool that scaffolds new glowing-fishstick projects.
+
+**Package location:** `core/generator/`
+**CLI command:** `fishstick-create`
+
+### Installation
+
+```bash
+npm install -g @glowing-fishstick/generator
+```
+
+### Usage
+
+```bash
+# Interactive mode
+fishstick-create
+
+# With flags (non-interactive)
+fishstick-create my-app --template app
+fishstick-create my-api --template api --no-install
+```
+
+### Options
+
+| Flag                | Description                  | Default         |
+| ------------------- | ---------------------------- | --------------- |
+| `--template <type>` | `app` or `api`               | `app`           |
+| `--port <number>`   | Override default port        | `3000` / `3001` |
+| `--no-install`      | Skip `npm install`           | runs install    |
+| `--no-git`          | Skip `git init`              | runs git init   |
+| `--force`           | Overwrite existing directory | `false`         |
+
+### Template variables
+
+| Variable      | Source                          | Used in                                         |
+| ------------- | ------------------------------- | ----------------------------------------------- |
+| `projectName` | CLI arg or prompt               | `package.json` name, `README.md`                |
+| `appName`     | Derived (hyphens → underscores) | `config/env.js`, `server.js` logger             |
+| `description` | Prompt                          | `package.json` description                      |
+| `port`        | `--port` or default             | `config/env.js`                                 |
+| `coreVersion` | Generator's `package.json`      | Dependency versions in generated `package.json` |
+
+### Template strategy
+
+Templates live in `core/generator/templates/` (self-contained). Handlebars (`{{ }}`) placeholders are used for dynamic values so they don't collide with Eta's `<%= %>` runtime syntax in `.eta` view files. `.eta` files are copied verbatim.
+
+---
+
+## 6. Deployment Patterns
 
 ### 5.1 API as an Authenticated Proxy
 
@@ -1097,6 +1147,7 @@ import { createServer } from '@glowing-fishstick/shared';
 The API includes a production-grade, version-tracked migration system (`api/src/database/db.js`) for SQLite schema evolution with built-in data validation and rollback protection.
 
 **Schema versioning:**
+
 - Tracks applied migrations in a `schema_versions` table with columns: `version` (PRIMARY KEY), `applied_at` (timestamp), `description` (text)
 - Migrations defined as an array of `{ version, description, up }` objects in module scope
 - `up` is a function that receives the `DatabaseSync` handle and executes schema changes
@@ -1126,6 +1177,7 @@ The API includes a production-grade, version-tracked migration system (`api/src/
 **Migration v1**: Rebuild tasks table with CHECK constraints
 
 Pre-migration validation checks (before schema change):
+
 ```sql
 SELECT id, length(title) FROM tasks WHERE length(title) > 255      -- Fail if violations found
 SELECT id, length(description) FROM tasks WHERE length(description) > 4000
@@ -1133,6 +1185,7 @@ SELECT id, done FROM tasks WHERE done NOT IN (0, 1)
 ```
 
 Schema rebuild (if validation passes):
+
 ```sql
 CREATE TABLE tasks_new (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1150,6 +1203,7 @@ ALTER TABLE tasks_new RENAME TO tasks;
 **Error handling on constraint violation:**
 
 If existing data violates the new constraints (e.g., a task has a 300-char title), the migration fails during validation with a clear error message that includes:
+
 - Which constraint is violated (field name + constraint description)
 - Count of violating records
 - Samples (first 3 records) with `id` and violation details
@@ -1157,6 +1211,7 @@ If existing data violates the new constraints (e.g., a task has a 300-char title
 - Pointer to delete `api/data/tasks.db` for a fresh start
 
 Example error output:
+
 ```
 Migration v1 failed: existing data violates new constraints:
   title (max 255 characters): 2 record(s)
@@ -1176,6 +1231,7 @@ The app **refuses to start** until the operator fixes the data or deletes the da
 **Base schema** (v0, applied via CREATE TABLE IF NOT EXISTS):
 
 Fresh databases get the base schema with all constraints already included:
+
 ```sql
 CREATE TABLE IF NOT EXISTS tasks (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1208,12 +1264,14 @@ CREATE TABLE IF NOT EXISTS tasks (
 Application-level input validation complements database CHECK constraints, providing user-friendly error responses before data reaches SQLite.
 
 **Validation module** (`api/src/validation/task-validation.js`):
+
 - Exports frozen `LIMITS` object: `{ TITLE_MAX: 255, DESCRIPTION_MAX: 4000 }`
 - `validateTaskInput(data, opts)` checks type, length, and presence; returns `{ valid, errors: string[] }`
 - `validateId(raw)` parses and validates numeric IDs; rejects NaN, negative, non-integer values
 - Reusable across routes and services
 
 **Route integration** (`api/src/routes/router.js`):
+
 - POST `/api/tasks`: Validates title presence/length/type; returns 400 with errors if invalid
 - PATCH `/api/tasks/:id`: Validates all provided fields (title, description, done) with per-field error reporting
 - All ID-based routes (GET, PATCH, DELETE): Validate `:id` parameter; return 400 for invalid format, 404 for not-found record
@@ -1228,6 +1286,7 @@ Application-level input validation complements database CHECK constraints, provi
 | `id` (URL param) | — | integer | Yes | Must be positive; NaN/negative returns 400 |
 
 **Defense in depth:**
+
 1. Application validation (400 errors, user-friendly messages, fast feedback)
 2. Database CHECK constraints (safety net, prevents malformed data at storage layer)
 3. SQLite TEXT limit (effectively unbounded ~1 GB default, last resort)

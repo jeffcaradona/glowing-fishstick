@@ -99,9 +99,7 @@ const MIGRATIONS = [
         );
       }
 
-      const badDone = db
-        .prepare('SELECT id, done FROM tasks WHERE done NOT IN (0, 1)')
-        .all();
+      const badDone = db.prepare('SELECT id, done FROM tasks WHERE done NOT IN (0, 1)').all();
       if (badDone.length > 0) {
         const samples = badDone
           .slice(0, 3)

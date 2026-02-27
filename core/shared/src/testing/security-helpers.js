@@ -44,10 +44,7 @@ export function createPayloadTestPlugin() {
  */
 export function sendOversizedJson(app, path = '/test-payload', sizeBytes = 2000) {
   const body = { data: 'x'.repeat(sizeBytes) };
-  return request(app)
-    .post(path)
-    .set('Content-Type', 'application/json')
-    .send(JSON.stringify(body));
+  return request(app).post(path).set('Content-Type', 'application/json').send(JSON.stringify(body));
 }
 
 /**

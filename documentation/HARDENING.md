@@ -1,7 +1,7 @@
 # Hardening Cookbook — glowing-fishstick
 
 > **Scope:** Practical recipes for adding enterprise-grade security controls to a consumer app or the core packages.  
-> These are *how-to* guides, not specifications. Each recipe is self-contained and cites the relevant config keys, files, and tests to update.
+> These are _how-to_ guides, not specifications. Each recipe is self-contained and cites the relevant config keys, files, and tests to update.
 
 ---
 
@@ -207,9 +207,9 @@ When adding a relational database with a pool (e.g. `pg`, `mysql2`):
 // WHY: Per-query statement timeout prevents runaway queries from starving
 // the connection pool under load. Adjust per SLA.
 const pool = new Pool({
-  connectionTimeoutMillis: 3000,  // fail-fast on connection acquisition
+  connectionTimeoutMillis: 3000, // fail-fast on connection acquisition
   idleTimeoutMillis: 30000,
-  query_timeout: 5000,            // pg-specific: per-statement wall-clock limit
+  query_timeout: 5000, // pg-specific: per-statement wall-clock limit
 });
 ```
 
@@ -217,11 +217,11 @@ Add these values to `createApiConfig()` as `dbConnectionTimeoutMs`, `dbQueryTime
 
 ### Connection pool sizing
 
-| Environment | Pool size | Rationale |
-|-------------|-----------|-----------|
-| Development | 2–5 | No parallelism needed |
-| CI/test | 1 | Prevent port exhaustion in parallel test runs |
-| Production | CPU count × 2 | Rule of thumb; benchmark under load |
+| Environment | Pool size     | Rationale                                     |
+| ----------- | ------------- | --------------------------------------------- |
+| Development | 2–5           | No parallelism needed                         |
+| CI/test     | 1             | Prevent port exhaustion in parallel test runs |
+| Production  | CPU count × 2 | Rule of thumb; benchmark under load           |
 
 ---
 
@@ -235,7 +235,7 @@ Add these values to `createApiConfig()` as `dbConnectionTimeoutMs`, `dbQueryTime
 
 Create `core/shared/src/utils/signing.js`:
 
-```js
+````js
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
@@ -277,7 +277,7 @@ In `core/api/src/config/env.js`:
 ```js
 signingSecret: overrides.signingSecret ?? env.API_SIGNING_SECRET ?? null,
 enableResponseSigning: overrides.enableResponseSigning ?? (env.API_ENABLE_SIGNING === 'true') ?? false,
-```
+````
 
 #### Step 3 — Add a response-signing middleware
 
@@ -340,27 +340,27 @@ function verifyResponseSignature(body, signatureHeader, secret) {
 
 ## Recipe 5 — Additional Quick Wins
 
-| Control | Recipe |
-|---------|--------|
-| **HSTS** | Add `helmet.hsts({ maxAge: 31536000 })` in production; sets `Strict-Transport-Security` |
-| **X-Frame-Options** | `helmet.frameguard({ action: 'deny' })` — prevents clickjacking |
-| **Rate limit all routes** | Use `createAdminThrottle` pattern with wider paths; or add `express-rate-limit` globally |
-| **Audit log** | In shutdown hook, flush any pending audit events before `server.close()` |
-| **Dependency audit** | Run `npm audit --audit-level=high` in CI; block merges on high/critical findings |
-| **Env var validation at startup** | In `createConfig()`, throw if required secrets are missing (already done for `JWT_SECRET`) |
-| **Remove stack traces in production** | In `errorHandler`, gate `stack` inclusion on `config.nodeEnv !== 'production'` |
+| Control                               | Recipe                                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **HSTS**                              | Add `helmet.hsts({ maxAge: 31536000 })` in production; sets `Strict-Transport-Security`    |
+| **X-Frame-Options**                   | `helmet.frameguard({ action: 'deny' })` — prevents clickjacking                            |
+| **Rate limit all routes**             | Use `createAdminThrottle` pattern with wider paths; or add `express-rate-limit` globally   |
+| **Audit log**                         | In shutdown hook, flush any pending audit events before `server.close()`                   |
+| **Dependency audit**                  | Run `npm audit --audit-level=high` in CI; block merges on high/critical findings           |
+| **Env var validation at startup**     | In `createConfig()`, throw if required secrets are missing (already done for `JWT_SECRET`) |
+| **Remove stack traces in production** | In `errorHandler`, gate `stack` inclusion on `config.nodeEnv !== 'production'`             |
 
 ---
 
 ## Where to Look
 
-| Topic | File |
-|-------|------|
-| Current rate limiting | `core/shared/src/middlewares/admin-throttle.js` |
-| JWT auth middleware | `core/shared/src/middlewares/jwt-auth.js` |
-| JWT sign/verify utilities | `core/shared/src/auth/jwt.js` |
-| Error middleware (app) | `core/app/src/middlewares/errorHandler.js` |
-| Error middleware (api) | `core/api/src/middlewares/error-handler.js` |
-| API enforcement (JWT + origin) | `core/api/src/middlewares/enforcement.js` |
-| Security hardening plan | `documentation/SECURITY-HARDENING-PLAN.md` |
-| Architecture overview | `documentation/ARCHITECTURE.md` |
+| Topic                          | File                                            |
+| ------------------------------ | ----------------------------------------------- |
+| Current rate limiting          | `core/shared/src/middlewares/admin-throttle.js` |
+| JWT auth middleware            | `core/shared/src/middlewares/jwt-auth.js`       |
+| JWT sign/verify utilities      | `core/shared/src/auth/jwt.js`                   |
+| Error middleware (app)         | `core/app/src/middlewares/errorHandler.js`      |
+| Error middleware (api)         | `core/api/src/middlewares/error-handler.js`     |
+| API enforcement (JWT + origin) | `core/api/src/middlewares/enforcement.js`       |
+| Security hardening plan        | `documentation/SECURITY-HARDENING-PLAN.md`      |
+| Architecture overview          | `documentation/ARCHITECTURE.md`                 |

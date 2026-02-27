@@ -13,7 +13,7 @@
     "test:integration": "vitest run --reporter=verbose tests/integration"
   },
   "dependencies": {
-    "@glowing-fishstick/api": "0.0.3",
+    "@glowing-fishstick/api": "^0.1.0",
     "express": "^5.2.1"
   },
   "devDependencies": {

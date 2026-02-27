@@ -67,7 +67,18 @@ const commonRules = {
 
 export default [
   {
-    ignores: ['node_modules', 'dist', '.git', '.next', 'build', 'coverage', '*.lock'],
+    // WHY: Template files contain Handlebars {{ }} syntax which is not valid
+    // JavaScript — linting them produces parser errors on placeholders.
+    ignores: [
+      'node_modules',
+      'dist',
+      '.git',
+      '.next',
+      'build',
+      'coverage',
+      '*.lock',
+      'core/generator/templates/**',
+    ],
   },
   {
     files: ['**/*.js'],
@@ -112,6 +123,20 @@ export default [
     ],
     rules: {
       'no-param-reassign': 'off',
+    },
+  },
+  {
+    // WHY: The generator is a CLI tool — console output is intentional user
+    // feedback (progress messages, next-steps instructions). The no-console
+    // rule exists to prevent accidental debug logs in server code; it does
+    // not apply to a CLI whose primary output channel is stdout.
+    files: [
+      'core/generator/bin/**/*.js',
+      'core/generator/src/generator.js',
+      'core/generator/src/prompts.js',
+    ],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];

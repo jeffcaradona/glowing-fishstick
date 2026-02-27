@@ -101,11 +101,11 @@ Open your browser to:
 
 The task manager communicates with the API, which enforces these constraints on task data:
 
-| Field | Max Length | Validation |
-|-------|---|---|
-| `title` | 255 characters | Required, non-empty, trimmed |
+| Field         | Max Length      | Validation                           |
+| ------------- | --------------- | ------------------------------------ |
+| `title`       | 255 characters  | Required, non-empty, trimmed         |
 | `description` | 4000 characters | Optional, may contain multiline text |
-| `done` | — | Boolean flag (0 or 1) |
+| `done`        | —               | Boolean flag (0 or 1)                |
 
 If the UI submits a title that exceeds 255 characters or description exceeding 4000 characters, the API returns a `400` error with a descriptive message. These limits are enforced both in the database (CHECK constraints via migrations) and the API route handlers.
 
@@ -116,13 +116,15 @@ When the API server starts (`npm run start:api` or `npm run dev:api`), it runs d
 1. **Validates** existing task data against new constraints (title ≤ 255 chars, description ≤ 4000 chars, done ∈ {0,1})
 2. If violations are found, the API **refuses to start** and prints a detailed error message with sample bad records
 3. To fix, manually clean the data:
+
    ```sql
    -- Option A: Delete violating records
    DELETE FROM tasks WHERE length(title) > 255;
-   
+
    -- Option B: Update to fix values
    UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
    ```
+
 4. Restart the API; migration will retry and succeed if data is now clean
 5. Alternatively, delete `api/data/tasks.db` for a fresh start
 

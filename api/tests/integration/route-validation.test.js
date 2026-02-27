@@ -70,29 +70,20 @@ describe('Route Input Validation', () => {
 
   describe('POST /api/tasks', () => {
     it('creates a task with valid input', async () => {
-      const res = await request(app)
-        .post('/api/tasks')
-        .send({ title: 'Valid task' })
-        .expect(201);
+      const res = await request(app).post('/api/tasks').send({ title: 'Valid task' }).expect(201);
 
       expect(res.body.title).toBe('Valid task');
       expect(res.body.id).toBeGreaterThan(0);
     });
 
     it('returns 400 for missing title', async () => {
-      const res = await request(app)
-        .post('/api/tasks')
-        .send({})
-        .expect(400);
+      const res = await request(app).post('/api/tasks').send({}).expect(400);
 
       expect(res.body.error).toMatch(/title/);
     });
 
     it('returns 400 for empty title', async () => {
-      const res = await request(app)
-        .post('/api/tasks')
-        .send({ title: '' })
-        .expect(400);
+      const res = await request(app).post('/api/tasks').send({ title: '' }).expect(400);
 
       expect(res.body.error).toMatch(/title/);
     });
@@ -116,10 +107,7 @@ describe('Route Input Validation', () => {
     });
 
     it('returns 400 for non-string title', async () => {
-      const res = await request(app)
-        .post('/api/tasks')
-        .send({ title: 42 })
-        .expect(400);
+      const res = await request(app).post('/api/tasks').send({ title: 42 }).expect(400);
 
       expect(res.body.error).toMatch(/title/);
     });
@@ -161,18 +149,12 @@ describe('Route Input Validation', () => {
     let taskId;
 
     beforeAll(async () => {
-      const res = await request(app)
-        .post('/api/tasks')
-        .send({ title: 'To patch' })
-        .expect(201);
+      const res = await request(app).post('/api/tasks').send({ title: 'To patch' }).expect(201);
       taskId = res.body.id;
     });
 
     it('returns 400 for invalid id', async () => {
-      const res = await request(app)
-        .patch('/api/tasks/abc')
-        .send({ title: 'New' })
-        .expect(400);
+      const res = await request(app).patch('/api/tasks/abc').send({ title: 'New' }).expect(400);
 
       expect(res.body.error).toMatch(/id/);
     });
