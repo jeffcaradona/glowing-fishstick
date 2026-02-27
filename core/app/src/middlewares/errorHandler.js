@@ -15,6 +15,7 @@
  * with the API counterpart; diverge only on response format.
  */
 
+import { normalizeError, resolveErrorLogger, logUnexpectedError } from '@glowing-fishstick/shared';
 import { createNotFoundError } from '../errors/appError.js';
 
 /**
@@ -43,28 +44,11 @@ export function notFoundHandler(req, res, next) {
  * @param {import('express').NextFunction} _next
  */
 export function errorHandler(err, req, res, _next) {
-  const statusCode = err.statusCode || 500;
-  const code = err.code || 'INTERNAL_ERROR';
-  // WHY: Non-operational errors are masked to avoid leaking internals.
-  const message = err.isOperational ? err.message : 'Internal server error';
-  // WHY: Logger is startup-injected via app.locals to avoid per-request
-  // object instantiation on error paths (Snyk javascript/NoRateLimitingForExpensiveWebOperation).
-  // Fallback to console.error preserves error visibility without allocation overhead.
-  const logger = req.app?.locals?.logger;
-  const logError = logger
-    ? (meta, msg) => logger.error(meta, msg)
-    : (meta, msg) => console.error(msg, meta);
+  const { statusCode, code, message } = normalizeError(err);
+  const logFn = resolveErrorLogger(req);
 
   if (!err.isOperational) {
-    logError(
-      {
-        err,
-        method: req.method,
-        path: req.path,
-        reqId: req.id || req.headers['x-request-id'],
-      },
-      'Unexpected error',
-    );
+    logUnexpectedError(req, err, logFn, 'Unexpected error');
   }
 
   res.status(statusCode);

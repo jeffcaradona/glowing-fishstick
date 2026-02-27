@@ -21,11 +21,11 @@ import path from 'node:path';
 import express from 'express';
 
 import {
-  createHookRegistry,
-  storeRegistries,
   createRequestIdMiddleware,
   createRequestLogger,
   createAdminThrottle,
+  attachHookRegistries,
+  createShutdownGate,
 } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
@@ -60,15 +60,7 @@ export function createApp(config, plugins = []) {
 
   // ── Startup/shutdown hook registries ────────────────────────
   // Private registries for lifecycle management; exposed via methods.
-  const startupRegistry = createHookRegistry();
-  const shutdownRegistry = createHookRegistry();
-
-  // Register hook methods on app object
-  app.registerStartupHook = (hook) => startupRegistry.register(hook);
-  app.registerShutdownHook = (hook) => shutdownRegistry.register(hook);
-
-  // Store registries using WeakMap for private access by server-factory
-  storeRegistries(app, startupRegistry, shutdownRegistry);
+  attachHookRegistries(app);
 
   // ── View engine ──────────────────────────────────────────────
   const coreViewsDir = path.join(__dirname, 'views');
@@ -95,12 +87,8 @@ export function createApp(config, plugins = []) {
     app.locals.logger = config.logger;
   }
 
-  // ── Graceful shutdown state (closure-based, not polluting app.locals) ───
-  let isShuttingDown = false;
-
-  app.on('shutdown', () => {
-    isShuttingDown = true;
-  });
+  // ── Graceful shutdown state ────────────────────────────────────
+  const shutdownGate = createShutdownGate(app);
 
   // ── Built-in middleware ──────────────────────────────────────
   // Request ID generation (always enabled for tracing)
@@ -135,21 +123,7 @@ export function createApp(config, plugins = []) {
   // Reject new requests during shutdown.
   // Requests that entered the middleware stack BEFORE shutdown began
   // are allowed to complete (shutdown check happens first).
-  app.use((_req, res, next) => {
-    // Check if shutdown has started
-    if (isShuttingDown) {
-      // WHY: Use 503 + Connection: close so clients and load balancers stop
-      // routing traffic to this instance while in-flight requests drain.
-      // New request during shutdown - reject with 503
-      res.status(503).set('Connection', 'close').json({
-        error: 'Server is shutting down',
-        message: 'Please retry your request',
-      });
-      return;
-    }
-
-    next();
-  });
+  app.use(shutdownGate);
 
   // ── Core routes ──────────────────────────────────────────────
   app.use(indexRoutes(config));

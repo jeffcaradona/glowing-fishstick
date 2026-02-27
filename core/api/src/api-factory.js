@@ -19,11 +19,11 @@
 import express from 'express';
 
 import {
-  createHookRegistry,
-  storeRegistries,
   createRequestIdMiddleware,
   createRequestLogger,
   createAdminThrottle,
+  attachHookRegistries,
+  createShutdownGate,
 } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { metricsRoutes } from './routes/metrics.js';
@@ -53,22 +53,13 @@ export function createApi(config, plugins = []) {
   // WHY: Hide framework fingerprinting header to reduce low-effort probing.
   app.disable('x-powered-by');
 
-  const startupRegistry = createHookRegistry();
-  const shutdownRegistry = createHookRegistry();
-
-  app.registerStartupHook = (hook) => startupRegistry.register(hook);
-  app.registerShutdownHook = (hook) => shutdownRegistry.register(hook);
-
-  storeRegistries(app, startupRegistry, shutdownRegistry);
+  attachHookRegistries(app);
 
   if (config.logger) {
     app.locals.logger = config.logger;
   }
 
-  let isShuttingDown = false;
-  app.on('shutdown', () => {
-    isShuttingDown = true;
-  });
+  const shutdownGate = createShutdownGate(app);
 
   app.use(createRequestIdMiddleware());
 
@@ -110,18 +101,7 @@ export function createApi(config, plugins = []) {
   app.use(metricsRoutes(config));
 
   // Reject new non-health traffic during shutdown.
-  app.use((_req, res, next) => {
-    if (isShuttingDown) {
-      // WHY: 503 + Connection: close tells callers to fail over during drain.
-      res.status(503).set('Connection', 'close').json({
-        error: 'Server is shutting down',
-        message: 'Please retry your request',
-      });
-      return;
-    }
-
-    next();
-  });
+  app.use(shutdownGate);
 
   app.use(indexRoutes(config));
 

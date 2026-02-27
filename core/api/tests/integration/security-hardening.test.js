@@ -17,6 +17,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { createApi, createApiConfig } from '../../index.js';
+import {
+  createPayloadTestPlugin,
+  sendOversizedJson,
+  sendSmallJson,
+  sendOversizedUrlencoded,
+  sendExcessParams,
+  exhaustAndHit,
+  exhaustRateLimit,
+} from '@glowing-fishstick/shared/testing';
 
 describe('Security Hardening — API', () => {
   // ── Payload Limit Tests ───────────────────────────────────────
@@ -35,58 +44,27 @@ describe('Security Hardening — API', () => {
         {},
       );
 
-      app = createApi(config, [
-        (api) => {
-          // WHY: Need a POST route to exercise parser limits.
-          api.post('/test-payload', (req, res) => {
-            res.json({ received: true, bodyKeys: Object.keys(req.body).length });
-          });
-        },
-      ]);
+      app = createApi(config, [createPayloadTestPlugin()]);
     });
 
     it('returns 413 for JSON payload exceeding jsonBodyLimit', async () => {
-      const oversizedBody = { data: 'x'.repeat(2000) };
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/json')
-        .send(JSON.stringify(oversizedBody));
-
+      const response = await sendOversizedJson(app);
       expect(response.status).toBe(413);
     });
 
     it('accepts JSON payload within jsonBodyLimit', async () => {
-      const smallBody = { data: 'ok' };
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/json')
-        .send(JSON.stringify(smallBody));
-
+      const response = await sendSmallJson(app);
       expect(response.status).toBe(200);
       expect(response.body.received).toBe(true);
     });
 
     it('returns 413 for URL-encoded payload exceeding urlencodedBodyLimit', async () => {
-      const oversizedData = 'field=' + 'x'.repeat(2000);
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/x-www-form-urlencoded')
-        .send(oversizedData);
-
+      const response = await sendOversizedUrlencoded(app);
       expect(response.status).toBe(413);
     });
 
     it('returns 413 for URL-encoded parameters exceeding parameterLimit', async () => {
-      const params = Array.from({ length: 10 }, (_, i) => `p${i}=v${i}`).join('&');
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/x-www-form-urlencoded')
-        .send(params);
-
+      const response = await sendExcessParams(app);
       expect(response.status).toBe(413);
     });
   });
@@ -110,31 +88,21 @@ describe('Security Hardening — API', () => {
     });
 
     it('returns 429 on GET /metrics/memory after exceeding threshold', async () => {
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/metrics/memory').expect(200);
-      }
-
-      const response = await request(app).get('/metrics/memory');
+      const response = await exhaustAndHit(app, '/metrics/memory', 3);
       expect(response.status).toBe(429);
       expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
       expect(response.body.error.retryAfterSeconds).toBe(60);
     });
 
     it('returns 429 on GET /metrics/runtime after exceeding threshold', async () => {
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/metrics/runtime').expect(200);
-      }
-
-      const response = await request(app).get('/metrics/runtime');
+      const response = await exhaustAndHit(app, '/metrics/runtime', 3);
       expect(response.status).toBe(429);
       expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
 
     it('throttles each metrics path independently', async () => {
       // Exhaust /metrics/memory quota
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/metrics/memory').expect(200);
-      }
+      await exhaustRateLimit(app, '/metrics/memory', 3);
 
       // /metrics/runtime should still be available (separate counter)
       await request(app).get('/metrics/runtime').expect(200);
@@ -159,22 +127,19 @@ describe('Security Hardening — API', () => {
     });
 
     it('/healthz remains available when metrics routes are throttled', async () => {
-      await request(app).get('/metrics/memory').expect(200);
-      await request(app).get('/metrics/memory').expect(429);
+      await exhaustAndHit(app, '/metrics/memory', 1);
 
       await request(app).get('/healthz').expect(200, { status: 'ok' });
     });
 
     it('/readyz remains available when metrics routes are throttled', async () => {
-      await request(app).get('/metrics/memory').expect(200);
-      await request(app).get('/metrics/memory').expect(429);
+      await exhaustAndHit(app, '/metrics/memory', 1);
 
       await request(app).get('/readyz').expect(200, { status: 'ready' });
     });
 
     it('/livez remains available when metrics routes are throttled', async () => {
-      await request(app).get('/metrics/memory').expect(200);
-      await request(app).get('/metrics/memory').expect(429);
+      await exhaustAndHit(app, '/metrics/memory', 1);
 
       await request(app).get('/livez').expect(200, { status: 'alive' });
     });

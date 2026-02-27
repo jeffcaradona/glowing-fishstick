@@ -17,6 +17,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import { createApp, createConfig } from '../../index.js';
+import {
+  createPayloadTestPlugin,
+  sendOversizedJson,
+  sendSmallJson,
+  sendOversizedUrlencoded,
+  sendExcessParams,
+  exhaustAndHit,
+  exhaustRateLimit,
+} from '@glowing-fishstick/shared/testing';
 
 describe('Security Hardening — App', () => {
   let app;
@@ -45,61 +54,30 @@ describe('Security Hardening — App', () => {
         urlencodedBodyLimit: '1kb',
         urlencodedParameterLimit: 5,
       });
-      app = createApp(config, [
-        (appInstance) => {
-          // WHY: Need a POST route to exercise parser limits.
-          appInstance.post('/test-payload', (req, res) => {
-            res.json({ received: true, bodyKeys: Object.keys(req.body).length });
-          });
-        },
-      ]);
+      app = createApp(config, [createPayloadTestPlugin()]);
     });
 
     it('returns 413 for JSON payload exceeding jsonBodyLimit', async () => {
       // WHY: 1kb limit; send >1kb of JSON to trigger Express 413.
-      const oversizedBody = { data: 'x'.repeat(2000) };
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/json')
-        .send(JSON.stringify(oversizedBody));
-
+      const response = await sendOversizedJson(app);
       expect(response.status).toBe(413);
     });
 
     it('accepts JSON payload within jsonBodyLimit', async () => {
-      const smallBody = { data: 'ok' };
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/json')
-        .send(JSON.stringify(smallBody));
-
+      const response = await sendSmallJson(app);
       expect(response.status).toBe(200);
       expect(response.body.received).toBe(true);
     });
 
     it('returns 413 for URL-encoded payload exceeding urlencodedBodyLimit', async () => {
       // WHY: 1kb limit; send >1kb of urlencoded data.
-      const oversizedData = 'field=' + 'x'.repeat(2000);
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/x-www-form-urlencoded')
-        .send(oversizedData);
-
+      const response = await sendOversizedUrlencoded(app);
       expect(response.status).toBe(413);
     });
 
     it('returns 413 for URL-encoded parameters exceeding parameterLimit', async () => {
       // WHY: parameterLimit=5; send 10 parameters to trigger rejection.
-      const params = Array.from({ length: 10 }, (_, i) => `p${i}=v${i}`).join('&');
-
-      const response = await request(app)
-        .post('/test-payload')
-        .set('Content-Type', 'application/x-www-form-urlencoded')
-        .send(params);
-
+      const response = await sendExcessParams(app);
       // Express returns 413 when parameterLimit is exceeded.
       expect(response.status).toBe(413);
     });
@@ -119,43 +97,27 @@ describe('Security Hardening — App', () => {
     });
 
     it('returns 429 on GET /admin after exceeding threshold', async () => {
-      // First 3 requests should succeed
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/admin').expect(200);
-      }
-
-      // Request #4 should be throttled
-      const response = await request(app).get('/admin');
+      const response = await exhaustAndHit(app, '/admin', 3);
       expect(response.status).toBe(429);
       expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
       expect(response.body.error.retryAfterSeconds).toBe(60);
     });
 
     it('returns 429 on GET /admin/config after exceeding threshold', async () => {
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/admin/config').expect(200);
-      }
-
-      const response = await request(app).get('/admin/config');
+      const response = await exhaustAndHit(app, '/admin/config', 3);
       expect(response.status).toBe(429);
       expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
 
     it('returns 429 on GET /admin/api-health after exceeding threshold', async () => {
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/admin/api-health').expect(200);
-      }
-
-      const response = await request(app).get('/admin/api-health');
+      const response = await exhaustAndHit(app, '/admin/api-health', 3);
       expect(response.status).toBe(429);
       expect(response.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
 
     it('throttles each admin path independently', async () => {
       // Exhaust /admin quota
-      for (let i = 0; i < 3; i++) {
-        await request(app).get('/admin').expect(200);
-      }
+      await exhaustRateLimit(app, '/admin', 3);
 
       // /admin/config should still be available (separate counter)
       await request(app).get('/admin/config').expect(200);
@@ -176,23 +138,20 @@ describe('Security Hardening — App', () => {
 
     it('/healthz remains available when admin routes are throttled', async () => {
       // Exhaust admin quota
-      await request(app).get('/admin').expect(200);
-      await request(app).get('/admin').expect(429);
+      await exhaustAndHit(app, '/admin', 1);
 
       // Health must still respond
       await request(app).get('/healthz').expect(200, { status: 'ok' });
     });
 
     it('/readyz remains available when admin routes are throttled', async () => {
-      await request(app).get('/admin').expect(200);
-      await request(app).get('/admin').expect(429);
+      await exhaustAndHit(app, '/admin', 1);
 
       await request(app).get('/readyz').expect(200, { status: 'ready' });
     });
 
     it('/livez remains available when admin routes are throttled', async () => {
-      await request(app).get('/admin').expect(200);
-      await request(app).get('/admin').expect(429);
+      await exhaustAndHit(app, '/admin', 1);
 
       await request(app).get('/livez').expect(200, { status: 'alive' });
     });
