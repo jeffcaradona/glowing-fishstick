@@ -4,7 +4,7 @@
 
 This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
 
-> **Current Next Work**: The next framework milestone is security hardening (payload limits, admin throttling, and error-path logger hardening). See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
+> **Security Hardening**: Payload limits, admin throttling, and error handler hardening are implemented. See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
 
 ---
 
@@ -94,6 +94,39 @@ Open your browser to:
 - **http://localhost:3000/admin/config** — Configuration viewer
 - **http://localhost:3000/admin/api-health** — App passthrough endpoint for API readiness checks
 - **http://localhost:3000/tasks** — Task manager (app plugin)
+
+---
+
+## Task Input Constraints & Migration
+
+The task manager communicates with the API, which enforces these constraints on task data:
+
+| Field | Max Length | Validation |
+|-------|---|---|
+| `title` | 255 characters | Required, non-empty, trimmed |
+| `description` | 4000 characters | Optional, may contain multiline text |
+| `done` | — | Boolean flag (0 or 1) |
+
+If the UI submits a title that exceeds 255 characters or description exceeding 4000 characters, the API returns a `400` error with a descriptive message. These limits are enforced both in the database (CHECK constraints via migrations) and the API route handlers.
+
+### Migration Behavior
+
+When the API server starts (`npm run start:api` or `npm run dev:api`), it runs database migrations automatically:
+
+1. **Validates** existing task data against new constraints (title ≤ 255 chars, description ≤ 4000 chars, done ∈ {0,1})
+2. If violations are found, the API **refuses to start** and prints a detailed error message with sample bad records
+3. To fix, manually clean the data:
+   ```sql
+   -- Option A: Delete violating records
+   DELETE FROM tasks WHERE length(title) > 255;
+   
+   -- Option B: Update to fix values
+   UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
+   ```
+4. Restart the API; migration will retry and succeed if data is now clean
+5. Alternatively, delete `api/data/tasks.db` for a fresh start
+
+This ensures data integrity: the app will never run with corrupted or oversized data.
 
 ---
 
@@ -500,6 +533,13 @@ API_BLOCK_BROWSER_ORIGIN=false
 API_REQUIRE_JWT=false
 JWT_SECRET=replace-with-random-secret
 JWT_EXPIRES_IN=120s
+
+# Security hardening (defaults shown; override as needed)
+APP_JSON_BODY_LIMIT=100kb
+APP_URLENCODED_BODY_LIMIT=100kb
+APP_URLENCODED_PARAMETER_LIMIT=1000
+APP_ADMIN_RATE_LIMIT_WINDOW_MS=60000
+APP_ADMIN_RATE_LIMIT_MAX=60
 ```
 
 The app will use these values when it calls `createConfig()`.

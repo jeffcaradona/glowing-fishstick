@@ -47,7 +47,7 @@
           type="submit"
           title="<%= task.done ? 'Mark incomplete' : 'Mark complete' %>"
           class="task-icon-btn task-toggle-btn"
-        ><%= task.done ? '&#x2705;' : '&#x2B1C;' %></button>
+        ><%~ task.done ? '&#x2705;' : '&#x2B1C;' %></button>
       </form>
 
       <!-- Task text -->

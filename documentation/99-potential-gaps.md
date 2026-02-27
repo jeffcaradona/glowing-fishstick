@@ -22,6 +22,90 @@ This document tracks potential server composability features and architectural g
 
 ---
 
+### Feature: Database Schema Migration System & Input Validation
+
+**Status**: ✓ Complete — Production-grade, version-tracked migrations and application-level validation implemented
+
+**Description**: Added a production-grade database migration system to the API package for safe schema evolution with built-in data validation and rollback protection. Existing databases are upgraded via atomic table rebuilds with pre-migration validation; fresh installs use the latest constraints. Complemented by application-level input validation in routes, providing user-friendly 400 errors before data reaches SQLite.
+
+**Rationale**: SQLite doesn't support ALTER TABLE for adding constraints, making table rebuilds necessary for schema evolution. Pre-migration validation prevents silent data corruption. Atomic transactions ensure schema is never partially upgraded. Fail-on-startup behavior forces operator intervention on data violations (production best practice).
+
+**Implementation**:
+
+**Database Migration System** (`api/src/database/db.js`):
+- Tracks applied migrations in `schema_versions` table: `version` (PK), `applied_at` (timestamp), `description` (text)
+- Migrations defined as array of `{ version, description, up }` objects at module scope
+- `up` is a function receiving `DatabaseSync` handle; executes within `BEGIN TRANSACTION / COMMIT` block
+- Runs automatically during `open()` startup hook, **before traffic arrives**
+- **Pre-migration validation**: Before rebuilding table, scans existing data for constraint violations
+- **Atomic execution**: Each migration is all-or-nothing via transactions; `ROLLBACK` on failure keeps schema unchanged
+- **Fail-on-startup**: If validation fails, app refuses to start with clear error listing sample bad records and fix options
+- **Idempotent**: Already-applied migrations are skipped; safe to call on every startup
+
+**Migration v1**: Rebuild tasks table with CHECK constraints
+- Pre-validation scans for: title > 255 chars, description > 4000 chars, done ∉ {0,1}
+- If violations found, throws error with sample IDs + lengths + fix instructions (DELETE or UPDATE options)
+- If clean, rebuilds via official SQLite 12-step pattern: `CREATE TABLE tasks_new... INSERT... DROP... RENAME`
+- Base schema for fresh installs includes all CHECK constraints at creation time
+
+**Error handling on data violations**:
+```
+Migration v1 failed: existing data violates new constraints:
+  title (max 255 characters): 2 record(s)
+    Samples: id=5, length=320 | id=8, length=1024
+  description (max 4000 characters): 1 record(s)
+    Samples: id=10, length=5000
+
+Fix the data manually:
+  Option A: DELETE FROM tasks WHERE length(title) > 255;
+  Option B: UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
+Then restart the app to retry migration.
+Or delete api/data/tasks.db for a fresh start.
+```
+App refuses to start; operator has full visibility and control over cleanup.
+
+**Input Validation Module** (`api/src/validation/task-validation.js`):
+- Exports frozen `LIMITS`: `{ TITLE_MAX: 255, DESCRIPTION_MAX: 4000 }`
+- `validateTaskInput(data, opts)`: Type, length, presence checks; returns `{ valid, errors: string[] }`
+- `validateId(raw)`: Parses + validates numeric IDs; rejects NaN, negative, non-integer; returns `{ valid, id, error? }`
+- Reusable across routes, services, tests; composable error reporting
+
+**Route Integration** (`api/src/routes/router.js`):
+- POST `/api/tasks`: Validates title presence/length/type; returns 400 with `{ error: string }` if invalid
+- PATCH `/api/tasks/:id`: Validates all provided fields; per-field error reporting
+- All `:id` routes (GET, PATCH, DELETE): Validate `:id` parameter; return 400 for invalid format, 404 for not-found
+- Database layer executes only after all validation succeeds
+
+**Input Constraints**:
+| Field | Max Length | Type | Required | Notes |
+|-------|---|---|---|---|
+| `title` | 255 chars | string | Yes | Non-empty after trim |
+| `description` | 4000 chars | string | No | Nullable |
+| `done` | — | boolean/0/1 | No | Defaults to 0 |
+| `id` (URL) | — | integer | Yes | Positive, non-NaN |
+
+**Defense-in-Depth**:
+1. Application validation (400 errors, user-friendly, fast feedback at route layer)
+2. Database CHECK constraints (safety net, prevents malformed data at storage)
+3. SQLite TEXT limit (effectively unbounded ~1 GB default, last resort)
+
+**WHY this design? (Production best practices)**:
+- **Pre-validation prevents corruption**: Operator sees violations before schema change; can fix or start fresh
+- **Atomic migrations are reversible**: If migration fails, schema is unchanged; operator can fix data and retry
+- **Fail-on-startup forces intervention**: App won't run with broken data; no silent errors or degraded service
+- **Explicit operator control**: Data cleanup is manual, not automated; prevents surprise truncations
+- **SQLite-compliant**: Uses official 12-step rebuild pattern; works with WAL mode, journal modes
+- **Synchronous OK here**: Migrations run at startup before traffic; acceptable exception per AGENTS.md
+
+**Management notes**:
+- Table rebuilds acquire brief exclusive locks; on large tables may take seconds
+- Idempotent `runMigrations()` safe on every app restart
+- Test with both empty databases (fresh install) and pre-populated databases (violation scenarios)
+
+**Benefit**: Safe schema evolution, zero silent data loss, operator visibility, production-grade error handling, testable migration contracts.
+
+---
+
 ### Refactor: Migrate Startup/Shutdown Hooks from `app.locals` to Closures
 
 **Status**: ✓ Complete — Encapsulation implemented (P0 startup ordering race fix + P1 WeakMap privacy)
@@ -177,61 +261,65 @@ This document tracks potential server composability features and architectural g
 - API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `app/src/services/tasks-api.js`
 - Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
 - Logger module extraction (`core/modules/*` ownership boundary) — Moved logger implementation to `core/modules/logger` / `@glowing-fishstick/logger`; kept `@glowing-fishstick/shared` as compatibility + curated public API
+- Database Schema Migration System & Input Validation — Version-tracked migrations in `api/src/database/db.js` with automatic startup execution; application-level validation in routes and dedicated validation module; CHECK constraints for defense-in-depth
+- Security hardening (Snyk `javascript/NoRateLimitingForExpensiveWebOperation`) — Payload limits (`jsonBodyLimit`, `urlencodedBodyLimit`, `urlencodedParameterLimit`), fixed-window admin/metrics throttling (`429`), error handler logger hardening (removed per-request `createLogger()` fallback), JWT toggle preserved as opt-in
 
 **High Priority** (near-term):
 
 ### Security: Resource Allocation Limits and Throttling (Snyk Code)
 
-**Status**: Planned and queued as immediate next implementation
-
-**Tag**: `CURRENT NEXT WORK ITEM`
+**Status**: ✓ Complete — payload limits, admin/metrics throttling, and error handler logger hardening implemented
 
 **Implementation Plan**: [SECURITY-HARDENING-PLAN.md](./SECURITY-HARDENING-PLAN.md)
 
-**Finding**: Snyk Code reports `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
+**Finding**: Snyk Code reported `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
 
 - `core/app/src/middlewares/errorHandler.js`
 - `core/app/src/controllers/admin-controller.js`
 
-**Risk Summary**:
+**Remediation Implemented**:
 
-- Unthrottled expensive request paths can increase CPU, memory, and I/O pressure under burst traffic.
-- Error-path fallback behaviors and repeated dashboard rendering/fetch work can amplify denial-of-service risk when endpoints are hit at high frequency.
+1. Request body allocation limits in both app and API factories:
+   - `express.json({ limit: config.jsonBodyLimit })` (default `100kb`)
+   - `express.urlencoded({ limit: config.urlencodedBodyLimit, parameterLimit: config.urlencodedParameterLimit })` (defaults `100kb` / `1000`)
 
-**Planned Remediation Scope**:
+2. Fixed-window, in-memory, process-local throttling:
+   - App: `/admin`, `/admin/config`, `/admin/api-health` (default 60 req / 60s)
+   - API: `/metrics/memory`, `/metrics/runtime` (default 60 req / 60s)
+   - Returns `429` with deterministic JSON error envelope
 
-1. Add explicit request body allocation limits in app and API factories:
+3. Error handler logger hardening:
+   - Removed per-request `createLogger()` fallback from `core/app/src/middlewares/errorHandler.js`
+   - Removed per-request `createLogger()` fallback from `core/api/src/middlewares/error-handler.js`
+   - Fallback to `console.error` when startup-injected logger is unavailable
 
-- `express.json({ limit })`
-- `express.urlencoded({ limit, parameterLimit })`
+4. Integration tests:
+   - `413` for oversized JSON, URL-encoded, and excess parameters (app + API)
+   - `429` for admin/metrics burst traffic (app + API)
+   - Health endpoints (`/healthz`, `/readyz`, `/livez`) remain available under throttle
+   - JWT enforcement and browser-origin blocking unaffected (regression tests)
+   - Error handler works without per-request logger construction
 
-2. Add route-level throttling for admin endpoints:
+**Config Surface Added**:
 
-- `/admin`
-- `/admin/config`
-- `/admin/api-health`
+| Package | Config Key | Env Var | Default |
+|---------|-----------|---------|---------|
+| App | `jsonBodyLimit` | `APP_JSON_BODY_LIMIT` | `100kb` |
+| App | `urlencodedBodyLimit` | `APP_URLENCODED_BODY_LIMIT` | `100kb` |
+| App | `urlencodedParameterLimit` | `APP_URLENCODED_PARAMETER_LIMIT` | `1000` |
+| App | `adminRateLimitWindowMs` | `APP_ADMIN_RATE_LIMIT_WINDOW_MS` | `60000` |
+| App | `adminRateLimitMax` | `APP_ADMIN_RATE_LIMIT_MAX` | `60` |
+| API | `jsonBodyLimit` | `API_JSON_BODY_LIMIT` | `100kb` |
+| API | `urlencodedBodyLimit` | `API_URLENCODED_BODY_LIMIT` | `100kb` |
+| API | `urlencodedParameterLimit` | `API_URLENCODED_PARAMETER_LIMIT` | `1000` |
+| API | `adminRateLimitWindowMs` | `API_ADMIN_RATE_LIMIT_WINDOW_MS` | `60000` |
+| API | `adminRateLimitMax` | `API_ADMIN_RATE_LIMIT_MAX` | `60` |
 
-3. Eliminate request-path logger construction fallback in error handling so logger initialization is startup-only.
-4. Add integration tests validating:
+**Residual Notes**:
 
-- `413` for oversized payloads
-- `429` when rate thresholds are exceeded
-- health endpoints remain available
-
-**Definition of Done**:
-
-- Snyk finding is resolved or reduced to documented accepted risk with rationale.
-- No per-request sync filesystem setup in request/error hot paths.
-- Throttling and payload limits are configurable via environment-backed config.
-- Documentation and examples reflect the new config surface.
-
-**Validation Commands**:
-
-```bash
-npm run lint
-npm run test:all
-rg -n "\\b(readFileSync|writeFileSync|appendFileSync|existsSync|readdirSync|statSync|lstatSync|mkdirSync|rmSync|unlinkSync|execSync|spawnSync|pbkdf2Sync|scryptSync)\\b" app core api
-```
+- Throttling is process-local (in-memory fixed-window). Distributed throttling (Redis-backed) deferred to future phase.
+- ESLint has a pre-existing `ajv` dependency issue unrelated to this work.
+- JWT toggle (`API_REQUIRE_JWT`) remains fully optional and composes cleanly with all hardening features.
 
 **Medium Priority** (mid-term):
 

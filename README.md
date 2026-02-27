@@ -38,6 +38,72 @@ This module provides:
 - ✅ **Graceful shutdown** for Kubernetes/container environments
 - ✅ **Service container** (`config.services`) for plugin-to-plugin dependency injection
 - ✅ **Functional programming patterns** for testability and composability
+- ✅ **Proxy pattern** — sit in front of existing backends (Proxmox, Kubernetes, etc.) with payload limits and optional JWT enforcement
+
+---
+
+## Deployment: API as a Reverse Proxy
+
+Both `@glowing-fishstick/app` and `@glowing-fishstick/api` can act as a lightweight authentication and resource-limit layer in front of existing backend systems.
+
+**Use Case**: Agents or internal tools need access to a backend system (e.g., Proxmox cluster, Kubernetes API, ClickHouse) without direct access.
+
+**Benefits**:
+
+- Centralized audit logging (all requests logged via Pino)
+- Payload validation (`413` for oversized requests)
+- Rate-limiting on expensive operations
+- Request tracing (built-in request IDs)
+- Graceful shutdown (drain in-flight requests)
+- No backend modifications needed
+- Flexible authentication (optional JWT toggle)
+
+**Example Setup**:
+
+```bash
+# Internal proxy (no JWT)
+API_REQUIRE_JWT=false
+API_BLOCK_BROWSER_ORIGIN=true
+API_JSON_BODY_LIMIT=100kb
+API_ADMIN_RATE_LIMIT_MAX=60
+```
+
+See [api/DEV_API_README.md](api/DEV_API_README.md#deployment-pattern-api-as-an-authenticated-proxy) for detailed setup and example Proxmox route configuration.
+
+### Input Validation & Database Schema Management
+
+The API package includes a lightweight **database migration system** and **input validation** layer for data consistency:
+
+- **Schema migrations**: Version-tracked migrations run automatically at startup (in `api/src/database/db.js`). New databases use the latest constraints; existing databases are upgraded via atomic table rebuilds.
+- **Pre-migration validation**: Before rebuilding the table, migrations scan for data that violates new constraints. If violations are found, the migration fails with a detailed error message (listing sample bad records) and the operator must manually fix or delete the violating data before the app will start.
+- **Atomic transactions**: Each migration runs in a BEGIN/COMMIT/ROLLBACK block, ensuring the schema is never partially upgraded.
+- **CHECK constraints**: SQLite tables enforce column-level constraints (e.g., `title TEXT CHECK(length(title) <= 255)`) as a safety net.
+- **Application-level validation**: Route handlers validate input length, type, and presence before database operations, returning `400` with descriptive errors.
+
+Input constraints for task data:
+
+| Field | Max Length | Notes |
+|-------|---|---|
+| `title` | 255 chars | Required, non-empty |
+| `description` | 4000 chars | Optional |
+
+**Migration failure example:**
+
+If the database contains a task with a 300-character title before migration v1, the app will refuse to start and print:
+
+```
+Migration v1 failed: existing data violates new constraints:
+  title (max 255 characters): 1 record(s)
+    Samples: id=5, length=300
+
+Fix the data manually:
+  Option A: DELETE FROM tasks WHERE <condition>;
+  Option B: UPDATE tasks SET <field> = <trimmed_value> WHERE <condition>;
+Then restart the app to retry migration.
+Or delete api/data/tasks.db for a fresh start.
+```
+
+This ensures data integrity and gives the operator full visibility and control.
 
 ---
 

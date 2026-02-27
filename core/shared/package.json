@@ -7,6 +7,9 @@
   "exports": {
     ".": {
       "import": "./index.js"
+    },
+    "./testing": {
+      "import": "./src/testing/security-helpers.js"
     }
   },
   "scripts": {

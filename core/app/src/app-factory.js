@@ -2,6 +2,18 @@
  * @module app
  * @description Express application factory. Composes middleware, core
  * routes, consumer plugins, and error handling into a single app instance.
+ *
+ * WHY (intentional parity with core/api/src/api-factory.js): Both
+ * factories share ~40 lines of middleware linking (hook registries,
+ * request ID, body parsers, health routes, shutdown rejection, throttle
+ * mounting, plugin loop). This duplication is deliberate — middleware
+ * order is load-bearing and differs (view engine, static files, navLinks
+ * are app-only; JWT enforcement and origin blocking are API-only).
+ * Abstracting the shared lines into a base function would require
+ * callback hooks that obscure the explicit, auditable middleware stack.
+ *
+ * VERIFY IF CHANGED: Review api-factory.js for parallel changes that
+ * should stay in sync (body-parser config, health routes, shutdown gate).
  */
 
 import { fileURLToPath } from 'node:url';
@@ -9,10 +21,11 @@ import path from 'node:path';
 import express from 'express';
 
 import {
-  createHookRegistry,
-  storeRegistries,
   createRequestIdMiddleware,
   createRequestLogger,
+  createAdminThrottle,
+  attachHookRegistries,
+  createShutdownGate,
 } from '@glowing-fishstick/shared';
 import { healthRoutes } from './routes/health.js';
 import { indexRoutes } from './routes/index.js';
@@ -47,15 +60,7 @@ export function createApp(config, plugins = []) {
 
   // ── Startup/shutdown hook registries ────────────────────────
   // Private registries for lifecycle management; exposed via methods.
-  const startupRegistry = createHookRegistry();
-  const shutdownRegistry = createHookRegistry();
-
-  // Register hook methods on app object
-  app.registerStartupHook = (hook) => startupRegistry.register(hook);
-  app.registerShutdownHook = (hook) => shutdownRegistry.register(hook);
-
-  // Store registries using WeakMap for private access by server-factory
-  storeRegistries(app, startupRegistry, shutdownRegistry);
+  attachHookRegistries(app);
 
   // ── View engine ──────────────────────────────────────────────
   const coreViewsDir = path.join(__dirname, 'views');
@@ -82,12 +87,8 @@ export function createApp(config, plugins = []) {
     app.locals.logger = config.logger;
   }
 
-  // ── Graceful shutdown state (closure-based, not polluting app.locals) ───
-  let isShuttingDown = false;
-
-  app.on('shutdown', () => {
-    isShuttingDown = true;
-  });
+  // ── Graceful shutdown state ────────────────────────────────────
+  const shutdownGate = createShutdownGate(app);
 
   // ── Built-in middleware ──────────────────────────────────────
   // Request ID generation (always enabled for tracing)
@@ -99,8 +100,16 @@ export function createApp(config, plugins = []) {
     app.use(createRequestLogger(config.logger, { generateRequestId: false }));
   }
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // WHY: Enforce payload ceilings to prevent OOM from unbounded body parsing.
+  // Express returns 413 Payload Too Large when limits are breached.
+  app.use(express.json({ limit: config.jsonBodyLimit }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: config.urlencodedBodyLimit,
+      parameterLimit: config.urlencodedParameterLimit,
+    }),
+  );
   app.use(express.static(path.join(__dirname, 'public')));
   if (config.publicDir) {
     app.use(express.static(config.publicDir));
@@ -114,24 +123,22 @@ export function createApp(config, plugins = []) {
   // Reject new requests during shutdown.
   // Requests that entered the middleware stack BEFORE shutdown began
   // are allowed to complete (shutdown check happens first).
-  app.use((_req, res, next) => {
-    // Check if shutdown has started
-    if (isShuttingDown) {
-      // WHY: Use 503 + Connection: close so clients and load balancers stop
-      // routing traffic to this instance while in-flight requests drain.
-      // New request during shutdown - reject with 503
-      res.status(503).set('Connection', 'close').json({
-        error: 'Server is shutting down',
-        message: 'Please retry your request',
-      });
-      return;
-    }
-
-    next();
-  });
+  app.use(shutdownGate);
 
   // ── Core routes ──────────────────────────────────────────────
   app.use(indexRoutes(config));
+
+  // WHY: Admin endpoints are expensive (dashboard fetches upstream metrics,
+  // config viewer reads full config, API health probes external service).
+  // Throttle to prevent burst-driven resource exhaustion.
+  // Mounted after health routes so /healthz, /readyz, /livez stay available.
+  app.use(
+    createAdminThrottle({
+      windowMs: config.adminRateLimitWindowMs,
+      max: config.adminRateLimitMax,
+      paths: ['/admin', '/admin/config', '/admin/api-health'],
+    }),
+  );
   app.use(adminRoutes(config));
 
   // ── Plugins ──────────────────────────────────────────────────

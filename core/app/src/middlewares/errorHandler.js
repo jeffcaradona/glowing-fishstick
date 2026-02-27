@@ -2,10 +2,21 @@
  * @module middlewares/errorHandler
  * @description Express error-handling middleware for 404 catch-all and
  * generic error responses. Content-negotiates between HTML and JSON.
+ *
+ * WHY (intentional duplication): The API counterpart lives at
+ * core/api/src/middlewares/error-handler.js and is JSON-only. This app
+ * version adds HTML content-negotiation via Eta view rendering, which
+ * the API package does not need. Consolidating would require a template-
+ * method abstraction that obscures two simple, clear implementations.
+ * Sonar flags ~85% similarity; the difference (HTML rendering) is the
+ * reason both exist.
+ *
+ * VERIFY IF CHANGED: Keep the logging/error-envelope structure aligned
+ * with the API counterpart; diverge only on response format.
  */
 
+import { normalizeError, resolveErrorLogger, logUnexpectedError } from '@glowing-fishstick/shared';
 import { createNotFoundError } from '../errors/appError.js';
-import { createLogger } from '@glowing-fishstick/shared';
 
 /**
  * Catch-all middleware that creates a 404 AppError for any unmatched
@@ -33,22 +44,11 @@ export function notFoundHandler(req, res, next) {
  * @param {import('express').NextFunction} _next
  */
 export function errorHandler(err, req, res, _next) {
-  const statusCode = err.statusCode || 500;
-  const code = err.code || 'INTERNAL_ERROR';
-  // WHY: Non-operational errors are masked to avoid leaking internals.
-  const message = err.isOperational ? err.message : 'Internal server error';
-  const logger = req.app?.locals?.logger || createLogger({ name: 'error-handler' });
+  const { statusCode, code, message } = normalizeError(err);
+  const logFn = resolveErrorLogger(req);
 
   if (!err.isOperational) {
-    logger.error(
-      {
-        err,
-        method: req.method,
-        path: req.path,
-        reqId: req.id || req.headers['x-request-id'],
-      },
-      'Unexpected error',
-    );
+    logUnexpectedError(req, err, logFn, 'Unexpected error');
   }
 
   res.status(statusCode);

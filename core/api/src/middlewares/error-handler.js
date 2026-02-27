@@ -1,9 +1,20 @@
 /**
  * @module middlewares/error-handler
  * @description JSON-first error handling middleware for API routes.
+ *
+ * WHY (intentional duplication): The app counterpart lives at
+ * core/app/src/middlewares/errorHandler.js and adds HTML content-
+ * negotiation via Eta view rendering. This API version is JSON-only,
+ * which keeps it lean for machine callers. Consolidating would require
+ * a template-method abstraction that obscures two simple, clear
+ * implementations. Sonar flags ~85% similarity; the difference
+ * (JSON-only vs HTML+JSON) is the reason both exist.
+ *
+ * VERIFY IF CHANGED: Keep the logging/error-envelope structure aligned
+ * with the app counterpart; diverge only on response format.
  */
 
-import { createLogger } from '@glowing-fishstick/shared';
+import { normalizeError, resolveErrorLogger, logUnexpectedError } from '@glowing-fishstick/shared';
 
 /**
  * Create and forward a 404 error for unmatched routes.
@@ -29,22 +40,11 @@ export function notFoundHandler(req, _res, next) {
  * @param {import('express').NextFunction} _next
  */
 export function errorHandler(err, req, res, _next) {
-  const statusCode = err.statusCode || 500;
-  const code = err.code || 'INTERNAL_ERROR';
-  // WHY: Non-operational failures are intentionally hidden from callers.
-  const message = err.isOperational ? err.message : 'Internal server error';
-  const logger = req.app?.locals?.logger || createLogger({ name: 'api-error-handler' });
+  const { statusCode, code, message } = normalizeError(err);
+  const logFn = resolveErrorLogger(req);
 
   if (!err.isOperational) {
-    logger.error(
-      {
-        err,
-        method: req.method,
-        path: req.path,
-        reqId: req.id || req.headers['x-request-id'],
-      },
-      'Unexpected API error',
-    );
+    logUnexpectedError(req, err, logFn, 'Unexpected API error');
   }
 
   // WHY: API clients depend on a stable error envelope for retries/telemetry.
