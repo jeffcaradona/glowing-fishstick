@@ -3,7 +3,7 @@
 **Package:** `@glowing-fishstick/generator`
 **Date:** February 27, 2026
 **Status:** Planning
-**Prerequisite:** Proposal approved (`template-generator-proposal.md`)
+**Prerequisite:** Proposal approved (`core/generator/documentation/template-generator-proposal.md`)
 
 ---
 
@@ -31,8 +31,8 @@ Build a CLI tool at `core/generator/` that scaffolds new glowing-fishstick proje
 core/generator/
 ├── package.json
 ├── README.md
-├── template-generator-proposal.md        # Existing proposal doc
 ├── documentation/
+│   ├── template-generator-proposal.md    # Existing proposal doc
 │   └── template-generator-plan.md        # This document
 ├── bin/
 │   └── cli.js                            # CLI entry point (hashbang)
@@ -259,8 +259,8 @@ Package README with:
 | `documentation/99-potential-gaps.md` | Add generator as a tracked feature (in progress) |
 | `AGENTS.md` | Update repository structure to list `core/generator/` properly; remove `template/` references |
 | `CLAUDE.md` | Add generator to repository description |
-| `templates/app/README.md` | Update structure diagram from `template/app/` to reflect new location |
-| `templates/api/README.md` | Update structure diagram from `template/api/` to reflect new location |
+| `core/generator/templates/app/README.md` | Update structure diagram from `template/app/` to reflect new location |
+| `core/generator/templates/api/README.md` | Update structure diagram from `template/api/` to reflect new location |
 
 ### Step 11: Add tests
 
@@ -308,7 +308,7 @@ fishstick-create [options] [project-directory]
 
 ```bash
 # Interactive mode (prompts for all options)
-fishstick-create my-app
+fishstick-create
 
 # With flags (skip prompts)
 fishstick-create my-api --template api --no-install
@@ -388,7 +388,7 @@ After implementation, verify:
 
 | Package | Version | Purpose | Type |
 |---------|---------|---------|------|
-| `commander` | ^12.0.0 | CLI argument parsing | runtime |
+| `commander` | ^14.0.3 | CLI argument parsing | runtime |
 | `handlebars` | ^4.7.8 | Template rendering (`{{ }}` syntax) | runtime |
 | `vitest` | (workspace) | Test runner | dev (inherited from root) |
 
@@ -407,6 +407,8 @@ All other functionality uses Node.js >= 22 built-ins:
 These can be added after the MVP ships:
 
 - TypeScript scaffolding (`--typescript` flag)
+- Optional example plugin scaffold toggle
+- Package manager auto-detection (`npm`/`pnpm`/`yarn`) for install step
 - Docker configuration generation
 - Database template options
 - Environment-specific configs (`.env.dev`, `.env.prod`)
