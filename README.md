@@ -136,7 +136,7 @@ Note on repository layout and installs
 
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` or `@glowing-fishstick/api` (Option A: workspace is the source; consumers install the package).
 - For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
-
+- See jsconfig for an example.
 ---
 
 ## Quick Start
