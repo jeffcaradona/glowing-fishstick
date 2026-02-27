@@ -193,3 +193,19 @@ export { default } from '@glowing-fishstick/shared/routes/health';
 | **Overall new-code dup %** | **8.3%** | **~5-6%** | Improved |
 
 Health route stubs drop from 49 lines each to ~4 lines — this duplication won't be flagged at all post-consolidation.
+
+## Slept on it response
+
+Don’t let Sonar’s duplication metric design the system.
+
+Free SonarCloud’s duplication threshold can push us into weird abstractions.
+
+Better approaches than “refactor twice until green”:
+
+Put repeated code into a shared internal module (clear + boring).
+
+If duplication is in test helpers, generated code, DTO mapping, etc., consider excluding those paths (if your org allows) rather than abstracting them.
+
+Use duplication as a signal, not a steering wheel. Some duplication is fine if it keeps local clarity.
+
+If we find ourselves inventing patterns just to appease a metric, that’s a strong sign we’re overengineering.
