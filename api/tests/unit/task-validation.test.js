@@ -204,7 +204,7 @@ describe('validateId', () => {
 
   it('rejects NaN values', () => {
     expect(validateId('abc').valid).toBe(false);
-    expect(validateId(NaN).valid).toBe(false);
+    expect(validateId(Number.NaN).valid).toBe(false);
   });
 
   it('rejects empty string', () => {
