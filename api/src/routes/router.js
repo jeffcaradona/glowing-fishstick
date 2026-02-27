@@ -7,9 +7,13 @@
  * GET    /api/tasks/:id    → get a single task
  * PATCH  /api/tasks/:id    → update a task (partial or full)
  * DELETE /api/tasks/:id    → delete a task
+ *
+ * All routes validate input at the application layer before touching the
+ * database. ID-bearing routes validate `:id`; POST/PATCH validate body fields.
  */
 
 import { Router } from 'express';
+import { validateTaskInput, validateId } from '../validation/task-validation.js';
 
 /**
  * @param {ReturnType<import('../services/tasks-service.js').createTasksService>} tasksService
@@ -31,7 +35,14 @@ export function taskApiRoutes(tasksService) {
   // GET /api/tasks/:id — get a single task
   router.get('/api/tasks/:id', (req, res, next) => {
     try {
-      const task = tasksService.findById(Number(req.params.id));
+      // WHY: Validate ID format before querying the database to return a
+      // clear 400 instead of a confusing NaN-based empty result.
+      const idResult = validateId(req.params.id);
+      if (!idResult.valid) {
+        return res.status(400).json({ error: idResult.error });
+      }
+
+      const task = tasksService.findById(idResult.id);
       if (!task) {
         return res.status(404).json({ error: 'Task not found' });
       }
@@ -44,11 +55,22 @@ export function taskApiRoutes(tasksService) {
   // POST /api/tasks — create a task
   router.post('/api/tasks', (req, res, next) => {
     try {
-      const { title, description } = req.body ?? {};
-      if (!title || typeof title !== 'string' || !title.trim()) {
-        return res.status(400).json({ error: '`title` is required' });
+      // WHY: Application-level validation gives user-friendly 400 errors
+      // before data reaches SQLite CHECK constraints (defense in depth).
+      const { valid, errors } = validateTaskInput(req.body);
+      if (!valid) {
+        return res.status(400).json({ error: errors.join('; ') });
       }
-      const task = tasksService.create({ title: title.trim(), description: description ?? null });
+
+      const { title, description } = req.body;
+
+      // WHY: Explicit type guard satisfies static analysis (Snyk) even though
+      // validateTaskInput already rejects non-string titles above.
+      const safeName = typeof title === 'string' ? title.trim() : '';
+      const task = tasksService.create({
+        title: safeName,
+        description: description ?? null,
+      });
       res.status(201).json(task);
     } catch (err) {
       next(err);
@@ -58,10 +80,21 @@ export function taskApiRoutes(tasksService) {
   // PATCH /api/tasks/:id — update a task (merges with existing fields)
   router.patch('/api/tasks/:id', (req, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const existing = tasksService.findById(id);
+      const idResult = validateId(req.params.id);
+      if (!idResult.valid) {
+        return res.status(400).json({ error: idResult.error });
+      }
+
+      const existing = tasksService.findById(idResult.id);
       if (!existing) {
         return res.status(404).json({ error: 'Task not found' });
+      }
+
+      // WHY: partial=true so only provided fields are validated; missing
+      // fields fall back to existing values (merge semantics for PATCH).
+      const { valid, errors } = validateTaskInput(req.body, { partial: true });
+      if (!valid) {
+        return res.status(400).json({ error: errors.join('; ') });
       }
 
       const {
@@ -70,7 +103,7 @@ export function taskApiRoutes(tasksService) {
         done = existing.done,
       } = req.body ?? {};
 
-      const task = tasksService.update(id, { title, description, done });
+      const task = tasksService.update(idResult.id, { title, description, done });
       res.json(task);
     } catch (err) {
       next(err);
@@ -80,12 +113,16 @@ export function taskApiRoutes(tasksService) {
   // DELETE /api/tasks/:id — delete a task
   router.delete('/api/tasks/:id', (req, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const existing = tasksService.findById(id);
+      const idResult = validateId(req.params.id);
+      if (!idResult.valid) {
+        return res.status(400).json({ error: idResult.error });
+      }
+
+      const existing = tasksService.findById(idResult.id);
       if (!existing) {
         return res.status(404).json({ error: 'Task not found' });
       }
-      tasksService.remove(id);
+      tasksService.remove(idResult.id);
       res.status(204).send();
     } catch (err) {
       next(err);
