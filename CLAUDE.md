@@ -5,10 +5,10 @@ POC Express.js framework distributed as npm modules. Solves "template drift" via
 ## Repository (npm workspaces monorepo)
 
 core/app/ → @glowing-fishstick/app | core/shared/ → @glowing-fishstick/shared | core/api/ → @glowing-fishstick/api
-app/ → consumer example | api/ → API consumer scaffold | core/generator/ → CLI scaffolding tool + starter templates | tests/ → Vitest integration tests
+sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | core/generator/ → CLI scaffolding tool + starter templates | tests/ → Vitest integration tests
 
 - Root package is NOT runtime-installable. Consumer examples import from `@glowing-fishstick/*` packages.
-- `app/` demonstrates how external projects consume the published modules.
+- `sandbox/app/` demonstrates how external projects consume the published modules.
 
 ## Architecture (factory + plugin + hooks)
 
@@ -48,8 +48,8 @@ app/ → consumer example | api/ → API consumer scaffold | core/generator/ →
 
 ### Consumer examples
 
-- `app/src/server.js` — entry point (composition demo)
-- `app/src/app.js` — task manager plugin
+- `sandbox/app/src/server.js` — entry point (composition demo)
+- `sandbox/app/src/app.js` — task manager plugin
 
 ### Key tests
 
@@ -76,7 +76,7 @@ Run: `npm run lint` · `npm run format` · `npm run test:all`
 
 **Adding features:** Read existing patterns → create plugin (don't modify core) → factory functions → lifecycle hooks → integration tests → sync 4 docs (README, DEV_APP_README, 00-project-specs, 99-potential-gaps) → validate.
 
-**Modifying core:** Understand impact on all consumers → maintain backward compat → update `app/` and `api/` → sync docs → run full test suite.
+**Modifying core:** Understand impact on all consumers → maintain backward compat → update `sandbox/app/` and `sandbox/api/` → sync docs → run full test suite.
 
 **Adding routes:** Use `express.Router()`, async handlers, `try/catch` with `next(err)`, request-scoped logging via `req.log`.
 
@@ -98,6 +98,6 @@ Some code appears in both `core/app` and `core/api` by design. Sonar reports dup
 
 ## When in doubt
 
-Read `core/app/src/app-factory.js` and `app/src/app.js` for canonical patterns.
+Read `core/app/src/app-factory.js` and `sandbox/app/src/app.js` for canonical patterns.
 Factories over classes. Async everywhere. Tests for lifecycle. Sync all 4 docs.
 Quality > velocity.

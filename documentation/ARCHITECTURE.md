@@ -9,7 +9,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Consumer entrypoint  (app/src/server.js, api/src/server.js)│
+│  Consumer entrypoint  (sandbox/app/src/server.js, sandbox/api/src/server.js)│
 │                                                             │
 │  1. createLogger()          ← @glowing-fishstick/shared     │
 │  2. createConfig(overrides) ← @glowing-fishstick/app|api    │
@@ -54,24 +54,25 @@
 
 ```
 /
-├── app/                    Consumer example — full-stack HTML app (task manager)
-│   └── src/
-│       ├── server.js       Entrypoint: wires config + plugin + server
-│       ├── app.js          taskManagerApplicationPlugin — adds routes, nav links
-│       ├── config/env.js   App-specific config overrides (spread into createConfig)
-│       ├── routes/         Consumer route handlers
-│       ├── services/       Business logic (task CRUD)
-│       └── views/          ETA templates
-│
-├── api/                    Consumer example — JSON REST API (task API)
-│   └── src/
-│       ├── server.js       Entrypoint: wires config + plugin + server
-│       ├── api.js          taskApiPlugin — adds routes
-│       ├── config/env.js   API-specific config overrides
-│       ├── database/       SQLite via DatabaseSync; schema migrations on startup
-│       ├── routes/         JSON route handlers
-│       ├── services/       Business logic (task CRUD)
-│       └── validation/     Input validation (task-validation.js); shared by routes
+├── sandbox/
+│   ├── app/                Consumer example — full-stack HTML app (task manager)
+│   │   └── src/
+│   │       ├── server.js       Entrypoint: wires config + plugin + server
+│   │       ├── app.js          taskManagerApplicationPlugin — adds routes, nav links
+│   │       ├── config/env.js   App-specific config overrides (spread into createConfig)
+│   │       ├── routes/         Consumer route handlers
+│   │       ├── services/       Business logic (task CRUD)
+│   │       └── views/          ETA templates
+│   │
+│   └── api/                Consumer example — JSON REST API (task API)
+│       └── src/
+│           ├── server.js       Entrypoint: wires config + plugin + server
+│           ├── api.js          taskApiPlugin — adds routes
+│           ├── config/env.js   API-specific config overrides
+│           ├── database/       SQLite via DatabaseSync; schema migrations on startup
+│           ├── routes/         JSON route handlers
+│           ├── services/       Business logic (task CRUD)
+│           └── validation/     Input validation (task-validation.js); shared by routes
 │
 ├── core/
 │   ├── app/                @glowing-fishstick/app — HTML/view framework package
@@ -143,30 +144,30 @@
 
 ### Add an endpoint to the consumer app
 
-1. Add a route file in `app/src/routes/`.
-2. Mount it inside `taskManagerApplicationPlugin` in `app/src/app.js`:
+1. Add a route file in `sandbox/app/src/routes/`.
+2. Mount it inside `taskManagerApplicationPlugin` in `sandbox/app/src/app.js`:
    ```js
    import { myRoutes } from './routes/my-routes.js';
    // inside the plugin function:
    app.use(myRoutes(config));
    ```
-3. Add a service function in `app/src/services/` if business logic is needed.
+3. Add a service function in `sandbox/app/src/services/` if business logic is needed.
 4. Write an integration test in `tests/integration/` using Supertest.
 
 ### Add an endpoint to the consumer API
 
-Same pattern as above but in `api/src/`:
+Same pattern as above but in `sandbox/api/src/`:
 
-1. Add a route file in `api/src/routes/`.
-2. Mount it in `taskApiPlugin` in `api/src/api.js`.
-3. Add input validation in `api/src/validation/` using the same shape as `task-validation.js`.
-4. Call the DB via `api/src/services/` — never directly from a route handler.
+1. Add a route file in `sandbox/api/src/routes/`.
+2. Mount it in `taskApiPlugin` in `sandbox/api/src/api.js`.
+3. Add input validation in `sandbox/api/src/validation/` using the same shape as `task-validation.js`.
+4. Call the DB via `sandbox/api/src/services/` — never directly from a route handler.
 
 ### Add a stored procedure / database call
 
-1. Define the query as a named function in `api/src/services/task-service.js` (or a new service file).
+1. Define the query as a named function in `sandbox/api/src/services/task-service.js` (or a new service file).
 2. Accept the `db` handle as an argument — never import the singleton inside the function.
-3. Add a schema migration in `api/src/database/db.js` if the schema changes:
+3. Add a schema migration in `sandbox/api/src/database/db.js` if the schema changes:
    - Add an entry to the `migrations` array with an incremented `version`.
    - The `up` function receives the `DatabaseSync` handle and runs inside a transaction.
    - Pre-validate existing data before destructive schema changes.
@@ -174,7 +175,7 @@ Same pattern as above but in `api/src/`:
 
 ### Add request validation to a route
 
-1. Add validation logic to `api/src/validation/task-validation.js` (or create a sibling file).
+1. Add validation logic to `sandbox/api/src/validation/task-validation.js` (or create a sibling file).
 2. Export a pure function: `validateX(data) => { valid: boolean, errors: string[] }`.
 3. Call it at the top of the route handler before any DB access:
    ```js

@@ -159,6 +159,6 @@ If issues are detected:
 When implementation lands, also update:
 
 1. `README.md` (security/rollout env section)
-2. `app/DEV_APP_README.md` (local setup + validation)
+2. `sandbox/app/DEV_APP_README.md` (local setup + validation)
 3. `documentation/00-project-specs.md` (middleware policy + config contract)
 4. `documentation/99-potential-gaps.md` (status updates from future-work to implemented rollout phase)

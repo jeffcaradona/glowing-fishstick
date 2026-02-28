@@ -24,7 +24,7 @@ npx audit-ci --critical
 
 ### Step 2 — Add a CSP middleware plugin
 
-Create `app/src/middlewares/csp.js`:
+Create `sandbox/app/src/middlewares/csp.js`:
 
 ```js
 import helmet from 'helmet';
@@ -58,7 +58,7 @@ export function createCspMiddleware(config) {
 
 ### Step 3 — Mount in the plugin
 
-In `app/src/app.js` (inside `taskManagerApplicationPlugin`):
+In `sandbox/app/src/app.js` (inside `taskManagerApplicationPlugin`):
 
 ```js
 import { createCspMiddleware } from './middlewares/csp.js';
@@ -174,7 +174,7 @@ Wire the connection attempt to try the new password first, then fall back to the
 
 **Why:** Without query timeouts, a slow or hung query holds a connection open indefinitely, exhausting the connection pool and stalling all subsequent requests.
 
-### SQLite (current implementation — `api/src/database/db.js`)
+### SQLite (current implementation — `sandbox/api/src/database/db.js`)
 
 Node's built-in `node:sqlite` `DatabaseSync` does not support query timeouts. The only reliable mitigation with the current driver is to:
 

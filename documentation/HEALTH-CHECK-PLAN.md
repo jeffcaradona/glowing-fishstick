@@ -412,7 +412,7 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 3. **[README.md](../README.md)** — If health endpoints are documented, add brief note about extensibility
 
-4. **[app/DEV_APP_README.md](../app/DEV_APP_README.md)** — Add example showing plugin health check registration
+4. **[sandbox/app/DEV_APP_README.md](../sandbox/app/DEV_APP_README.md)** — Add example showing plugin health check registration
 
 ---
 
@@ -442,7 +442,7 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 | `documentation/00-project-specs.md`                             | **Modify**              | Update Section 7.1 with extensibility API                          |
 | `documentation/99-potential-gaps.md`                            | **Modify**              | Mark #3 as completed                                               |
 | `README.md`                                                     | **Modify**              | Note extensible health checks (if applicable)                      |
-| `app/DEV_APP_README.md`                                         | **Modify**              | Add plugin health check example                                    |
+| `sandbox/app/DEV_APP_README.md`                                 | **Modify**              | Add plugin health check example                                    |
 
 ---
 
@@ -472,7 +472,7 @@ rg -n "eval\(|new Function\(|with\s*\(" core/shared/src/health-check-registry.js
 rg "healthRoutes" core/app core/api core/shared
 
 # Documentation consistency
-rg "from '../../index.js'" README.md app/DEV_APP_README.md documentation/*.md
+rg "from '../../index.js'" README.md sandbox/app/DEV_APP_README.md documentation/*.md
 ```
 
 ---

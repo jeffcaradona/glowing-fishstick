@@ -6,8 +6,8 @@ This document outlines the expectations and constraints for working with this re
 
 This repository is a **monorepo workspace** with the following key directories:
 
-- `api/` - Local Development API package
-- `app/` - Local Development Application package
+- `sandbox/api/` - Local Development API package
+- `sandbox/app/` - Local Development Application package
 - `core/` - Core libraries (includes `core/generator/templates/` — starter scaffolds)
 - `documentation/` - Project documentation
 - `tests/` - Integration tests
@@ -52,7 +52,7 @@ If parity cannot be preserved in a condensed file, restore detail instead of dro
 ### Canonical Truth Sources
 
 1. README installation + import examples
-2. `app/DEV_APP_README` examples and directory diagrams
+2. `sandbox/app/DEV_APP_README` examples and directory diagrams
 3. `documentation/00-project-specs` public API snippets
 4. `documentation/99-potential-gaps.md` for implementation state
 
@@ -61,7 +61,7 @@ If parity cannot be preserved in a condensed file, restore detail instead of dro
 When editing package names, exports, directory structure, or API entrypoints:
 
 1. Update README installation + import examples
-2. Update `app/DEV_APP_README` examples and directory diagrams
+2. Update `sandbox/app/DEV_APP_README` examples and directory diagrams
 3. Update `documentation/00-project-specs` public API snippets
 4. Update status wording in `documentation/99-potential-gaps.md` if implementation state changed
 
@@ -235,7 +235,7 @@ Use these commands when relevant to the change:
 rg --files
 
 # Search for documentation inconsistencies
-rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md app/DEV_APP_README.md documentation/*.md
+rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md sandbox/app/DEV_APP_README.md documentation/*.md
 
 # Verify package boundaries
 npm pack --dry-run
