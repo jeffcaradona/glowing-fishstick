@@ -62,7 +62,7 @@ If a future contributor independently finds the inline health assertions burdens
 
 ### 3. Health Routes — Decline (for now)
 
-The discovery that `core/app/src/routes/health.js` and `core/api/src/routes/health.js` are 100% identical is a valid finding. The re-export stub pattern would work. However:
+The discovery that `core/web-app/src/routes/health.js` and `core/service-api/src/routes/health.js` are 100% identical is a valid finding. The re-export stub pattern would work. However:
 
 - The absolute duplication is 49 lines per file — trivial in project context.
 - The consolidation requires changes across 4+ files and package.json exports.

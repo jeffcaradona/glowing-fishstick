@@ -155,7 +155,7 @@ App refuses to start; operator has full visibility and control over cleanup.
 
 **Changes Implemented**:
 
-- [app-factory.js](../core/app/src/app-factory.js): Create private hook registries in closure; expose register methods on app object; store registries via WeakMap ✓
+- [app-factory.js](../core/web-app/src/app-factory.js): Create private hook registries in closure; expose register methods on app object; store registries via WeakMap ✓
 - [server-factory.js](../core/shared/src/server-factory.js): Retrieve registries via `getRegistries()` instead of underscore fields; defer startup execution via `setImmediate()` to allow consumer hook registration ✓
 - [registry-store.js](../core/shared/src/registry-store.js): WeakMap-based private registry storage — `storeRegistries()` / `getRegistries()` ✓
 - [shared/index.js](../core/shared/index.js): Export `storeRegistries` for cross-package access ✓
@@ -297,7 +297,7 @@ App refuses to start; operator has full visibility and control over cleanup.
 - `@glowing-fishstick/api` Thin MVP Slice — Implemented `createApi`/`createApiConfig`, core middleware stack, JSON-first error handling, and integration tests
 - API health passthrough (phase 1) — Implemented fixed app endpoint (`/admin/api-health`) to probe API readiness (`/readyz`) without exposing generic proxying
 - Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
-- API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `sandbox/app/src/services/tasks-api.js`
+- API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/service-api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `sandbox/app/src/services/tasks-api.js`
 - Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
 - Logger module extraction (`core/modules/*` ownership boundary) — Moved logger implementation to `core/modules/logger` / `@glowing-fishstick/logger`; kept `@glowing-fishstick/shared` as compatibility + curated public API
 - Database Schema Migration System & Input Validation — Version-tracked migrations in `sandbox/api/src/database/db.js` with automatic startup execution; application-level validation in routes and dedicated validation module; CHECK constraints for defense-in-depth
@@ -313,8 +313,8 @@ App refuses to start; operator has full visibility and control over cleanup.
 
 **Finding**: Snyk Code reported `javascript/NoRateLimitingForExpensiveWebOperation` on request-path code in:
 
-- `core/app/src/middlewares/errorHandler.js`
-- `core/app/src/controllers/admin-controller.js`
+- `core/web-app/src/middlewares/errorHandler.js`
+- `core/web-app/src/controllers/admin-controller.js`
 
 **Remediation Implemented**:
 
@@ -328,8 +328,8 @@ App refuses to start; operator has full visibility and control over cleanup.
    - Returns `429` with deterministic JSON error envelope
 
 3. Error handler logger hardening:
-   - Removed per-request `createLogger()` fallback from `core/app/src/middlewares/errorHandler.js`
-   - Removed per-request `createLogger()` fallback from `core/api/src/middlewares/error-handler.js`
+   - Removed per-request `createLogger()` fallback from `core/web-app/src/middlewares/errorHandler.js`
+   - Removed per-request `createLogger()` fallback from `core/service-api/src/middlewares/error-handler.js`
    - Fallback to `console.error` when startup-injected logger is unavailable
 
 4. Integration tests:

@@ -53,10 +53,10 @@ The codebase leans toward functional programming paradigms. Pragmatic exceptions
 
 ## 4. Public API Surface
 
-The app package public entry point is `core/app/index.js` and re-exports the following:
+The app package public entry point is `core/web-app/index.js` and re-exports the following:
 
 ```js
-// core/app/index.js
+// core/web-app/index.js
 export { createApp } from './src/app-factory.js';
 export {
   createServer,
@@ -88,9 +88,9 @@ export { jwtAuthMiddleware } from './src/middlewares/jwt-auth.js';
 
 Source-of-truth file mapping for this public API surface:
 
-- `createApp` → `core/app/src/app-factory.js`
-- `createConfig` / `filterSensitiveKeys` → `core/app/src/config/env.js`
-- `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/app/src/errors/appError.js`
+- `createApp` → `core/web-app/src/app-factory.js`
+- `createConfig` / `filterSensitiveKeys` → `core/web-app/src/config/env.js`
+- `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/web-app/src/errors/appError.js`
 - `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `createLogger` / `createRequestLogger` → `core/modules/logger/src/logger.js` (re-exported via the `@glowing-fishstick/shared` compatibility package boundary)
 - `generateToken` / `verifyToken` → `core/shared/src/auth/jwt.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
@@ -773,8 +773,8 @@ class AppError extends Error {
 | Level           | Directory                         | What's Tested                                                                                                  | Tools                 |
 | --------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- |
 | **Unit**        | `core/shared/tests/unit/`         | Pure shared utilities and helper functions (e.g., formatters, JWT, service container).                         | `vitest`              |
-| **Integration** | `core/app/tests/integration/`     | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest` |
-| **Integration** | `core/api/tests/integration/`     | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest` |
+| **Integration** | `core/web-app/tests/integration/`     | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest` |
+| **Integration** | `core/service-api/tests/integration/`     | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest` |
 | **Stress**      | `autocannon` (optional, dev tool) | Load testing against a running instance. Validates performance and stability under concurrency.                | `autocannon`          |
 
 ### 12.2 Testability by Design
@@ -822,10 +822,10 @@ The FP-first architecture directly supports testability:
   "dev:api": "npm run dev --workspace sandbox/api",
   "test": "npm run test:all",
   "test:unit": "npm run test:unit --workspace core/shared",
-  "test:integration": "npm run test:integration --workspace core/app",
-  "test:smoke": "npm run test:smoke --workspace core/app",
-  "test:api": "npm run test --workspace core/api",
-  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api && npm run test --workspace core/generator",
+  "test:integration": "npm run test:integration --workspace core/web-app",
+  "test:smoke": "npm run test:smoke --workspace core/web-app",
+  "test:api": "npm run test --workspace core/service-api",
+  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/web-app && npm run test --workspace core/service-api && npm run test --workspace core/generator",
   "lint": "eslint .",
   "format": "prettier --write ."
 }

@@ -4,7 +4,7 @@
  * metrics routes, consumer plugins, and error handling into a single
  * API app instance.
  *
- * WHY (intentional parity with core/app/src/app-factory.js): Both
+ * WHY (intentional parity with core/web-app/src/app-factory.js): Both
  * factories share ~40 lines of middleware linking (hook registries,
  * request ID, body parsers, health routes, shutdown rejection, throttle
  * mounting, plugin loop). This duplication is deliberate — middleware

@@ -1,5 +1,5 @@
 /**
- * @file core/app/tests/integration/startup-hook-ordering.test.js
+ * @file core/web-app/tests/integration/startup-hook-ordering.test.js
  * @description Integration test for P0 startup hook ordering fix.
  *
  * Verifies that the race condition between createServer() and

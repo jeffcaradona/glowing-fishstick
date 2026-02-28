@@ -75,7 +75,7 @@
 │           └── validation/     Input validation (task-validation.js); shared by routes
 │
 ├── core/
-│   ├── app/                @glowing-fishstick/app — HTML/view framework package
+│   ├── web-app/            @glowing-fishstick/app — HTML/view framework package
 │   │   └── src/
 │   │       ├── app-factory.js      createApp() — assembles full middleware stack
 │   │       ├── config/env.js       createConfig() — layered config factory
@@ -86,7 +86,7 @@
 │   │       ├── routes/             health.js, index.js, admin.js
 │   │       └── views/              Core ETA templates (layout, admin, health)
 │   │
-│   ├── api/                @glowing-fishstick/api — JSON API framework package
+│   ├── service-api/        @glowing-fishstick/api — JSON API framework package
 │   │   └── src/
 │   │       ├── api-factory.js      createApi() — assembles API middleware stack
 │   │       ├── config/env.js       createApiConfig() — layered config factory

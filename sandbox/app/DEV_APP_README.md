@@ -301,7 +301,7 @@ export function taskRoutes(config) {
 Edit files in the core packages under `core/`:
 
 ```
-core/app/src/
+core/web-app/src/
 |-- app-factory.js
 |-- config/
 |-- controllers/

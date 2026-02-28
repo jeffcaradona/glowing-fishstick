@@ -1,4 +1,4 @@
-﻿# API - Local Development Guide
+# API - Local Development Guide
 
 > Using the `sandbox/api/` directory for local development and testing
 
@@ -83,7 +83,7 @@ npm run dev:api
 This runs:
 
 ```bash
-nodemon --watch src --watch ../core/api/src --watch ../core/shared/src --ext js,mjs,cjs,json,eta src/server.js
+nodemon --watch src --watch ../core/service-api/src --watch ../core/shared/src --ext js,mjs,cjs,json,eta src/server.js
 ```
 
 ### 3. Access the API

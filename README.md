@@ -5,8 +5,8 @@
 > **Modular Structure:**
 >
 > - The root package provides documentation, development scripts, and a monorepo structure.
-> - The main application logic is in [`core/app`](core/app), distributed as `@glowing-fishstick/app`.
-> - The JSON-first API module is in [`core/api`](core/api), distributed as `@glowing-fishstick/api`.
+> - The main application logic is in [`core/web-app`](core/web-app), distributed as `@glowing-fishstick/app`.
+> - The JSON-first API module is in [`core/service-api`](core/service-api), distributed as `@glowing-fishstick/api`.
 > - The CLI scaffolding tool is in [`core/generator`](core/generator), distributed as `@glowing-fishstick/generator`.
 > - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared` (including logger re-exports).
 > - Logger implementation lives in [`core/modules/logger`](core/modules/logger), distributed as `@glowing-fishstick/logger`.
@@ -136,7 +136,7 @@ npm install @glowing-fishstick/logger
 Note on repository layout and installs
 
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` or `@glowing-fishstick/api` (Option A: workspace is the source; consumers install the package).
-- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
+- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/web-app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 - See jsconfig.json for an example of resolving a directory to a package name.
 
 ---
@@ -572,10 +572,10 @@ const config = createConfig();
 
 **Workspace Package Map**
 
-- `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
-- `core/shared` — Compatibility layer + curated public API used by `core/app` and `core/api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/web-app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
+- `core/shared` — Compatibility layer + curated public API used by `core/web-app` and `core/service-api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
 - `core/modules/logger` — Implementation ownership boundary for logging (Pino logger factory + request logging middleware). Published as `@glowing-fishstick/logger`.
-- `core/api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
+- `core/service-api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
 - `core/generator` — CLI scaffolding tool. Published as `@glowing-fishstick/generator`. Provides the `fishstick-create` command to scaffold new app or API projects from starter templates.
 - `sandbox/app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
 - `sandbox/api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.
@@ -755,8 +755,8 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 
 | Package               | npm name                         |
 | --------------------- | -------------------------------- |
-| `core/app`            | `@glowing-fishstick/app`         |
-| `core/api`            | `@glowing-fishstick/api`         |
+| `core/web-app`            | `@glowing-fishstick/app`         |
+| `core/service-api`            | `@glowing-fishstick/api`         |
 | `core/shared`         | `@glowing-fishstick/shared`      |
 | `core/modules/logger` | `@glowing-fishstick/logger`      |
 | `core/generator`      | `@glowing-fishstick/generator`   |

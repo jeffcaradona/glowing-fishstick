@@ -8,7 +8,7 @@
 
 ## Revision History
 
-- **v3**: Corrected Stage D default-flip path to `core/api/src/config/env.js`; added explicit middleware ordering requirement in `core/api/src/api-factory.js` so enforcement runs before `metricsRoutes` and `indexRoutes` (not via plugin loop).
+- **v3**: Corrected Stage D default-flip path to `core/service-api/src/config/env.js`; added explicit middleware ordering requirement in `core/service-api/src/api-factory.js` so enforcement runs before `metricsRoutes` and `indexRoutes` (not via plugin loop).
 - **v2**: Aligned env var names to `JWT_SECRET` and `JWT_EXPIRES_IN`, clarified token rotation (no per-request signing), added explicit metrics validation, specified Stage D default-flip location, and fixed Test Plan section structure.
 - **v1**: Initial staged rollout proposal.
 
@@ -71,7 +71,7 @@ Policy:
 
 Implementation note:
 
-- Enforcement middleware must be mounted in `core/api/src/api-factory.js` before `metricsRoutes(config)` and `indexRoutes(config)`.
+- Enforcement middleware must be mounted in `core/service-api/src/api-factory.js` before `metricsRoutes(config)` and `indexRoutes(config)`.
 - Do not rely on the plugin loop for enforcement registration because plugins are mounted after both route groups.
 
 ## Rollout Stages
@@ -110,7 +110,7 @@ Validation:
 
 ### Stage D: Harden defaults
 
-- After stability window, flip `DEFAULTS` for `blockBrowserOrigin` and `requireJwt` to `true` in `core/api/src/config/env.js`.
+- After stability window, flip `DEFAULTS` for `blockBrowserOrigin` and `requireJwt` to `true` in `core/service-api/src/config/env.js`.
 - Keep env override for emergency rollback.
 
 ## Test Plan

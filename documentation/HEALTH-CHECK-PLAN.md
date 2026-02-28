@@ -9,7 +9,7 @@
 
 ## Summary
 
-Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that lets plugins register named, async health checks via `app.registerHealthCheck(name, fn, opts)`. Checks execute concurrently with per-check timeouts and critical/non-critical classification. `/readyz` returns 503 only when critical checks fail; `/livez` aggregates all checks for deep verification; `/healthz` stays static. The duplicate health route in `core/app` and `core/api` is deduplicated into `core/shared`.
+Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that lets plugins register named, async health checks via `app.registerHealthCheck(name, fn, opts)`. Checks execute concurrently with per-check timeouts and critical/non-critical classification. `/readyz` returns 503 only when critical checks fail; `/livez` aggregates all checks for deep verification; `/healthz` stays static. The duplicate health route in `core/web-app` and `core/service-api` is deduplicated into `core/shared`.
 
 ---
 
@@ -17,7 +17,7 @@ Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that 
 
 | Decision                      | Choice                                                                                | Rationale                                                                                                          |
 | ----------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Deduplicate health routes** | Move to `core/shared`; both factories import from there                               | `core/app` and `core/api` have identical copies today — single source of truth eliminates drift                    |
+| **Deduplicate health routes** | Move to `core/shared`; both factories import from there                               | `core/web-app` and `core/service-api` have identical copies today — single source of truth eliminates drift                    |
 | **`/healthz` behavior**       | Stays static (`{ status: "ok" }`, always 200)                                         | Liveness probes must be cheap and must never flap due to dependency state; K8s will kill the pod if liveness fails |
 | **Critical vs non-critical**  | Critical failure → 503 on `/readyz`; non-critical → reported but still 200            | Enables graceful degradation; K8s stops routing traffic only for critical failures                                 |
 | **Per-check timeout**         | Default 5 s per check, overridable at registration                                    | Prevents a hung dependency (e.g., unresponsive DB) from blocking the entire health response                        |
@@ -300,15 +300,15 @@ export function healthRoutes(app) {
 }
 ```
 
-**Deleted file**: `core/api/src/routes/health.js` — replaced with import from `@glowing-fishstick/shared`
+**Deleted file**: `core/service-api/src/routes/health.js` — replaced with import from `@glowing-fishstick/shared`
 
-**Modified or replaced file**: `core/app/src/routes/health.js` — either delete and update import, or re-export from shared
+**Modified or replaced file**: `core/web-app/src/routes/health.js` — either delete and update import, or re-export from shared
 
 ---
 
 ### Phase 4 — Wire into App and API Factories
 
-**Modified file**: `core/app/src/app-factory.js`
+**Modified file**: `core/web-app/src/app-factory.js`
 
 ```diff
 + import {
@@ -336,9 +336,9 @@ export function healthRoutes(app) {
   }
 ```
 
-**Modified file**: `core/api/src/api-factory.js` — mirror the same changes.
+**Modified file**: `core/service-api/src/api-factory.js` — mirror the same changes.
 
-**Modified file**: `core/app/src/config/env.js` (optional)
+**Modified file**: `core/web-app/src/config/env.js` (optional)
 
 Add `healthCheckTimeout` config key:
 
@@ -377,7 +377,7 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 #### Integration Tests
 
-**New file**: `core/app/tests/integration/health-check-extensibility.test.js`
+**New file**: `core/web-app/tests/integration/health-check-extensibility.test.js`
 
 | #   | Test Case                                               | Assertion                                                       |
 | --- | ------------------------------------------------------- | --------------------------------------------------------------- |
@@ -432,13 +432,13 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 | `core/shared/src/registry-store.js`                             | **Modify**              | Add `storeHealthRegistry` / `getHealthRegistry`                    |
 | `core/shared/src/routes/health.js`                              | **Create**              | Deduplicated + extended health routes                              |
 | `core/shared/index.js`                                          | **Modify**              | Export new factory, store functions, error classes, health routes  |
-| `core/app/src/app-factory.js`                                   | **Modify**              | Create health registry, expose `app.registerHealthCheck`, store it |
-| `core/app/src/routes/health.js`                                 | **Delete or re-export** | Replaced by shared implementation                                  |
-| `core/app/src/config/env.js`                                    | **Modify**              | Add `healthCheckTimeout` config key                                |
-| `core/api/src/api-factory.js`                                   | **Modify**              | Mirror app-factory health registry wiring                          |
-| `core/api/src/routes/health.js`                                 | **Delete**              | Replaced by shared implementation                                  |
+| `core/web-app/src/app-factory.js`                                   | **Modify**              | Create health registry, expose `app.registerHealthCheck`, store it |
+| `core/web-app/src/routes/health.js`                                 | **Delete or re-export** | Replaced by shared implementation                                  |
+| `core/web-app/src/config/env.js`                                    | **Modify**              | Add `healthCheckTimeout` config key                                |
+| `core/service-api/src/api-factory.js`                                   | **Modify**              | Mirror app-factory health registry wiring                          |
+| `core/service-api/src/routes/health.js`                                 | **Delete**              | Replaced by shared implementation                                  |
 | `core/shared/tests/unit/health-check-registry.test.js`          | **Create**              | ~16 unit tests                                                     |
-| `core/app/tests/integration/health-check-extensibility.test.js` | **Create**              | ~8 integration tests                                               |
+| `core/web-app/tests/integration/health-check-extensibility.test.js` | **Create**              | ~8 integration tests                                               |
 | `documentation/00-project-specs.md`                             | **Modify**              | Update Section 7.1 with extensibility API                          |
 | `documentation/99-potential-gaps.md`                            | **Modify**              | Mark #3 as completed                                               |
 | `README.md`                                                     | **Modify**              | Note extensible health checks (if applicable)                      |
@@ -456,7 +456,7 @@ npm run test:all
 npx vitest run core/shared/tests/unit/health-check-registry.test.js
 
 # New integration tests pass
-npx vitest run core/app/tests/integration/health-check-extensibility.test.js
+npx vitest run core/web-app/tests/integration/health-check-extensibility.test.js
 
 # Code quality
 npm run lint
@@ -469,7 +469,7 @@ rg -n "\b(readFileSync|writeFileSync|execSync)\b" core/shared/src/health-check-r
 rg -n "eval\(|new Function\(|with\s*\(" core/shared/src/health-check-registry.js core/shared/src/routes/health.js
 
 # Confirm deduplication — healthRoutes defined only in shared
-rg "healthRoutes" core/app core/api core/shared
+rg "healthRoutes" core/web-app core/service-api core/shared
 
 # Documentation consistency
 rg "from '../../index.js'" README.md sandbox/app/DEV_APP_README.md documentation/*.md

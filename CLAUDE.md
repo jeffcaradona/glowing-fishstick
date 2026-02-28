@@ -4,7 +4,7 @@ POC Express.js framework distributed as npm modules. Solves "template drift" via
 
 ## Repository (npm workspaces monorepo)
 
-core/app/ → @glowing-fishstick/app | core/shared/ → @glowing-fishstick/shared | core/api/ → @glowing-fishstick/api
+core/web-app/ → @glowing-fishstick/app | core/shared/ → @glowing-fishstick/shared | core/service-api/ → @glowing-fishstick/api
 sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | core/generator/ → CLI scaffolding tool + starter templates | tests/ → Vitest integration tests
 
 - Root package is NOT runtime-installable. Consumer examples import from `@glowing-fishstick/*` packages.
@@ -40,11 +40,11 @@ sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | cor
 
 ### Application framework
 
-- `core/app/src/app-factory.js` — Express app composition
-- `core/app/src/config/env.js` — configuration factory
-- `core/app/src/errors/appError.js` — error classes
-- `core/app/src/middlewares/errorHandler.js` — error middleware
-- `core/app/src/routes/health.js` — `/healthz`, `/readyz`, `/livez`
+- `core/web-app/src/app-factory.js` — Express app composition
+- `core/web-app/src/config/env.js` — configuration factory
+- `core/web-app/src/errors/appError.js` — error classes
+- `core/web-app/src/middlewares/errorHandler.js` — error middleware
+- `core/web-app/src/routes/health.js` — `/healthz`, `/readyz`, `/livez`
 
 ### Consumer examples
 
@@ -84,20 +84,20 @@ Run: `npm run lint` · `npm run format` · `npm run test:all`
 
 ## Intentional code duplication
 
-Some code appears in both `core/app` and `core/api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
+Some code appears in both `core/web-app` and `core/service-api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
 
 ### Consolidated (shared)
 
-- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/app` and `core/api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
+- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/web-app` and `core/service-api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
 
 ### Intentionally separate (do not consolidate)
 
-- **Error handlers** (`core/app/src/middlewares/errorHandler.js` vs `core/api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
-- **Factories** (`core/app/src/app-factory.js` vs `core/api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
+- **Error handlers** (`core/web-app/src/middlewares/errorHandler.js` vs `core/service-api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
+- **Factories** (`core/web-app/src/app-factory.js` vs `core/service-api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
 - **Security hardening tests** (`core/*/tests/integration/security-hardening.test.js`): Parallel test structure validates each framework independently. Each package must prove its own security contract; shared harness would obscure which implementation is under test.
 
 ## When in doubt
 
-Read `core/app/src/app-factory.js` and `sandbox/app/src/app.js` for canonical patterns.
+Read `core/web-app/src/app-factory.js` and `sandbox/app/src/app.js` for canonical patterns.
 Factories over classes. Async everywhere. Tests for lifecycle. Sync all 4 docs.
 Quality > velocity.

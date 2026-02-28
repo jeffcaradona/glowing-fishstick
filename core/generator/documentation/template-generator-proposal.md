@@ -321,8 +321,8 @@ Add to root `package.json` workspaces:
 ```json
 {
   "workspaces": [
-    "core/app",
-    "core/api",
+    "core/web-app",
+    "core/service-api",
     "core/shared",
     "core/modules/logger",
     "core/generator", // ← NEW

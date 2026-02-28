@@ -2,7 +2,7 @@
  * @module testing/security-helpers
  * @description Shared test helpers for security-hardening integration tests.
  *
- * WHY: Both core/app and core/api security-hardening test suites exercise
+ * WHY: Both core/web-app and core/service-api security-hardening test suites exercise
  * identical HTTP patterns (oversized payloads, throttle exhaustion, health
  * probes). Extracting the _request construction_ into helpers eliminates
  * Sonar-flagged line duplication while each test file retains its own

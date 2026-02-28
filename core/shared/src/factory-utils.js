@@ -13,8 +13,8 @@
  * Each factory retains full control of middleware ordering and app-specific
  * setup; only the mechanical plumbing is shared.
  *
- * VERIFY IF CHANGED: Both core/app/src/app-factory.js and
- * core/api/src/api-factory.js depend on these utilities.
+ * VERIFY IF CHANGED: Both core/web-app/src/app-factory.js and
+ * core/service-api/src/api-factory.js depend on these utilities.
  */
 
 import { createHookRegistry } from './hook-registry.js';

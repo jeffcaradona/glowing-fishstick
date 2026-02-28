@@ -9,8 +9,8 @@
  * shared lines here satisfies Sonar's duplication threshold without
  * consolidating the handlers themselves (which AGENTS.md forbids).
  *
- * VERIFY IF CHANGED: Both core/app/src/middlewares/errorHandler.js and
- * core/api/src/middlewares/error-handler.js depend on these utilities.
+ * VERIFY IF CHANGED: Both core/web-app/src/middlewares/errorHandler.js and
+ * core/service-api/src/middlewares/error-handler.js depend on these utilities.
  */
 
 /**

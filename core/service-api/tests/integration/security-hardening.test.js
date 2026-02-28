@@ -6,7 +6,7 @@
  * to metrics routes returns 429, and health endpoints remain available
  * under throttle pressure.
  *
- * WHY (intentional parity with core/app/tests/integration/security-hardening.test.js):
+ * WHY (intentional parity with core/web-app/tests/integration/security-hardening.test.js):
  * Both test suites validate the same security contract (payload limits,
  * throttling, health availability) for their respective frameworks.
  * This duplication is deliberate — each package must independently
