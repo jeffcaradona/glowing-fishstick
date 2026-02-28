@@ -753,13 +753,13 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 
 ### Publishable packages
 
-| Package               | npm name                         |
-| --------------------- | -------------------------------- |
-| `core/web-app`            | `@glowing-fishstick/app`         |
-| `core/service-api`            | `@glowing-fishstick/api`         |
-| `core/shared`         | `@glowing-fishstick/shared`      |
-| `core/modules/logger` | `@glowing-fishstick/logger`      |
-| `core/generator`      | `@glowing-fishstick/generator`   |
+| Package               | npm name                       |
+| --------------------- | ------------------------------ |
+| `core/web-app`        | `@glowing-fishstick/app`       |
+| `core/service-api`    | `@glowing-fishstick/api`       |
+| `core/shared`         | `@glowing-fishstick/shared`    |
+| `core/modules/logger` | `@glowing-fishstick/logger`    |
+| `core/generator`      | `@glowing-fishstick/generator` |
 
 `sandbox/app/` and `sandbox/api/` are marked `"private": true` and are never published. Starter templates live in `core/generator/templates/` and ship as part of the `@glowing-fishstick/generator` package.
 

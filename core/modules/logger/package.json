@@ -17,7 +17,6 @@
     "type": "git",
     "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
   },
-  
   "license": "MIT",
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",

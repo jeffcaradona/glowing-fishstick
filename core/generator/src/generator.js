@@ -110,10 +110,9 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
   return {
     appDependencySpec: `file:${path.relative(targetDir, localDirs.app).replaceAll('\\', '/')}`,
     apiDependencySpec: `file:${path.relative(targetDir, localDirs.api).replaceAll('\\', '/')}`,
-    sharedDependencySpec: `file:${path.relative(targetDir, localDirs.shared).replaceAll(
-      '\\',
-      '/',
-    )}`,
+    sharedDependencySpec: `file:${path
+      .relative(targetDir, localDirs.shared)
+      .replaceAll('\\', '/')}`,
   };
 }
 
@@ -248,10 +247,7 @@ async function resolveOptions(rawOptions) {
  * @returns {Promise<void>}
  */
 async function validateInputs({ projectName, template, port, targetDir, force }) {
-  const checks = [
-    validateProjectName(projectName),
-    validateTemplate(template),
-  ];
+  const checks = [validateProjectName(projectName), validateTemplate(template)];
 
   if (port !== undefined) {
     checks.push(validatePort(port));

@@ -17,7 +17,7 @@ Add a `createHealthCheckRegistry()` factory to `@glowing-fishstick/shared` that 
 
 | Decision                      | Choice                                                                                | Rationale                                                                                                          |
 | ----------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Deduplicate health routes** | Move to `core/shared`; both factories import from there                               | `core/web-app` and `core/service-api` have identical copies today — single source of truth eliminates drift                    |
+| **Deduplicate health routes** | Move to `core/shared`; both factories import from there                               | `core/web-app` and `core/service-api` have identical copies today — single source of truth eliminates drift        |
 | **`/healthz` behavior**       | Stays static (`{ status: "ok" }`, always 200)                                         | Liveness probes must be cheap and must never flap due to dependency state; K8s will kill the pod if liveness fails |
 | **Critical vs non-critical**  | Critical failure → 503 on `/readyz`; non-critical → reported but still 200            | Enables graceful degradation; K8s stops routing traffic only for critical failures                                 |
 | **Per-check timeout**         | Default 5 s per check, overridable at registration                                    | Prevents a hung dependency (e.g., unresponsive DB) from blocking the entire health response                        |
@@ -426,23 +426,23 @@ healthCheckTimeout: parseInt(env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
 
 ## Files Changed Summary
 
-| File                                                            | Action                  | Description                                                        |
-| --------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| `core/shared/src/health-check-registry.js`                      | **Create**              | Health check registry factory + error classes                      |
-| `core/shared/src/registry-store.js`                             | **Modify**              | Add `storeHealthRegistry` / `getHealthRegistry`                    |
-| `core/shared/src/routes/health.js`                              | **Create**              | Deduplicated + extended health routes                              |
-| `core/shared/index.js`                                          | **Modify**              | Export new factory, store functions, error classes, health routes  |
+| File                                                                | Action                  | Description                                                        |
+| ------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| `core/shared/src/health-check-registry.js`                          | **Create**              | Health check registry factory + error classes                      |
+| `core/shared/src/registry-store.js`                                 | **Modify**              | Add `storeHealthRegistry` / `getHealthRegistry`                    |
+| `core/shared/src/routes/health.js`                                  | **Create**              | Deduplicated + extended health routes                              |
+| `core/shared/index.js`                                              | **Modify**              | Export new factory, store functions, error classes, health routes  |
 | `core/web-app/src/app-factory.js`                                   | **Modify**              | Create health registry, expose `app.registerHealthCheck`, store it |
 | `core/web-app/src/routes/health.js`                                 | **Delete or re-export** | Replaced by shared implementation                                  |
 | `core/web-app/src/config/env.js`                                    | **Modify**              | Add `healthCheckTimeout` config key                                |
-| `core/service-api/src/api-factory.js`                                   | **Modify**              | Mirror app-factory health registry wiring                          |
-| `core/service-api/src/routes/health.js`                                 | **Delete**              | Replaced by shared implementation                                  |
-| `core/shared/tests/unit/health-check-registry.test.js`          | **Create**              | ~16 unit tests                                                     |
+| `core/service-api/src/api-factory.js`                               | **Modify**              | Mirror app-factory health registry wiring                          |
+| `core/service-api/src/routes/health.js`                             | **Delete**              | Replaced by shared implementation                                  |
+| `core/shared/tests/unit/health-check-registry.test.js`              | **Create**              | ~16 unit tests                                                     |
 | `core/web-app/tests/integration/health-check-extensibility.test.js` | **Create**              | ~8 integration tests                                               |
-| `documentation/00-project-specs.md`                             | **Modify**              | Update Section 7.1 with extensibility API                          |
-| `documentation/99-potential-gaps.md`                            | **Modify**              | Mark #3 as completed                                               |
-| `README.md`                                                     | **Modify**              | Note extensible health checks (if applicable)                      |
-| `sandbox/app/DEV_APP_README.md`                                 | **Modify**              | Add plugin health check example                                    |
+| `documentation/00-project-specs.md`                                 | **Modify**              | Update Section 7.1 with extensibility API                          |
+| `documentation/99-potential-gaps.md`                                | **Modify**              | Mark #3 as completed                                               |
+| `README.md`                                                         | **Modify**              | Note extensible health checks (if applicable)                      |
+| `sandbox/app/DEV_APP_README.md`                                     | **Modify**              | Add plugin health check example                                    |
 
 ---
 

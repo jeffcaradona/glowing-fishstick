@@ -4,7 +4,6 @@ api/ -> sandbox/api/
 
 app/ -> sandbox/app/
 
-
 ## B) Rename core - Done
 
 core/api -> core/service-api

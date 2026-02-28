@@ -29,15 +29,15 @@ Root `package.json` has `"files": []` but no `"private": true`. An accidental `n
 
 Use `core/generator/package.json` as the model (it's the most complete). Add missing fields to these 4 packages:
 
-| Field | `core/web-app` | `core/service-api` | `core/shared` | `core/modules/logger` |
-|-------|----------------|--------------------|--------------|-----------------------|
-| `license` | ❌ add `"MIT"` | ❌ add | ❌ add | ✅ |
-| `author` | ❌ add | ❌ add | ❌ add | ⚠️ empty string → fill |
-| `repository` | ❌ add | ❌ add | ❌ add | ❌ add |
-| `homepage` | ❌ add | ❌ add | ❌ add | ❌ add |
-| `bugs` | ❌ add | ❌ add | ❌ add | ❌ add |
-| `keywords` | ❌ add | ❌ add | ❌ add | ❌ add |
-| `engines` | ❌ add `"node": ">=22"` | ❌ add | ❌ add | ❌ add |
+| Field        | `core/web-app`          | `core/service-api` | `core/shared` | `core/modules/logger`  |
+| ------------ | ----------------------- | ------------------ | ------------- | ---------------------- |
+| `license`    | ❌ add `"MIT"`          | ❌ add             | ❌ add        | ✅                     |
+| `author`     | ❌ add                  | ❌ add             | ❌ add        | ⚠️ empty string → fill |
+| `repository` | ❌ add                  | ❌ add             | ❌ add        | ❌ add                 |
+| `homepage`   | ❌ add                  | ❌ add             | ❌ add        | ❌ add                 |
+| `bugs`       | ❌ add                  | ❌ add             | ❌ add        | ❌ add                 |
+| `keywords`   | ❌ add                  | ❌ add             | ❌ add        | ❌ add                 |
+| `engines`    | ❌ add `"node": ">=22"` | ❌ add             | ❌ add        | ❌ add                 |
 
 Also fix `core/shared/package.json` `"description"` — currently copy-pasted from web-app ("Core application factory and configuration module"); change to something like "Shared utilities, server factory, hook registry, and auth for glowing-fishstick".
 
@@ -157,13 +157,13 @@ Update these 4 docs per AGENTS.md requirements:
 
 ### Per-package readiness snapshot
 
-| Package | `type` | `exports` | `files` | `license` | `author` | `repo` | `engines` | README |
-|---------|--------|-----------|---------|-----------|----------|--------|-----------|--------|
-| `@glowing-fishstick/app` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| `@glowing-fishstick/api` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| `@glowing-fishstick/shared` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| `@glowing-fishstick/logger` | ✅ | ✅ | ✅ | ✅ | ⚠️ `""` | ❌ | ❌ | ❌ |
-| `@glowing-fishstick/generator` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Package                        | `type` | `exports` | `files` | `license` | `author` | `repo` | `engines` | README |
+| ------------------------------ | ------ | --------- | ------- | --------- | -------- | ------ | --------- | ------ |
+| `@glowing-fishstick/app`       | ✅     | ✅        | ✅      | ❌        | ❌       | ❌     | ❌        | ✅     |
+| `@glowing-fishstick/api`       | ✅     | ✅        | ✅      | ❌        | ❌       | ❌     | ❌        | ❌     |
+| `@glowing-fishstick/shared`    | ✅     | ✅        | ✅      | ❌        | ❌       | ❌     | ❌        | ✅     |
+| `@glowing-fishstick/logger`    | ✅     | ✅        | ✅      | ✅        | ⚠️ `""`  | ❌     | ❌        | ❌     |
+| `@glowing-fishstick/generator` | ✅     | ✅        | ✅      | ✅        | ✅       | ✅     | ✅        | ✅     |
 
 ### Root `.npmignore`
 
@@ -201,19 +201,18 @@ sandbox/
 
 ### Severity summary
 
-| # | Severity | Issue |
-|---|----------|-------|
-| 1 | **HIGH** | `core/modules/workflows` in workspaces with no `package.json` |
-| 2 | **HIGH** | Root `.npmignore` `*.md` may exclude README from tarballs |
-| 3 | **MEDIUM** | Root `package.json` missing `"private": true` |
-| 4 | **MEDIUM** | 3 packages missing `license`, `author`, `repository`, `engines` |
-| 5 | **MEDIUM** | `core/shared` description is copy-pasted from `core/web-app` |
-| 6 | **MEDIUM** | `core/service-api` has no README.md |
-| 7 | **MEDIUM** | `core/modules/logger` has no README.md and empty `author` |
-| 8 | **LOW** | No `prepublishOnly` scripts to gate broken publishes |
-| 9 | **LOW** | No CI/CD workflows for automated publish |
-| 10 | **INFO** | `./testing` sub-path in shared — confirm intentional |
-
+| #   | Severity   | Issue                                                           |
+| --- | ---------- | --------------------------------------------------------------- |
+| 1   | **HIGH**   | `core/modules/workflows` in workspaces with no `package.json`   |
+| 2   | **HIGH**   | Root `.npmignore` `*.md` may exclude README from tarballs       |
+| 3   | **MEDIUM** | Root `package.json` missing `"private": true`                   |
+| 4   | **MEDIUM** | 3 packages missing `license`, `author`, `repository`, `engines` |
+| 5   | **MEDIUM** | `core/shared` description is copy-pasted from `core/web-app`    |
+| 6   | **MEDIUM** | `core/service-api` has no README.md                             |
+| 7   | **MEDIUM** | `core/modules/logger` has no README.md and empty `author`       |
+| 8   | **LOW**    | No `prepublishOnly` scripts to gate broken publishes            |
+| 9   | **LOW**    | No CI/CD workflows for automated publish                        |
+| 10  | **INFO**   | `./testing` sub-path in shared — confirm intentional            |
 
 ### Dry Runs
 
@@ -368,5 +367,5 @@ npm notice integrity: sha512-MPI71p9C2Pwph[...]bAK1IxUPomg+g==
 npm notice total files: 23
 npm notice
 glowing-fishstick-generator-0.1.2.tgz
-PS E:\Users\jeffc\Source\Repos\GitHub\glowing-fishstick> 
+PS E:\Users\jeffc\Source\Repos\GitHub\glowing-fishstick>
 ```
