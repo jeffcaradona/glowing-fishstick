@@ -91,9 +91,11 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
     return externalDeps;
   }
 
+  // WHY: Actual package directories differ from npm scope names —
+  // @glowing-fishstick/app lives in core/web-app, /api in core/service-api.
   const localDirs = {
-    app: path.join(REPO_ROOT, 'core', 'app'),
-    api: path.join(REPO_ROOT, 'core', 'api'),
+    app: path.join(REPO_ROOT, 'core', 'web-app'),
+    api: path.join(REPO_ROOT, 'core', 'service-api'),
     shared: path.join(REPO_ROOT, 'core', 'shared'),
   };
 
@@ -108,10 +110,9 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
   return {
     appDependencySpec: `file:${path.relative(targetDir, localDirs.app).replaceAll('\\', '/')}`,
     apiDependencySpec: `file:${path.relative(targetDir, localDirs.api).replaceAll('\\', '/')}`,
-    sharedDependencySpec: `file:${path.relative(targetDir, localDirs.shared).replaceAll(
-      '\\',
-      '/',
-    )}`,
+    sharedDependencySpec: `file:${path
+      .relative(targetDir, localDirs.shared)
+      .replaceAll('\\', '/')}`,
   };
 }
 
@@ -246,10 +247,7 @@ async function resolveOptions(rawOptions) {
  * @returns {Promise<void>}
  */
 async function validateInputs({ projectName, template, port, targetDir, force }) {
-  const checks = [
-    validateProjectName(projectName),
-    validateTemplate(template),
-  ];
+  const checks = [validateProjectName(projectName), validateTemplate(template)];
 
   if (port !== undefined) {
     checks.push(validatePort(port));

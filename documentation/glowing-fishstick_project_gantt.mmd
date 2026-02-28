@@ -18,15 +18,16 @@ gantt
     DI Service Container v1          :done, di,  after acc,  5d
 
     section Security Hardening (HIGH)
-    Ph1 Config and Env Parsing       :active, sh1, 2026-02-24, 2d
-    Ph2 Request Parser Limits        :sh2, after sh1, 2d
-    Ph3 Admin Throttle Middleware    :sh3, after sh2, 3d
-    Ph4 Error Logger Hardening       :sh4, after sh3, 2d
-    Ph5 Tests and Verification       :sh5, after sh4, 3d
-    Ph6 Docs and Final Validation    :sh6, after sh5, 2d
+    Ph1 Config and Env Parsing       :done, sh1, 2026-02-24, 2d
+    Ph2 Request Parser Limits        :done, sh2, after sh1, 2d
+    Ph3 Admin Throttle Middleware    :done, sh3, after sh2, 3d
+    Ph4 Error Logger Hardening       :done, sh4, after sh3, 2d
+    Ph5 Tests and Verification       :done, sh5, after sh4, 3d
+    Ph6 Docs and Final Validation    :done, sh6, after sh5, 2d
 
     section Milestone v0.1.0
-    v0.1.0 Release Gate              :milestone, m010, after sh6, 0d
+    v0.1.2 Release Candidate         :active, rc012, 2026-02-28, 2d
+    v0.1.0 Release Gate              :milestone, m010, after rc012, 0d
 
     section Health Check Extensibility (Medium)
     Ph1 Health Check Registry        :hc1, after sh6, 3d

@@ -1,7 +1,24 @@
 {
   "name": "@glowing-fishstick/shared",
-  "version": "0.1.1",
-  "description": "Core application factory and configuration module",
+  "version": "0.1.2",
+  "description": "Shared server factory, lifecycle hooks, JWT, and admin middleware for glowing-fishstick",
+  "keywords": [
+    "express",
+    "shared",
+    "factory",
+    "server",
+    "glowing-fishstick"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -12,15 +29,18 @@
       "import": "./src/testing/security-helpers.js"
     }
   },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "npm run test:unit",
     "test:unit": "vitest run --reporter=verbose tests/unit",
     "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-shared vitest run --reporter=verbose tests/unit"
   },
-  "files": [
-    "index.js",
-    "src/"
-  ],
   "dependencies": {
     "dotenv": "^17.3.1",
     "jsonwebtoken": "^9.0.3",

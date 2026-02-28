@@ -98,28 +98,28 @@ These files in `core/generator/templates/` need Handlebars placeholders replacin
 
 ### App Template (`templates/app/`)
 
-| File                | Hardcoded Value                                                    | Replacement                                                                          |
-| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `package.json`      | `"my-glowing-fishstick-app"`                                       | `"{{projectName}}"`                                                                  |
-| `package.json`      | `"A starter application..."`                                       | `"{{description}}"`                                                                  |
-| `package.json`      | `"^0.0.3"` (dep versions)                                          | `"^{{coreVersion}}"`                                                                 |
+| File                | Hardcoded Value                                                        | Replacement                                                                          |
+| ------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `package.json`      | `"my-glowing-fishstick-app"`                                           | `"{{projectName}}"`                                                                  |
+| `package.json`      | `"A starter application..."`                                           | `"{{description}}"`                                                                  |
+| `package.json`      | `"^0.0.3"` (dep versions)                                              | `"^{{coreVersion}}"`                                                                 |
 | `package.json`      | `--watch ../core/web-app/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
-| `src/server.js`     | `createLogger({ name: 'my-app' })`                                 | `createLogger({ name: '{{appName}}' })`                                              |
-| `src/config/env.js` | `appName: 'my-app'`                                                | `appName: '{{appName}}'`                                                             |
-| `README.md`         | Title and structure references                                     | Use `{{projectName}}` and `{{appName}}`                                              |
+| `src/server.js`     | `createLogger({ name: 'my-app' })`                                     | `createLogger({ name: '{{appName}}' })`                                              |
+| `src/config/env.js` | `appName: 'my-app'`                                                    | `appName: '{{appName}}'`                                                             |
+| `README.md`         | Title and structure references                                         | Use `{{projectName}}` and `{{appName}}`                                              |
 
 ### API Template (`templates/api/`)
 
-| File                | Hardcoded Value                                                    | Replacement                                                                          |
-| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `package.json`      | `"my-glowing-fishstick-api"`                                       | `"{{projectName}}"`                                                                  |
-| `package.json`      | `"A starter API..."`                                               | `"{{description}}"`                                                                  |
-| `package.json`      | `"^0.0.3"` (dep versions)                                          | `"^{{coreVersion}}"`                                                                 |
+| File                | Hardcoded Value                                                            | Replacement                                                                          |
+| ------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `package.json`      | `"my-glowing-fishstick-api"`                                               | `"{{projectName}}"`                                                                  |
+| `package.json`      | `"A starter API..."`                                                       | `"{{description}}"`                                                                  |
+| `package.json`      | `"^0.0.3"` (dep versions)                                                  | `"^{{coreVersion}}"`                                                                 |
 | `package.json`      | `--watch ../core/service-api/src --watch ../core/shared/src` in dev script | Remove (standalone: `"nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"`) |
-| `src/server.js`     | `createLogger({ name: 'my-api' })`                                 | `createLogger({ name: '{{appName}}' })`                                              |
-| `src/config/env.js` | `appName: 'my-api'`                                                | `appName: '{{appName}}'`                                                             |
-| `src/config/env.js` | `port: Number(process.env.PORT \|\| 3001)`                         | `port: Number(process.env.PORT \|\| {{port}})`                                       |
-| `README.md`         | Title and structure references                                     | Use `{{projectName}}` and `{{appName}}`                                              |
+| `src/server.js`     | `createLogger({ name: 'my-api' })`                                         | `createLogger({ name: '{{appName}}' })`                                              |
+| `src/config/env.js` | `appName: 'my-api'`                                                        | `appName: '{{appName}}'`                                                             |
+| `src/config/env.js` | `port: Number(process.env.PORT \|\| 3001)`                                 | `port: Number(process.env.PORT \|\| {{port}})`                                       |
+| `README.md`         | Title and structure references                                             | Use `{{projectName}}` and `{{appName}}`                                              |
 
 ### Files NOT Modified
 

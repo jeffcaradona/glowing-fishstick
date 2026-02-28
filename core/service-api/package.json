@@ -1,7 +1,24 @@
 {
   "name": "@glowing-fishstick/api",
-  "version": "0.1.1",
-  "description": "Core API factory and route composition module",
+  "version": "0.1.2",
+  "description": "Core API factory and route composition module for glowing-fishstick",
+  "keywords": [
+    "express",
+    "api",
+    "rest",
+    "factory",
+    "glowing-fishstick"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -13,6 +30,9 @@
     "index.js",
     "src/"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "npm run test:integration",
     "test:integration": "vitest run --reporter=verbose tests/integration",

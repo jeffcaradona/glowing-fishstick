@@ -8,11 +8,11 @@
 
 ## Sonar Findings
 
-| File                                                    | Duplicated Blocks | Duplicated Lines | Dup % (New Code) |
-| ------------------------------------------------------- | ----------------- | ---------------- | ---------------- |
-| `core/web-app/tests/integration/security-hardening.test.js` | 4                 | 90               | 42.3%            |
+| File                                                            | Duplicated Blocks | Duplicated Lines | Dup % (New Code) |
+| --------------------------------------------------------------- | ----------------- | ---------------- | ---------------- |
+| `core/web-app/tests/integration/security-hardening.test.js`     | 4                 | 90               | 42.3%            |
 | `core/service-api/tests/integration/security-hardening.test.js` | 4                 | 78               | 28.8%            |
-| `core/web-app/src/app-factory.js`                           | 1                 | 12               | 29.3%            |
+| `core/web-app/src/app-factory.js`                               | 1                 | 12               | 29.3%            |
 | `core/service-api/src/api-factory.js`                           | 1                 | 11               | 23.9%            |
 
 ---

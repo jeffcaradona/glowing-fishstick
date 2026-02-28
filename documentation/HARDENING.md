@@ -354,13 +354,13 @@ function verifyResponseSignature(body, signatureHeader, secret) {
 
 ## Where to Look
 
-| Topic                          | File                                            |
-| ------------------------------ | ----------------------------------------------- |
-| Current rate limiting          | `core/shared/src/middlewares/admin-throttle.js` |
-| JWT auth middleware            | `core/shared/src/middlewares/jwt-auth.js`       |
-| JWT sign/verify utilities      | `core/shared/src/auth/jwt.js`                   |
+| Topic                          | File                                                |
+| ------------------------------ | --------------------------------------------------- |
+| Current rate limiting          | `core/shared/src/middlewares/admin-throttle.js`     |
+| JWT auth middleware            | `core/shared/src/middlewares/jwt-auth.js`           |
+| JWT sign/verify utilities      | `core/shared/src/auth/jwt.js`                       |
 | Error middleware (app)         | `core/web-app/src/middlewares/errorHandler.js`      |
-| Error middleware (api)         | `core/service-api/src/middlewares/error-handler.js`     |
-| API enforcement (JWT + origin) | `core/service-api/src/middlewares/enforcement.js`       |
-| Security hardening plan        | `documentation/SECURITY-HARDENING-PLAN.md`      |
-| Architecture overview          | `documentation/ARCHITECTURE.md`                 |
+| Error middleware (api)         | `core/service-api/src/middlewares/error-handler.js` |
+| API enforcement (JWT + origin) | `core/service-api/src/middlewares/enforcement.js`   |
+| Security hardening plan        | `documentation/SECURITY-HARDENING-PLAN.md`          |
+| Architecture overview          | `documentation/ARCHITECTURE.md`                     |
