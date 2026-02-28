@@ -14,9 +14,9 @@ coverage/
 .env
 .env.*.local
 
-# Documentation & app
+# Documentation & sandbox app/api
 documentation/
-app/
+sandbox/
 *.md
 
 # CI/CD
@@ -32,3 +32,4 @@ app/
 # Git
 .git/
 .gitkeep
+
