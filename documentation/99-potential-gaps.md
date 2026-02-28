@@ -6,6 +6,23 @@ This document tracks potential server composability features and architectural g
 
 ## Current / In-Flight Work
 
+### Release: v0.1.2 Release Candidate → v0.1.0
+
+**Status**: In Progress — RC branch targeting merge to `main`
+
+**Description**: Version `0.1.2` is designated as the release-candidate branch. Once final validation passes, this branch merges back into `main` and is tagged as the formal `v0.1.0` release. All Security Hardening phases (Ph1–Ph6) are complete as of 2026-02-26; this RC captures any remaining polish, doc sync, and Gantt chart updates before the milestone cut.
+
+**Checklist**:
+
+- [x] Security Hardening Ph1–Ph6 implemented and tested
+- [x] Gantt chart updated to reflect completed hardening phases
+- [ ] Final `npm run test:all` green
+- [ ] Final `npm run lint` clean
+- [ ] Merge RC branch to `main`
+- [ ] Tag `v0.1.0` release on `main`
+
+---
+
 ### Feature: CLI Template Generator (`@glowing-fishstick/generator`)
 
 **Status**: ✓ Complete — MVP implemented at `core/generator/`

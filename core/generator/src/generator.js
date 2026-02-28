@@ -91,9 +91,11 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
     return externalDeps;
   }
 
+  // WHY: Actual package directories differ from npm scope names —
+  // @glowing-fishstick/app lives in core/web-app, /api in core/service-api.
   const localDirs = {
-    app: path.join(REPO_ROOT, 'core', 'app'),
-    api: path.join(REPO_ROOT, 'core', 'api'),
+    app: path.join(REPO_ROOT, 'core', 'web-app'),
+    api: path.join(REPO_ROOT, 'core', 'service-api'),
     shared: path.join(REPO_ROOT, 'core', 'shared'),
   };
 

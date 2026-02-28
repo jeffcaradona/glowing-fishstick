@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/shared",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Core application factory and configuration module",
   "type": "module",
   "main": "index.js",

@@ -1,7 +1,7 @@
 {
   "name": "glowing-fishstick-tasks-api",
   "private": true,
-  "version": "1.0.1",
+  "version": "0.1.2",
   "description": "A local development application to help build the core modules",
   "type": "module",
   "main": "src/server.js",
@@ -13,7 +13,7 @@
     "test:integration": "vitest run --reporter=verbose tests/integration"
   },
   "dependencies": {
-    "@glowing-fishstick/api": "^0.1.0",
+    "@glowing-fishstick/api": "^0.1.2",
     "express": "^5.2.1"
   },
   "devDependencies": {
