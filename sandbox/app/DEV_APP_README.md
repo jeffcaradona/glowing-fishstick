@@ -1,8 +1,8 @@
 # App — Local Development Guide
 
-> **Using the `app/` directory for local development and testing**
+> **Using the `sandbox/app/` directory for local development and testing**
 
-This document explains how to use the `app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
+This document explains how to use the `sandbox/app/` directory to run the example app locally, which demonstrates how a consuming application would use the `@glowing-fishstick/app` package in production.
 
 > **Security Hardening**: Payload limits, admin throttling, and error handler hardening are implemented. See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
 
@@ -10,7 +10,7 @@ This document explains how to use the `app/` directory to run the example app lo
 
 ## Overview
 
-The `app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `@glowing-fishstick/app` package. It demonstrates:
+The `sandbox/app/` directory simulates a real-world consumer application (like a "Task Manager") that depends on the core `@glowing-fishstick/app` package. It demonstrates:
 
 - ✅ How to compose the core module with custom plugins
 - ✅ How to provide application-specific routes and views
@@ -25,7 +25,7 @@ npm install @glowing-fishstick/app @glowing-fishstick/shared
 
 `@glowing-fishstick/shared` is the compatibility layer and primary public entry for logger utilities; logger implementation ownership lives in `@glowing-fishstick/logger`.
 
-**For local development**, the `app/` directory simulates a consumer importing the package by name:
+**For local development**, the `sandbox/app/` directory simulates a consumer importing the package by name:
 
 ```js
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
@@ -38,7 +38,7 @@ In this repository the package name is resolved via workspace package linkage (o
 ## Directory Structure
 
 ```
-app/
+sandbox/app/
 ├── DEV_APP_README.md          # This file
 ├── package.json               # App metadata (optional)
 └── src/
@@ -81,7 +81,7 @@ npm run dev:app
 This runs:
 
 ```bash
-nodemon --exec node app/src/server.js
+nodemon --exec node sandbox/app/src/server.js
 ```
 
 ### 3. Access the Application
@@ -126,7 +126,7 @@ When the API server starts (`npm run start:api` or `npm run dev:api`), it runs d
    ```
 
 4. Restart the API; migration will retry and succeed if data is now clean
-5. Alternatively, delete `api/data/tasks.db` for a fresh start
+5. Alternatively, delete `sandbox/api/data/tasks.db` for a fresh start
 
 This ensures data integrity: the app will never run with corrupted or oversized data.
 
@@ -134,7 +134,7 @@ This ensures data integrity: the app will never run with corrupted or oversized 
 
 ## How It Works
 
-### Entry Point: `app/src/server.js`
+### Entry Point: `sandbox/app/src/server.js`
 
 This is the main file that composes the application. The actual entrypoint imports the workspace package by name:
 
@@ -161,7 +161,7 @@ export { server, close };
 
 ---
 
-### App Plugin: `app/src/app.js`
+### App Plugin: `sandbox/app/src/app.js`
 
 The plugin adds task manager functionality to the core application:
 
@@ -185,7 +185,7 @@ export function taskManagerApplicationPlugin(app, config) {
 
 ---
 
-### Configuration Overrides: `app/src/config/env.js`
+### Configuration Overrides: `sandbox/app/src/config/env.js`
 
 App-specific configuration values:
 
@@ -271,7 +271,7 @@ const config = createConfig({ services: testContainer });
 
 ---
 
-### Custom Routes: `app/src/routes/router.js`
+### Custom Routes: `sandbox/app/src/routes/router.js`
 
 The task manager routes demonstrate how to add application-specific endpoints:
 
@@ -573,10 +573,10 @@ router.get('/tasks/:id', (req, res) => {
 
 ### Adding a New Plugin
 
-1. **Create a plugin file** in `app/src/plugins/`:
+1. **Create a plugin file** in `sandbox/app/src/plugins/`:
 
 ```js
-// app/src/plugins/analytics.js
+// sandbox/app/src/plugins/analytics.js
 export function analyticsPlugin(app, config) {
   const logger = config.logger;
 
@@ -599,7 +599,7 @@ const app = createApp(config, [taskManagerApplicationPlugin, analyticsPlugin]);
 
 ## Simulating Production Usage
 
-The `app/` directory structure mirrors how a real application would consume the module in production.
+The `sandbox/app/` directory structure mirrors how a real application would consume the module in production.
 
 **Production scenario:**
 
@@ -685,7 +685,7 @@ npm run dev:app  # Not start:app
 **Check view paths:**
 
 - Core views: `src/views/`
-- App views: `app/src/views/`
+- App views: `sandbox/app/src/views/`
 - Use shared layout includes from the active views chain: `<%~ include('layouts/header', { appName }) %>`
 
 ---
@@ -694,7 +694,7 @@ npm run dev:app  # Not start:app
 
 You can test the app just like you would test any Express app:
 
-Local app-only example (inside this repository's `app/` workspace):
+Local app-only example (inside this repository's `sandbox/app/` workspace):
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -717,7 +717,7 @@ describe('App', () => {
 
 ## Comparing Local Dev vs Production
 
-| Aspect            | Local Dev (`app/`)                                   | Production                              |
+| Aspect            | Local Dev (`sandbox/app/`)                           | Production                              |
 | ----------------- | ---------------------------------------------------- | --------------------------------------- |
 | **Module source** | Workspace package linkage (`@glowing-fishstick/app`) | npm package (`@glowing-fishstick/app`)  |
 | **Configuration** | `.env` in repo root                                  | Environment variables or config service |
@@ -748,6 +748,6 @@ describe('App', () => {
 
 If you're building a consuming application:
 
-1. Review the `app/` directory structure as a template
-2. Follow the patterns in `app/src/server.js` and `app/src/app.js`
+1. Review the `sandbox/app/` directory structure as a template
+2. Follow the patterns in `sandbox/app/src/server.js` and `sandbox/app/src/app.js`
 3. Refer to the [Plugin System](../README.md#plugin-system) documentation

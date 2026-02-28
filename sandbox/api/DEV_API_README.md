@@ -1,8 +1,8 @@
 ﻿# API - Local Development Guide
 
-> Using the `api/` directory for local development and testing
+> Using the `sandbox/api/` directory for local development and testing
 
-This document explains how to use the `api/` directory to run the local JSON API workspace. It demonstrates how a consuming API service would use `@glowing-fishstick/api` in production while composing custom plugin routes.
+This document explains how to use the `sandbox/api/` directory to run the local JSON API workspace. It demonstrates how a consuming API service would use `@glowing-fishstick/api` in production while composing custom plugin routes.
 
 > **Security Hardening**: Payload limits, metrics throttling, and error handler hardening are implemented. See [documentation/SECURITY-HARDENING-PLAN.md](../documentation/SECURITY-HARDENING-PLAN.md).
 
@@ -10,7 +10,7 @@ This document explains how to use the `api/` directory to run the local JSON API
 
 ## Overview
 
-The `api/` directory simulates a real consumer API service that depends on the core `@glowing-fishstick/api` package. It demonstrates:
+The `sandbox/api/` directory simulates a real consumer API service that depends on the core `@glowing-fishstick/api` package. It demonstrates:
 
 - How to compose the API factory with custom plugin routes
 - How to provide API-specific configuration overrides
@@ -35,7 +35,7 @@ For local development in this repository, workspace package linkage resolves tho
 ## Directory Structure
 
 ```text
-api/
+sandbox/api/
 |-- DEV_API_README.md          # This file
 |-- package.json               # Workspace metadata/scripts
 |-- data/
@@ -113,7 +113,7 @@ Task routes from the local plugin:
 
 ## How It Works
 
-### Entry Point: `api/src/server.js`
+### Entry Point: `sandbox/api/src/server.js`
 
 The local entrypoint imports the workspace package by name:
 
@@ -138,7 +138,7 @@ Key points:
 3. Composes plugin routes via `createApi(config, [taskApiPlugin])`
 4. Boots with shared `createServer()` for lifecycle handling
 
-### Plugin: `api/src/api.js`
+### Plugin: `sandbox/api/src/api.js`
 
 The plugin wires database, service, and routes:
 
@@ -148,9 +148,9 @@ The plugin wires database, service, and routes:
 - Closes DB in a shutdown hook
 - Mounts task REST routes
 
-### Database Lifecycle: `api/src/database/db.js`
+### Database Lifecycle: `sandbox/api/src/database/db.js`
 
-The local API uses `node:sqlite` with a file at `api/data/tasks.db`.
+The local API uses `node:sqlite` with a file at `sandbox/api/data/tasks.db`.
 
 Startup (`open()`):
 
@@ -241,7 +241,7 @@ API_JSON_BODY_LIMIT=100kb
 
 #### Wiring Proxmox Routes (Example)
 
-In your API plugin (`api/src/api.js`), register a route that proxies to Proxmox:
+In your API plugin (`sandbox/api/src/api.js`), register a route that proxies to Proxmox:
 
 ```javascript
 import express from 'express';
@@ -286,7 +286,7 @@ export function setupProxmoxPlugin(app, config) {
 }
 ```
 
-Then register in `api/src/api.js`:
+Then register in `sandbox/api/src/api.js`:
 
 ```javascript
 import { taskApiPlugin } from './routes/tasks.js';
@@ -300,7 +300,7 @@ export const plugins = [
 
 #### Environment Variables for Backend Config
 
-Add to your config override (`api/src/config/env.js`):
+Add to your config override (`sandbox/api/src/config/env.js`):
 
 ```javascript
 export function apiConfigOverrides() {
@@ -434,7 +434,7 @@ If `API_REQUIRE_JWT=true`, send `Authorization: Bearer <token>` and ensure `JWT_
 
 ### Task data appears stale
 
-The SQLite database file is persisted at `api/data/tasks.db`. Remove it only if you intentionally want a clean local dataset.
+The SQLite database file is persisted at `sandbox/api/data/tasks.db`. Remove it only if you intentionally want a clean local dataset.
 
 ---
 

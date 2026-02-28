@@ -1,15 +1,13 @@
-A) Rename top-level apps to make intent obvious
-
-
+## A) Rename top-level apps to make intent obvious — ✓ Done
 
 api/ → sandbox/api/
 
 app/ → sandbox/app/
 
 
-B) Rename core
+## B) Rename core — Planned
 
-core/api = core/service-api
+core/api → core/service-api
 
-core/app = core/web-app
+core/app → core/web-app
 

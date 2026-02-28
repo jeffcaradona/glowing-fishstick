@@ -492,29 +492,30 @@ glowing-fishstick/
 |-- LICENSE
 |-- package.json
 |-- README.md
-|-- app/
-|   |-- DEV_APP_README.md
-|   |-- package.json
-|   `-- src/
-|       |-- app.js
-|       |-- server.js
-|       |-- config/
-|       |   `-- env.js
-|       |-- routes/
-|       |   `-- router.js
-|       |-- public/
-|       |   `-- js/
-|       |       `-- tasks/
-|       |           `-- list.js
-|       `-- views/
-|           `-- tasks/
-|               `-- list.eta
-|-- api/
-|   |-- package.json
-|   `-- src/
-|       |-- server.js
-|       `-- config/
-|           `-- env.js
+|-- sandbox/
+|   |-- app/
+|   |   |-- DEV_APP_README.md
+|   |   |-- package.json
+|   |   `-- src/
+|   |       |-- app.js
+|   |       |-- server.js
+|   |       |-- config/
+|   |       |   `-- env.js
+|   |       |-- routes/
+|   |       |   `-- router.js
+|   |       |-- public/
+|   |       |   `-- js/
+|   |       |       `-- tasks/
+|   |       |           `-- list.js
+|   |       `-- views/
+|   |           `-- tasks/
+|   |               `-- list.eta
+|   `-- api/
+|       |-- package.json
+|       `-- src/
+|           |-- server.js
+|           `-- config/
+|               `-- env.js
 |-- core/
 |   |-- app/
 |   |   |-- index.js
@@ -815,22 +816,22 @@ The FP-first architecture directly supports testability:
 
 ```json
 {
-  "start:app": "npm run start --workspace app",
-  "dev:app": "npm run dev --workspace app",
-  "start:api": "npm run start --workspace api",
-  "dev:api": "npm run dev --workspace api",
+  "start:app": "npm run start --workspace sandbox/app",
+  "dev:app": "npm run dev --workspace sandbox/app",
+  "start:api": "npm run start --workspace sandbox/api",
+  "dev:api": "npm run dev --workspace sandbox/api",
   "test": "npm run test:all",
   "test:unit": "npm run test:unit --workspace core/shared",
   "test:integration": "npm run test:integration --workspace core/app",
   "test:smoke": "npm run test:smoke --workspace core/app",
   "test:api": "npm run test --workspace core/api",
-  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api",
+  "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api && npm run test --workspace core/generator",
   "lint": "eslint .",
   "format": "prettier --write ."
 }
 ```
 
-**App (`app/package.json`) and API (`api/package.json`):**
+**App (`sandbox/app/package.json`) and API (`sandbox/api/package.json`):**
 
 Each consumer has its own `package.json` and can be run/tested independently.
 
@@ -850,12 +851,12 @@ The `close()` function returned by `createServer` can also be called programmati
 
 ## 16. App Example ("task_manager")
 
-The `app/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
+The `sandbox/app/` directory simulates how a consuming application would use the core module. It demonstrates a standalone application with its own `package.json` and `src/` directory.
 
 **App entrypoint:**
 
 ```js
-// app/src/server.js
+// sandbox/app/src/server.js
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 import { createLogger } from '@glowing-fishstick/shared';
 import { taskManagerApplicationPlugin } from './app.js';
@@ -880,7 +881,7 @@ export { server, close };
 **App plugin (custom routes):**
 
 ```js
-// app/src/app.js
+// sandbox/app/src/app.js
 export function taskManagerApplicationPlugin(app, config) {
   const logger = config.logger;
 
@@ -1144,7 +1145,7 @@ import { createServer } from '@glowing-fishstick/shared';
 
 ### 19.1 Database Migrations & Schema Management
 
-The API includes a production-grade, version-tracked migration system (`api/src/database/db.js`) for SQLite schema evolution with built-in data validation and rollback protection.
+The API includes a production-grade, version-tracked migration system (`sandbox/api/src/database/db.js`) for SQLite schema evolution with built-in data validation and rollback protection.
 
 **Schema versioning:**
 
@@ -1208,7 +1209,7 @@ If existing data violates the new constraints (e.g., a task has a 300-char title
 - Count of violating records
 - Samples (first 3 records) with `id` and violation details
 - Actionable fix instructions (DELETE or UPDATE options)
-- Pointer to delete `api/data/tasks.db` for a fresh start
+- Pointer to delete `sandbox/api/data/tasks.db` for a fresh start
 
 Example error output:
 
@@ -1223,7 +1224,7 @@ Fix the data manually:
   Option A: DELETE FROM tasks WHERE length(title) > 255;
   Option B: UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
 Then restart the app to retry migration.
-Or delete api/data/tasks.db for a fresh start.
+Or delete sandbox/api/data/tasks.db for a fresh start.
 ```
 
 The app **refuses to start** until the operator fixes the data or deletes the database.
@@ -1263,14 +1264,14 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 Application-level input validation complements database CHECK constraints, providing user-friendly error responses before data reaches SQLite.
 
-**Validation module** (`api/src/validation/task-validation.js`):
+**Validation module** (`sandbox/api/src/validation/task-validation.js`):
 
 - Exports frozen `LIMITS` object: `{ TITLE_MAX: 255, DESCRIPTION_MAX: 4000 }`
 - `validateTaskInput(data, opts)` checks type, length, and presence; returns `{ valid, errors: string[] }`
 - `validateId(raw)` parses and validates numeric IDs; rejects NaN, negative, non-integer values
 - Reusable across routes and services
 
-**Route integration** (`api/src/routes/router.js`):
+**Route integration** (`sandbox/api/src/routes/router.js`):
 
 - POST `/api/tasks`: Validates title presence/length/type; returns 400 with errors if invalid
 - PATCH `/api/tasks/:id`: Validates all provided fields (title, description, done) with per-field error reporting

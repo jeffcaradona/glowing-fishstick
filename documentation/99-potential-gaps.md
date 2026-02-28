@@ -62,7 +62,7 @@ This document tracks potential server composability features and architectural g
 
 **Implementation**:
 
-**Database Migration System** (`api/src/database/db.js`):
+**Database Migration System** (`sandbox/api/src/database/db.js`):
 
 - Tracks applied migrations in `schema_versions` table: `version` (PK), `applied_at` (timestamp), `description` (text)
 - Migrations defined as array of `{ version, description, up }` objects at module scope
@@ -93,19 +93,19 @@ Fix the data manually:
   Option A: DELETE FROM tasks WHERE length(title) > 255;
   Option B: UPDATE tasks SET title = substr(title, 1, 255) WHERE length(title) > 255;
 Then restart the app to retry migration.
-Or delete api/data/tasks.db for a fresh start.
+Or delete sandbox/api/data/tasks.db for a fresh start.
 ```
 
 App refuses to start; operator has full visibility and control over cleanup.
 
-**Input Validation Module** (`api/src/validation/task-validation.js`):
+**Input Validation Module** (`sandbox/api/src/validation/task-validation.js`):
 
 - Exports frozen `LIMITS`: `{ TITLE_MAX: 255, DESCRIPTION_MAX: 4000 }`
 - `validateTaskInput(data, opts)`: Type, length, presence checks; returns `{ valid, errors: string[] }`
 - `validateId(raw)`: Parses + validates numeric IDs; rejects NaN, negative, non-integer; returns `{ valid, id, error? }`
 - Reusable across routes, services, tests; composable error reporting
 
-**Route Integration** (`api/src/routes/router.js`):
+**Route Integration** (`sandbox/api/src/routes/router.js`):
 
 - POST `/api/tasks`: Validates title presence/length/type; returns 400 with `{ error: string }` if invalid
 - PATCH `/api/tasks/:id`: Validates all provided fields; per-field error reporting
@@ -159,7 +159,7 @@ App refuses to start; operator has full visibility and control over cleanup.
 - [server-factory.js](../core/shared/src/server-factory.js): Retrieve registries via `getRegistries()` instead of underscore fields; defer startup execution via `setImmediate()` to allow consumer hook registration ✓
 - [registry-store.js](../core/shared/src/registry-store.js): WeakMap-based private registry storage — `storeRegistries()` / `getRegistries()` ✓
 - [shared/index.js](../core/shared/index.js): Export `storeRegistries` for cross-package access ✓
-- [app.js](../app/src/app.js): Plugin examples use `app.registerStartupHook()` / `app.registerShutdownHook()` ✓
+- [app.js](../sandbox/app/src/app.js): Plugin examples use `app.registerStartupHook()` / `app.registerShutdownHook()` ✓
 
 **Fix Details (P0 — Startup Hook Ordering)**:
 
@@ -297,10 +297,10 @@ App refuses to start; operator has full visibility and control over cleanup.
 - `@glowing-fishstick/api` Thin MVP Slice — Implemented `createApi`/`createApiConfig`, core middleware stack, JSON-first error handling, and integration tests
 - API health passthrough (phase 1) — Implemented fixed app endpoint (`/admin/api-health`) to probe API readiness (`/readyz`) without exposing generic proxying
 - Admin route decomposition + JWT primitives (phase 2) — Moved admin route business logic into controllers and promoted shared JWT helpers/middleware (`generateToken`, `verifyToken`, `jwtAuthMiddleware`) into the published shared package boundary
-- API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `app/src/services/tasks-api.js`
+- API app-access enforcement (phase 3) — Implemented non-health route enforcement in `core/api` via `API_BLOCK_BROWSER_ORIGIN` and `API_REQUIRE_JWT`, fail-fast `JWT_SECRET` guard, and app-side JWT rotation with shutdown cleanup in `sandbox/app/src/services/tasks-api.js`
 - Dependency Injection / Service Container (#2) — v1 implemented with singleton/transient lifecycles, circular detection, LIFO disposal, and 6 error classes; `config.services` wired into both app and api factories
 - Logger module extraction (`core/modules/*` ownership boundary) — Moved logger implementation to `core/modules/logger` / `@glowing-fishstick/logger`; kept `@glowing-fishstick/shared` as compatibility + curated public API
-- Database Schema Migration System & Input Validation — Version-tracked migrations in `api/src/database/db.js` with automatic startup execution; application-level validation in routes and dedicated validation module; CHECK constraints for defense-in-depth
+- Database Schema Migration System & Input Validation — Version-tracked migrations in `sandbox/api/src/database/db.js` with automatic startup execution; application-level validation in routes and dedicated validation module; CHECK constraints for defense-in-depth
 - Security hardening (Snyk `javascript/NoRateLimitingForExpensiveWebOperation`) — Payload limits (`jsonBodyLimit`, `urlencodedBodyLimit`, `urlencodedParameterLimit`), fixed-window admin/metrics throttling (`429`), error handler logger hardening (removed per-request `createLogger()` fallback), JWT toggle preserved as opt-in
 
 **High Priority** (near-term):
