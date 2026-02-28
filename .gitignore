@@ -151,6 +151,7 @@ Thumbs.db
 # Local dev overrides
 .env.local
 .env.development.local
-api/data/tasks.db
-api/data/tasks.db-shm
-api/data/tasks.db-wal
+sandbox/api/data/tasks.db
+sandbox/api/data/tasks.db-shm
+sandbox/api/data/tasks.db-wal
+

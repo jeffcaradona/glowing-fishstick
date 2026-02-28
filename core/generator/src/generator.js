@@ -197,6 +197,115 @@ function runNpmInstall(cwd) {
 }
 
 /**
+ * Resolve final options by prompting the user or deriving defaults from CLI args.
+ *
+ * WHY: Extracted from generate() to reduce cognitive complexity and make the
+ * prompt-vs-defaults branching independently testable.
+ *
+ * @param {object} rawOptions  CLI options (may be partial).
+ * @returns {Promise<object>}  Complete options object.
+ */
+async function resolveOptions(rawOptions) {
+  const needsPrompts = !rawOptions.projectDirectory || !validateTemplate(rawOptions.template).valid;
+
+  if (needsPrompts) {
+    return runPrompts(rawOptions);
+  }
+
+  // WHY: All required values supplied via CLI; derive sensible defaults for
+  // optional fields so downstream code has a uniform shape.
+  const template = rawOptions.template;
+  const defaultPort = template === 'api' ? 3001 : 3000;
+  const defaultDesc =
+    template === 'api'
+      ? 'A starter API using glowing-fishstick'
+      : 'A starter application using glowing-fishstick';
+
+  return {
+    projectName: rawOptions.projectDirectory,
+    description: defaultDesc,
+    template,
+    port: rawOptions.port ?? defaultPort,
+    install: rawOptions.install ?? true,
+    git: rawOptions.git ?? true,
+  };
+}
+
+/**
+ * Validate all collected inputs, throwing on the first failure.
+ *
+ * WHY: Extracted from generate() to flatten validation branching and keep the
+ * orchestrator focused on sequencing, not error-shape construction.
+ *
+ * @param {object} params
+ * @param {string} params.projectName
+ * @param {string} params.template
+ * @param {number|undefined} params.port
+ * @param {string} params.targetDir
+ * @param {boolean} params.force
+ * @returns {Promise<void>}
+ */
+async function validateInputs({ projectName, template, port, targetDir, force }) {
+  const checks = [
+    validateProjectName(projectName),
+    validateTemplate(template),
+  ];
+
+  if (port !== undefined) {
+    checks.push(validatePort(port));
+  }
+
+  for (const result of checks) {
+    if (!result.valid) {
+      const err = new Error(result.message);
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+  }
+
+  // WHY: Directory validation is async (checks filesystem) so it runs after
+  // the synchronous validators above.
+  const dirResult = await validateDirectory(targetDir, force);
+  if (!dirResult.valid) {
+    const err = new Error(dirResult.message);
+    err.code = 'VALIDATION_ERROR';
+    throw err;
+  }
+}
+
+/**
+ * Build the Handlebars template context for scaffolding.
+ *
+ * WHY: Extracted from generate() — dependency resolution and version stamping
+ * are self-contained concerns that benefit from isolation.
+ *
+ * @param {object} params
+ * @param {string} params.projectName
+ * @param {string} params.description
+ * @param {string} params.template
+ * @param {number|undefined} params.port
+ * @param {string} params.targetDir
+ * @returns {Promise<object>}
+ */
+async function buildContext({ projectName, description, template, port, targetDir }) {
+  // WHY: Replace hyphens with underscores so appName is a valid JS identifier
+  // for logger names and config values.
+  const appName = projectName.replaceAll('-', '_');
+  const resolvedPort = port ?? (template === 'api' ? 3001 : 3000);
+  const coreVersion = await readCoreVersion();
+  const dependencySpecs = await resolveDependencySpecs({ targetDir, coreVersion });
+
+  return {
+    projectName,
+    appName,
+    description,
+    port: resolvedPort,
+    coreVersion,
+    ...dependencySpecs,
+  };
+}
+
+/**
  * Main generate function — called by bin/cli.js after argument parsing.
  *
  * @param {object} rawOptions         CLI options (may be partial if interactive).
@@ -208,90 +317,16 @@ function runNpmInstall(cwd) {
  * @param {boolean} rawOptions.force                      Overwrite existing dir?
  * @returns {Promise<void>}
  */
-// TODO: Consider splitting this function into smaller steps for improved testability and readability.
-//     E.g. separate functions for input validation, context building, scaffolding, git init, npm install, and success message.
 export async function generate(rawOptions) {
   const { force = false } = rawOptions;
 
-  // ── Determine if prompts are needed ──────────────────────────────────────
-  // WHY: If project-directory was given as a CLI arg AND --template is valid,
-  // skip interactive prompts. Otherwise, ask the user.
-  const needsPrompts = !rawOptions.projectDirectory || !validateTemplate(rawOptions.template).valid;
-
-  let options;
-  if (needsPrompts) {
-    options = await runPrompts(rawOptions);
-  } else {
-    // All required values supplied; derive defaults for the rest.
-    const template = rawOptions.template;
-    const defaultPort = template === 'api' ? 3001 : 3000;
-    const defaultDesc =
-      template === 'api'
-        ? 'A starter API using glowing-fishstick'
-        : 'A starter application using glowing-fishstick';
-
-    options = {
-      projectName: rawOptions.projectDirectory,
-      description: defaultDesc,
-      template,
-      port: rawOptions.port ?? defaultPort,
-      install: rawOptions.install ?? true,
-      git: rawOptions.git ?? true,
-    };
-  }
-
+  const options = await resolveOptions(rawOptions);
   const { projectName, description, template, port, install, git } = options;
 
-  // ── Validate all collected inputs ─────────────────────────────────────────
-  const nameResult = validateProjectName(projectName);
-  if (!nameResult.valid) {
-    const err = new Error(nameResult.message);
-    err.code = 'VALIDATION_ERROR';
-    throw err;
-  }
-
-  const templateResult = validateTemplate(template);
-  if (!templateResult.valid) {
-    const err = new Error(templateResult.message);
-    err.code = 'VALIDATION_ERROR';
-    throw err;
-  }
-
-  if (port !== undefined) {
-    const portResult = validatePort(port);
-    if (!portResult.valid) {
-      const err = new Error(portResult.message);
-      err.code = 'VALIDATION_ERROR';
-      throw err;
-    }
-  }
-
-  // Resolve target directory relative to CWD.
   const targetDir = path.resolve(process.cwd(), projectName);
+  await validateInputs({ projectName, template, port, targetDir, force });
 
-  const dirResult = await validateDirectory(targetDir, force);
-  if (!dirResult.valid) {
-    const err = new Error(dirResult.message);
-    err.code = 'VALIDATION_ERROR';
-    throw err;
-  }
-
-  // ── Build Handlebars context ──────────────────────────────────────────────
-  // WHY: Derive appName from projectName by replacing hyphens with underscores
-  // so it's a valid JS identifier for logger names and config values.
-  const appName = projectName.replace(/-/g, '_');
-  const resolvedPort = port ?? (template === 'api' ? 3001 : 3000);
-  const coreVersion = await readCoreVersion();
-  const dependencySpecs = await resolveDependencySpecs({ targetDir, coreVersion });
-
-  const context = {
-    projectName,
-    appName,
-    description,
-    port: resolvedPort,
-    coreVersion,
-    ...dependencySpecs,
-  };
+  const context = await buildContext({ projectName, description, template, port, targetDir });
 
   // ── Scaffold ──────────────────────────────────────────────────────────────
   const templateDir = path.join(TEMPLATES_DIR, template);
