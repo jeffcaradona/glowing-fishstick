@@ -116,6 +116,34 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
 }
 
 /**
+ * Build a copy of `process.env` with PATH sanitized to absolute entries only.
+ *
+ * WHY: Prevents current-directory hijacking — empty segments or relative paths
+ * in PATH (e.g. `.`, `./bin`, or a trailing `:`) resolve to CWD, which could
+ * contain a malicious executable with the same name as a trusted tool. By
+ * keeping only absolute paths we ensure OS lookup can't be tricked by files in
+ * the scaffolded project directory (especially relevant with `--force`).
+ *
+ * TRADEOFF: We do NOT filter to "unwritable" dirs because Node version
+ * managers (nvm, fnm, volta) legitimately place node/npm in user-writable
+ * paths. Absolute-only filtering is the practical defence here.
+ *
+ * @returns {NodeJS.ProcessEnv}
+ */
+function getSanitizedEnv() {
+  const env = { ...process.env };
+  const sep = process.platform === 'win32' ? ';' : ':';
+
+  if (env.PATH) {
+    env.PATH = env.PATH.split(sep)
+      .filter((dir) => path.isAbsolute(dir))
+      .join(sep);
+  }
+
+  return env;
+}
+
+/**
  * Run `git init` in the target directory.
  *
  * WHY: Use execFile (not exec) to avoid shell injection — no user input is
@@ -126,7 +154,8 @@ async function resolveDependencySpecs({ targetDir, coreVersion }) {
  * @returns {Promise<void>}
  */
 async function runGitInit(cwd) {
-  await execFileAsync('git', ['init'], { cwd });
+  // WHY (env): Use sanitized PATH to prevent CWD-based executable hijacking.
+  await execFileAsync('git', ['init'], { cwd, env: getSanitizedEnv() });
 }
 
 /**
@@ -144,7 +173,16 @@ function runNpmInstall(cwd) {
     // WHY: `shell: true` is required on Windows where `npm` is a `.cmd` file;
     // without it Node can't find the npm executable. Input is hardcoded — not
     // user-supplied — so shell injection is not a concern here.
-    const child = spawn('npm', ['install'], { cwd, stdio: 'inherit', shell: true });
+    //
+    // WHY (env): Use sanitized PATH (absolute entries only) to prevent
+    // CWD-based executable hijacking — the target directory may contain
+    // untrusted files when using --force on an existing project.
+    const child = spawn('npm', ['install'], {
+      cwd,
+      stdio: 'inherit',
+      shell: true,
+      env: getSanitizedEnv(),
+    });
 
     child.on('close', (code) => {
       if (code === 0) {
@@ -170,6 +208,8 @@ function runNpmInstall(cwd) {
  * @param {boolean} rawOptions.force                      Overwrite existing dir?
  * @returns {Promise<void>}
  */
+// TODO: Consider splitting this function into smaller steps for improved testability and readability.
+//     E.g. separate functions for input validation, context building, scaffolding, git init, npm install, and success message.
 export async function generate(rawOptions) {
   const { force = false } = rawOptions;
 
