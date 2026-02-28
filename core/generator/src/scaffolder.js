@@ -79,6 +79,14 @@ export async function scaffoldFiles(templateDir, targetDir, context) {
       // WHY: Compile a fresh template per file to avoid cross-file state.
       // Handlebars is synchronous; this runs in the CLI startup path (not
       // request handling), so sync compilation is acceptable.
+      //
+      // WHY (noEscape): Auto-escaping is disabled because templates produce
+      // JS, JSON, and Markdown — not browser-served HTML. Escaping would
+      // corrupt generated source files (e.g. `&` → `&amp;`). This is safe
+      // because: (1) this is a local CLI tool, output is written to disk,
+      // never rendered in a browser; (2) context values are developer-
+      // controlled CLI inputs (projectName, port, etc.); (3) templates are
+      // first-party files shipped with the package, not user-supplied.
       const compiled = Handlebars.compile(raw, { noEscape: true });
       const rendered = compiled(context);
       await writeFile(destPath, rendered, 'utf8');
