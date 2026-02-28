@@ -24,7 +24,7 @@ npx audit-ci --critical
 
 ### Step 2 — Add a CSP middleware plugin
 
-Create `app/src/middlewares/csp.js`:
+Create `sandbox/app/src/middlewares/csp.js`:
 
 ```js
 import helmet from 'helmet';
@@ -58,7 +58,7 @@ export function createCspMiddleware(config) {
 
 ### Step 3 — Mount in the plugin
 
-In `app/src/app.js` (inside `taskManagerApplicationPlugin`):
+In `sandbox/app/src/app.js` (inside `taskManagerApplicationPlugin`):
 
 ```js
 import { createCspMiddleware } from './middlewares/csp.js';
@@ -130,7 +130,7 @@ export function verifyToken(token, secrets) {
 
 #### Step 2 — Wire via environment variables
 
-In `core/api/src/config/env.js`:
+In `core/service-api/src/config/env.js`:
 
 ```js
 jwtSecret: overrides.jwtSecret ?? env.JWT_SECRET,
@@ -174,7 +174,7 @@ Wire the connection attempt to try the new password first, then fall back to the
 
 **Why:** Without query timeouts, a slow or hung query holds a connection open indefinitely, exhausting the connection pool and stalling all subsequent requests.
 
-### SQLite (current implementation — `api/src/database/db.js`)
+### SQLite (current implementation — `sandbox/api/src/database/db.js`)
 
 Node's built-in `node:sqlite` `DatabaseSync` does not support query timeouts. The only reliable mitigation with the current driver is to:
 
@@ -272,7 +272,7 @@ export function verifySignature(payload, signature, secret) {
 
 #### Step 2 — Add config keys
 
-In `core/api/src/config/env.js`:
+In `core/service-api/src/config/env.js`:
 
 ```js
 signingSecret: overrides.signingSecret ?? env.API_SIGNING_SECRET ?? null,
@@ -281,7 +281,7 @@ enableResponseSigning: overrides.enableResponseSigning ?? (env.API_ENABLE_SIGNIN
 
 #### Step 3 — Add a response-signing middleware
 
-Create `core/api/src/middlewares/response-signing.js`:
+Create `core/service-api/src/middlewares/response-signing.js`:
 
 ```js
 import { signPayload } from '@glowing-fishstick/shared';
@@ -318,7 +318,7 @@ export function createResponseSigningMiddleware(config) {
 #### Step 4 — Mount in `createApi()`
 
 ```js
-// In core/api/src/api-factory.js, after enforcement middleware:
+// In core/service-api/src/api-factory.js, after enforcement middleware:
 app.use(createResponseSigningMiddleware(config));
 ```
 
@@ -359,8 +359,8 @@ function verifyResponseSignature(body, signatureHeader, secret) {
 | Current rate limiting          | `core/shared/src/middlewares/admin-throttle.js` |
 | JWT auth middleware            | `core/shared/src/middlewares/jwt-auth.js`       |
 | JWT sign/verify utilities      | `core/shared/src/auth/jwt.js`                   |
-| Error middleware (app)         | `core/app/src/middlewares/errorHandler.js`      |
-| Error middleware (api)         | `core/api/src/middlewares/error-handler.js`     |
-| API enforcement (JWT + origin) | `core/api/src/middlewares/enforcement.js`       |
+| Error middleware (app)         | `core/web-app/src/middlewares/errorHandler.js`      |
+| Error middleware (api)         | `core/service-api/src/middlewares/error-handler.js`     |
+| API enforcement (JWT + origin) | `core/service-api/src/middlewares/enforcement.js`       |
 | Security hardening plan        | `documentation/SECURITY-HARDENING-PLAN.md`      |
 | Architecture overview          | `documentation/ARCHITECTURE.md`                 |

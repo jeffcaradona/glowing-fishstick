@@ -6,8 +6,8 @@ This document outlines the expectations and constraints for working with this re
 
 This repository is a **monorepo workspace** with the following key directories:
 
-- `api/` - Local Development API package
-- `app/` - Local Development Application package
+- `sandbox/api/` - Local Development API package
+- `sandbox/app/` - Local Development Application package
 - `core/` - Core libraries (includes `core/generator/templates/` — starter scaffolds)
 - `documentation/` - Project documentation
 - `tests/` - Integration tests
@@ -20,16 +20,16 @@ This repository is a **monorepo workspace** with the following key directories:
 
 ### Intentional Code Duplication
 
-Some code appears in both `core/app` and `core/api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
+Some code appears in both `core/web-app` and `core/service-api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
 
 #### Consolidated (shared)
 
-- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/app` and `core/api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
+- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/web-app` and `core/service-api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
 
 #### Intentionally separate (do not consolidate)
 
-- **Error handlers** (`core/app/src/middlewares/errorHandler.js` vs `core/api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
-- **Factories** (`core/app/src/app-factory.js` vs `core/api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
+- **Error handlers** (`core/web-app/src/middlewares/errorHandler.js` vs `core/service-api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
+- **Factories** (`core/web-app/src/app-factory.js` vs `core/service-api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
 - **Security hardening tests** (`core/*/tests/integration/security-hardening.test.js`): Parallel test structure validates each framework independently. Each package must prove its own security contract; shared harness would obscure which implementation is under test.
 
 ## Instruction File Parity (Required)
@@ -52,7 +52,7 @@ If parity cannot be preserved in a condensed file, restore detail instead of dro
 ### Canonical Truth Sources
 
 1. README installation + import examples
-2. `app/DEV_APP_README` examples and directory diagrams
+2. `sandbox/app/DEV_APP_README` examples and directory diagrams
 3. `documentation/00-project-specs` public API snippets
 4. `documentation/99-potential-gaps.md` for implementation state
 
@@ -61,7 +61,7 @@ If parity cannot be preserved in a condensed file, restore detail instead of dro
 When editing package names, exports, directory structure, or API entrypoints:
 
 1. Update README installation + import examples
-2. Update `app/DEV_APP_README` examples and directory diagrams
+2. Update `sandbox/app/DEV_APP_README` examples and directory diagrams
 3. Update `documentation/00-project-specs` public API snippets
 4. Update status wording in `documentation/99-potential-gaps.md` if implementation state changed
 
@@ -235,7 +235,7 @@ Use these commands when relevant to the change:
 rg --files
 
 # Search for documentation inconsistencies
-rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md app/DEV_APP_README.md documentation/*.md
+rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md sandbox/app/DEV_APP_README.md documentation/*.md
 
 # Verify package boundaries
 npm pack --dry-run

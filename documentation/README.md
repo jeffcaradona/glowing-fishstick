@@ -12,14 +12,13 @@ Use this index to quickly find the right document type.
 ## Current Next Work
 
 - `documentation/HARDENING.md` - Cookbook: CSP headers, secret rotation, DB timeouts, response signing recipes.
-- `documentation/SECURITY-HARDENING-PLAN.md` - Immediate next implementation plan for payload limits, admin throttling, and error-path logger hardening (Snyk `javascript/NoRateLimitingForExpensiveWebOperation`).
+- `documentation/HEALTH-CHECK-PLAN.md` - Implementation plan for health check extensibility (next candidate).
 
 ## Active Supporting Docs
 
-- `documentation/SECURITY-HARDENING-PLAN.md` - Current active implementation plan for security hardening.
-- `documentation/API-APP-ACCESS-ROLLOUT.md` - Current rollout reference for API app-access controls.
-- `documentation/MIGRATION-EJS-TO-ETA.md` - Current migration plan.
-- `documentation/99-potential-gaps.md` - Includes planned security hardening item for request throttling and resource-allocation limits (Snyk `NoRateLimitingForExpensiveWebOperation`).
+- `documentation/SECURITY-HARDENING-PLAN.md` - Completed implementation plan for payload limits, admin throttling, and error-path logger hardening.
+- `documentation/API-APP-ACCESS-ROLLOUT.md` - Rollout reference for API app-access controls.
+- `documentation/99-potential-gaps.md` - Backlog and implementation status tracking.
 
 ## Historical / Archive
 

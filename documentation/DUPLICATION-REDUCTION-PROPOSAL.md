@@ -10,10 +10,10 @@
 
 | File                                                    | Duplicated Blocks | Duplicated Lines | Dup % (New Code) |
 | ------------------------------------------------------- | ----------------- | ---------------- | ---------------- |
-| `core/app/tests/integration/security-hardening.test.js` | 4                 | 90               | 42.3%            |
-| `core/api/tests/integration/security-hardening.test.js` | 4                 | 78               | 28.8%            |
-| `core/app/src/app-factory.js`                           | 1                 | 12               | 29.3%            |
-| `core/api/src/api-factory.js`                           | 1                 | 11               | 23.9%            |
+| `core/web-app/tests/integration/security-hardening.test.js` | 4                 | 90               | 42.3%            |
+| `core/service-api/tests/integration/security-hardening.test.js` | 4                 | 78               | 28.8%            |
+| `core/web-app/src/app-factory.js`                           | 1                 | 12               | 29.3%            |
+| `core/service-api/src/api-factory.js`                           | 1                 | 11               | 23.9%            |
 
 ---
 
@@ -141,7 +141,7 @@ Mirror in `CLAUDE.md`.
 
 ### Discovery
 
-`core/app/src/routes/health.js` and `core/api/src/routes/health.js` are **100% character-identical** (49 lines each). This duplication is **not documented** in the AGENTS.md intentional-separation table — it appears to be an oversight.
+`core/web-app/src/routes/health.js` and `core/service-api/src/routes/health.js` are **100% character-identical** (49 lines each). This duplication is **not documented** in the AGENTS.md intentional-separation table — it appears to be an oversight.
 
 ### Proposed changes
 
@@ -160,7 +160,7 @@ export { default } from '@glowing-fishstick/shared/routes/health';
 
 4. **Add to AGENTS.md** "Consolidated (shared)" section:
 
-> **`healthRoutes`** — Canonical source: `core/shared/src/routes/health.js`. Both `core/app` and `core/api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/routes/health.js`) are re-export stubs that preserve the original import path.
+> **`healthRoutes`** — Canonical source: `core/shared/src/routes/health.js`. Both `core/web-app` and `core/service-api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/routes/health.js`) are re-export stubs that preserve the original import path.
 
 ---
 
@@ -168,8 +168,8 @@ export { default } from '@glowing-fishstick/shared/routes/health';
 
 - [ ] Create `core/shared/src/routes/health.js` (move canonical source)
 - [ ] Add `./routes/health` export to `core/shared/package.json`
-- [ ] Convert `core/app/src/routes/health.js` to re-export stub
-- [ ] Convert `core/api/src/routes/health.js` to re-export stub
+- [ ] Convert `core/web-app/src/routes/health.js` to re-export stub
+- [ ] Convert `core/service-api/src/routes/health.js` to re-export stub
 - [ ] Add `assertHealthAvailableAfterThrottle` to `core/shared/src/testing/security-helpers.js`
 - [ ] Import + use `verifyHealthEndpoints` in app security hardening test
 - [ ] Import + use `verifyHealthEndpoints` in API security hardening test

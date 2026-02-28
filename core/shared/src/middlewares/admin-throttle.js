@@ -15,8 +15,8 @@
  * (shared store) is deferred to a future phase.
  *
  * VERIFY IF CHANGED: Integration tests for 429 responses in both
- * core/app/tests/integration/security-hardening.test.js and
- * core/api/tests/integration/security-hardening.test.js, plus health
+ * core/web-app/tests/integration/security-hardening.test.js and
+ * core/service-api/tests/integration/security-hardening.test.js, plus health
  * endpoint availability tests (health must bypass throttle).
  */
 

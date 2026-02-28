@@ -3,7 +3,7 @@
  * @description JSON-first error handling middleware for API routes.
  *
  * WHY (intentional duplication): The app counterpart lives at
- * core/app/src/middlewares/errorHandler.js and adds HTML content-
+ * core/web-app/src/middlewares/errorHandler.js and adds HTML content-
  * negotiation via Eta view rendering. This API version is JSON-only,
  * which keeps it lean for machine callers. Consolidating would require
  * a template-method abstraction that obscures two simple, clear

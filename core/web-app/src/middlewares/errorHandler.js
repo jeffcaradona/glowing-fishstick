@@ -4,7 +4,7 @@
  * generic error responses. Content-negotiates between HTML and JSON.
  *
  * WHY (intentional duplication): The API counterpart lives at
- * core/api/src/middlewares/error-handler.js and is JSON-only. This app
+ * core/service-api/src/middlewares/error-handler.js and is JSON-only. This app
  * version adds HTML content-negotiation via Eta view rendering, which
  * the API package does not need. Consolidating would require a template-
  * method abstraction that obscures two simple, clear implementations.

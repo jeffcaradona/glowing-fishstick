@@ -3,7 +3,7 @@
  * @description Re-exports createAdminThrottle from @glowing-fishstick/shared.
  *
  * WHY: The throttle implementation is framework-agnostic and was duplicated
- * identically in core/app and core/api. Consolidated into shared to
+ * identically in core/web-app and core/service-api. Consolidated into shared to
  * eliminate Sonar code-duplication findings and ensure uniform behavior.
  * This re-export preserves the original import path for existing consumers.
  *

@@ -24,12 +24,12 @@ The objective is to reduce denial-of-service risk from expensive unbounded opera
 
 Snyk Code reported `javascript/NoRateLimitingForExpensiveWebOperation` against request-handling paths that can become expensive under burst traffic:
 
-- `core/app/src/controllers/admin-controller.js`
-- `core/app/src/middlewares/errorHandler.js`
+- `core/web-app/src/controllers/admin-controller.js`
+- `core/web-app/src/middlewares/errorHandler.js`
 
 Related API error path behavior also uses request-path logger fallback construction:
 
-- `core/api/src/middlewares/error-handler.js`
+- `core/service-api/src/middlewares/error-handler.js`
 
 ### Risk
 
@@ -77,17 +77,17 @@ No breaking signature changes are planned. Existing defaults continue to work, w
 
 ### Phase 1 - Config and Env Parsing
 
-- Add new app keys in `core/app/src/config/env.js`
-- Add new API keys in `core/api/src/config/env.js`
+- Add new app keys in `core/web-app/src/config/env.js`
+- Add new API keys in `core/service-api/src/config/env.js`
 - Parse numeric values with explicit `Number(...)` conversion where needed
 - Preserve existing override > env > default precedence
 
 ### Phase 2 - Request Parser Limit Wiring
 
-- Update `core/app/src/app-factory.js`:
+- Update `core/web-app/src/app-factory.js`:
   - `express.json({ limit: config.jsonBodyLimit })`
   - `express.urlencoded({ extended: true, limit: config.urlencodedBodyLimit, parameterLimit: config.urlencodedParameterLimit })`
-- Update `core/api/src/api-factory.js` with equivalent limits
+- Update `core/service-api/src/api-factory.js` with equivalent limits
 
 ### Phase 3 - Admin Throttling Middleware
 
@@ -101,8 +101,8 @@ No breaking signature changes are planned. Existing defaults continue to work, w
 ### Phase 4 - Error Middleware Logger Hardening
 
 - Remove `createLogger()` fallback construction in:
-  - `core/app/src/middlewares/errorHandler.js`
-  - `core/api/src/middlewares/error-handler.js`
+  - `core/web-app/src/middlewares/errorHandler.js`
+  - `core/service-api/src/middlewares/error-handler.js`
 - Use startup-injected logger path (`req.app?.locals?.logger`) and safe fallback strategy decided in code review (for example console or guarded no-op path)
 - Ensure error responses remain unchanged
 
@@ -185,13 +185,13 @@ If work is resumed later, start in this order:
 1. Review this plan: `documentation/SECURITY-HARDENING-PLAN.md`
 2. Confirm backlog status: `documentation/99-potential-gaps.md`
 3. Inspect current config factories:
-   - `core/app/src/config/env.js`
-   - `core/api/src/config/env.js`
+   - `core/web-app/src/config/env.js`
+   - `core/service-api/src/config/env.js`
 4. Inspect middleware wiring:
-   - `core/app/src/app-factory.js`
-   - `core/api/src/api-factory.js`
-   - `core/app/src/middlewares/errorHandler.js`
-   - `core/api/src/middlewares/error-handler.js`
+   - `core/web-app/src/app-factory.js`
+   - `core/service-api/src/api-factory.js`
+   - `core/web-app/src/middlewares/errorHandler.js`
+   - `core/service-api/src/middlewares/error-handler.js`
 5. Run baseline checks:
 
 ```bash

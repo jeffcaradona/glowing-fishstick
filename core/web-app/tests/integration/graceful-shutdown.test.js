@@ -1,5 +1,5 @@
 /**
- * @file core/app/tests/integration/graceful-shutdown.test.js
+ * @file core/web-app/tests/integration/graceful-shutdown.test.js
  * @description Integration test for P1 graceful shutdown behavior.
  *
  * Verifies that graceful shutdown:

@@ -118,7 +118,7 @@ export default [
   {
     files: [
       '**/src/**-factory.js',
-      'core/app/src/app-factory.js',
+      'core/web-app/src/app-factory.js',
       'core/shared/src/server-factory.js',
     ],
     rules: {

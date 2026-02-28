@@ -5,8 +5,9 @@
 > **Modular Structure:**
 >
 > - The root package provides documentation, development scripts, and a monorepo structure.
-> - The main application logic is in [`core/app`](core/app), distributed as `@glowing-fishstick/app`.
-> - The JSON-first API module is in [`core/api`](core/api), distributed as `@glowing-fishstick/api`.
+> - The main application logic is in [`core/web-app`](core/web-app), distributed as `@glowing-fishstick/app`.
+> - The JSON-first API module is in [`core/service-api`](core/service-api), distributed as `@glowing-fishstick/api`.
+> - The CLI scaffolding tool is in [`core/generator`](core/generator), distributed as `@glowing-fishstick/generator`.
 > - Shared utilities and types are in [`core/shared`](core/shared), distributed as `@glowing-fishstick/shared` (including logger re-exports).
 > - Logger implementation lives in [`core/modules/logger`](core/modules/logger), distributed as `@glowing-fishstick/logger`.
 >
@@ -68,13 +69,13 @@ API_JSON_BODY_LIMIT=100kb
 API_ADMIN_RATE_LIMIT_MAX=60
 ```
 
-See [api/DEV_API_README.md](api/DEV_API_README.md#deployment-pattern-api-as-an-authenticated-proxy) for detailed setup and example Proxmox route configuration.
+See [sandbox/api/DEV_API_README.md](sandbox/api/DEV_API_README.md#deployment-pattern-api-as-an-authenticated-proxy) for detailed setup and example Proxmox route configuration.
 
 ### Input Validation & Database Schema Management
 
 The API package includes a lightweight **database migration system** and **input validation** layer for data consistency:
 
-- **Schema migrations**: Version-tracked migrations run automatically at startup (in `api/src/database/db.js`). New databases use the latest constraints; existing databases are upgraded via atomic table rebuilds.
+- **Schema migrations**: Version-tracked migrations run automatically at startup (in `sandbox/api/src/database/db.js`). New databases use the latest constraints; existing databases are upgraded via atomic table rebuilds.
 - **Pre-migration validation**: Before rebuilding the table, migrations scan for data that violates new constraints. If violations are found, the migration fails with a detailed error message (listing sample bad records) and the operator must manually fix or delete the violating data before the app will start.
 - **Atomic transactions**: Each migration runs in a BEGIN/COMMIT/ROLLBACK block, ensuring the schema is never partially upgraded.
 - **CHECK constraints**: SQLite tables enforce column-level constraints (e.g., `title TEXT CHECK(length(title) <= 255)`) as a safety net.
@@ -100,7 +101,7 @@ Fix the data manually:
   Option A: DELETE FROM tasks WHERE <condition>;
   Option B: UPDATE tasks SET <field> = <trimmed_value> WHERE <condition>;
 Then restart the app to retry migration.
-Or delete api/data/tasks.db for a fresh start.
+Or delete sandbox/api/data/tasks.db for a fresh start.
 ```
 
 This ensures data integrity and gives the operator full visibility and control.
@@ -135,7 +136,7 @@ npm install @glowing-fishstick/logger
 Note on repository layout and installs
 
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` or `@glowing-fishstick/api` (Option A: workspace is the source; consumers install the package).
-- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
+- For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/web-app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 - See jsconfig.json for an example of resolving a directory to a package name.
 
 ---
@@ -571,12 +572,13 @@ const config = createConfig();
 
 **Workspace Package Map**
 
-- `core/app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
-- `core/shared` — Compatibility layer + curated public API used by `core/app` and `core/api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
+- `core/web-app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
+- `core/shared` — Compatibility layer + curated public API used by `core/web-app` and `core/service-api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
 - `core/modules/logger` — Implementation ownership boundary for logging (Pino logger factory + request logging middleware). Published as `@glowing-fishstick/logger`.
-- `core/api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
-- `app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
-- `api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.
+- `core/service-api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
+- `core/generator` — CLI scaffolding tool. Published as `@glowing-fishstick/generator`. Provides the `fishstick-create` command to scaffold new app or API projects from starter templates.
+- `sandbox/app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.
+- `sandbox/api/` — A local consumer JSON API example that composes `@glowing-fishstick/api` with plugin routes.
 
 These roles reflect the current repository structure and are the intended mapping for consumers and maintainers.
 
@@ -738,8 +740,8 @@ Request → Body Parsers → Static Files → Core Routes → Plugins → 404 Ha
 
 ## Development
 
-See [app/DEV_APP_README.md](app/DEV_APP_README.md) for information on running the app for local development.
-See [api/DEV_API_README.md](api/DEV_API_README.md) for information on running the API for local development.
+See [sandbox/app/DEV_APP_README.md](sandbox/app/DEV_APP_README.md) for information on running the app for local development.
+See [sandbox/api/DEV_API_README.md](sandbox/api/DEV_API_README.md) for information on running the API for local development.
 
 ---
 
@@ -751,14 +753,15 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 
 ### Publishable packages
 
-| Package               | npm name                    |
-| --------------------- | --------------------------- |
-| `core/app`            | `@glowing-fishstick/app`    |
-| `core/api`            | `@glowing-fishstick/api`    |
-| `core/shared`         | `@glowing-fishstick/shared` |
-| `core/modules/logger` | `@glowing-fishstick/logger` |
+| Package               | npm name                         |
+| --------------------- | -------------------------------- |
+| `core/web-app`            | `@glowing-fishstick/app`         |
+| `core/service-api`            | `@glowing-fishstick/api`         |
+| `core/shared`         | `@glowing-fishstick/shared`      |
+| `core/modules/logger` | `@glowing-fishstick/logger`      |
+| `core/generator`      | `@glowing-fishstick/generator`   |
 
-`app/` and `api/` are marked `"private": true` and are never published. Starter templates live in `core/generator/templates/` and ship as part of the `@glowing-fishstick/generator` package.
+`sandbox/app/` and `sandbox/api/` are marked `"private": true` and are never published. Starter templates live in `core/generator/templates/` and ship as part of the `@glowing-fishstick/generator` package.
 
 ### Local workflow
 
@@ -783,7 +786,17 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 
 This is a **proof of concept** and demonstration project showing how to build a composable Express.js framework distributed as an npm module. It is not intended for production use without significant additional development work.
 
-**Current Next Work**: Security hardening is the immediate engineering milestone before new feature tracks (health extensibility/auth). See [documentation/SECURITY-HARDENING-PLAN.md](documentation/SECURITY-HARDENING-PLAN.md).
+**Completed milestones**:
+
+- ✅ Core factory-based architecture (app + API)
+- ✅ Plugin system with service container
+- ✅ Graceful shutdown and lifecycle hooks
+- ✅ CLI scaffolding tool (`@glowing-fishstick/generator`)
+- ✅ Logger module extraction (`@glowing-fishstick/logger`)
+- ✅ Database schema migrations and input validation
+- ✅ Security hardening (payload limits, admin/metrics throttling, error handler hardening)
+
+**Next candidates**: Health check extensibility, request-level context (AsyncLocalStorage). See [documentation/99-potential-gaps.md](documentation/99-potential-gaps.md) for the full backlog.
 
 Feel free to explore the concepts and patterns demonstrated here and apply them to your own projects as they best fit your needs.
 
@@ -798,5 +811,6 @@ MIT © Jeff Caradona
 ## Related Documentation
 
 - [Project Specification](documentation/00-project-specs.md) — Detailed architectural decisions and design principles
-- [App Development README](app/DEV_APP_README.md) — How to use the `app/` directory for local development
-- [API Development README](api/DEV_API_README.md) — How to use the `api/` directory for local development
+- [App Development README](sandbox/app/DEV_APP_README.md) — How to use the `sandbox/app/` directory for local development
+- [API Development README](sandbox/api/DEV_API_README.md) — How to use the `sandbox/api/` directory for local development
+- [Generator README](core/generator/README.md) — CLI scaffolding tool for new projects

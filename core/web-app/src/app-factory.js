@@ -3,7 +3,7 @@
  * @description Express application factory. Composes middleware, core
  * routes, consumer plugins, and error handling into a single app instance.
  *
- * WHY (intentional parity with core/api/src/api-factory.js): Both
+ * WHY (intentional parity with core/service-api/src/api-factory.js): Both
  * factories share ~40 lines of middleware linking (hook registries,
  * request ID, body parsers, health routes, shutdown rejection, throttle
  * mounting, plugin loop). This duplication is deliberate — middleware

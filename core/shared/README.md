@@ -37,7 +37,7 @@ When consuming via `@glowing-fishstick/app`, `createServer` is re-exported from 
 - `registry-store.js` — WeakMap-based private storage for app lifecycle registries
 - Logger utilities re-exported from `@glowing-fishstick/logger` (implementation in `core/modules/logger`)
 - Common type definitions
-- Reusable helpers for core/app and downstream modules
+- Reusable helpers for core/web-app and downstream modules
 
 ## Logger
 
