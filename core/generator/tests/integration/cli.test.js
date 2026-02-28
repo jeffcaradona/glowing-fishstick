@@ -11,10 +11,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { generate } from '../../src/generator.js';
 
 let workDir;
+let generatorVersion;
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const generatorRoot = path.resolve(testDir, '..', '..');
 
 beforeEach(async () => {
   workDir = await mkdtemp(path.join(tmpdir(), 'fishstick-int-'));
@@ -22,6 +26,14 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(workDir, { recursive: true, force: true });
+});
+
+beforeEach(async () => {
+  if (!generatorVersion) {
+    const raw = await readFile(path.join(generatorRoot, 'package.json'), 'utf8');
+    const pkg = JSON.parse(raw);
+    generatorVersion = pkg.version;
+  }
 });
 
 /**
@@ -62,6 +74,8 @@ describe('app template', () => {
     const raw = await readFile(path.join(outDir, 'package.json'), 'utf8');
     const pkg = JSON.parse(raw);
     expect(pkg.name).toBe('my-test-app');
+    expect(pkg.dependencies['@glowing-fishstick/app']).toBe(`^${generatorVersion}`);
+    expect(pkg.dependencies['@glowing-fishstick/shared']).toBe(`^${generatorVersion}`);
   });
 
   it('generates package.json with standalone dev script (no monorepo --watch)', async () => {
@@ -119,6 +133,8 @@ describe('api template', () => {
     const pkg = JSON.parse(raw);
     expect(Object.keys(pkg.dependencies)).toContain('@glowing-fishstick/api');
     expect(Object.keys(pkg.dependencies)).not.toContain('@glowing-fishstick/app');
+    expect(pkg.dependencies['@glowing-fishstick/api']).toBe(`^${generatorVersion}`);
+    expect(pkg.dependencies['@glowing-fishstick/shared']).toBe(`^${generatorVersion}`);
   });
 
   it('renders custom port in config/env.js', async () => {

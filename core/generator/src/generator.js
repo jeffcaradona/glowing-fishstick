@@ -8,7 +8,7 @@
  * a monolithic function that mixes concerns.
  */
 
-import { readFile } from 'node:fs/promises';
+import { readFile, access } from 'node:fs/promises';
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
@@ -26,6 +26,7 @@ import { scaffoldFiles, createPublicSubdirs } from './scaffolder.js';
 const execFileAsync = promisify(execFile);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 /**
  * Resolve the absolute path to the templates directory.
@@ -48,6 +49,70 @@ async function readCoreVersion() {
   const raw = await readFile(pkgPath, 'utf8');
   const { version } = JSON.parse(raw);
   return version;
+}
+
+/**
+ * Determine whether `candidatePath` is within `basePath`.
+ *
+ * WHY: Local file dependencies should only be generated when scaffolding
+ * inside this monorepo checkout. Emitting `file:` links for external targets
+ * would couple generated projects to a machine-specific checkout path.
+ *
+ * @param {string} basePath
+ * @param {string} candidatePath
+ * @returns {boolean}
+ */
+function isSubPath(basePath, candidatePath) {
+  const rel = path.relative(basePath, candidatePath);
+  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
+/**
+ * Resolve dependency specifiers for generated templates.
+ *
+ * WHY: In local monorepo dev, scoped packages may not be published yet.
+ * Emitting relative `file:` dependencies keeps `npm install` working for
+ * `node core/generator/bin/cli.js ...` scaffolds while preserving semver
+ * package installs for external consumers.
+ *
+ * @param {object} params
+ * @param {string} params.targetDir
+ * @param {string} params.coreVersion
+ * @returns {Promise<object>}
+ */
+async function resolveDependencySpecs({ targetDir, coreVersion }) {
+  const externalDeps = {
+    appDependencySpec: `^${coreVersion}`,
+    apiDependencySpec: `^${coreVersion}`,
+    sharedDependencySpec: `^${coreVersion}`,
+  };
+
+  if (!isSubPath(REPO_ROOT, targetDir)) {
+    return externalDeps;
+  }
+
+  const localDirs = {
+    app: path.join(REPO_ROOT, 'core', 'app'),
+    api: path.join(REPO_ROOT, 'core', 'api'),
+    shared: path.join(REPO_ROOT, 'core', 'shared'),
+  };
+
+  try {
+    await Promise.all(
+      Object.values(localDirs).map((dir) => access(path.join(dir, 'package.json'))),
+    );
+  } catch {
+    return externalDeps;
+  }
+
+  return {
+    appDependencySpec: `file:${path.relative(targetDir, localDirs.app).replaceAll('\\', '/')}`,
+    apiDependencySpec: `file:${path.relative(targetDir, localDirs.api).replaceAll('\\', '/')}`,
+    sharedDependencySpec: `file:${path.relative(targetDir, localDirs.shared).replaceAll(
+      '\\',
+      '/',
+    )}`,
+  };
 }
 
 /**
@@ -177,6 +242,7 @@ export async function generate(rawOptions) {
   const appName = projectName.replace(/-/g, '_');
   const resolvedPort = port ?? (template === 'api' ? 3001 : 3000);
   const coreVersion = await readCoreVersion();
+  const dependencySpecs = await resolveDependencySpecs({ targetDir, coreVersion });
 
   const context = {
     projectName,
@@ -184,6 +250,7 @@ export async function generate(rawOptions) {
     description,
     port: resolvedPort,
     coreVersion,
+    ...dependencySpecs,
   };
 
   // ── Scaffold ──────────────────────────────────────────────────────────────

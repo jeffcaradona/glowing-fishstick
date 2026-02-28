@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/logger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A logging module for the core system.",
   "main": "index.js",
   "type": "module",

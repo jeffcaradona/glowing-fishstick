@@ -94,3 +94,9 @@ node core/generator/bin/cli.js test-output --template app --no-install --no-git
 # Verify the output
 cd test-output && npm install && node src/server.js
 ```
+
+When scaffolding into a directory inside this monorepo, generated `package.json`
+dependencies use local `file:` links to `core/app`, `core/api`, and
+`core/shared` so `npm install` works even before packages are published.
+Outside this repo, generated dependencies use semver ranges (for example
+`^0.1.0`) against published `@glowing-fishstick/*` packages.

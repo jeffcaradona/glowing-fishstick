@@ -10,8 +10,8 @@
     "dev": "nodemon --watch src --ext js,mjs,cjs,json,eta src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/app": "^{{coreVersion}}",
-    "@glowing-fishstick/shared": "^{{coreVersion}}",
+    "@glowing-fishstick/app": "{{appDependencySpec}}",
+    "@glowing-fishstick/shared": "{{sharedDependencySpec}}",
     "express": "^5.2.1"
   },
   "devDependencies": {
