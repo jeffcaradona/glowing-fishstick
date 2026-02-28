@@ -22,7 +22,7 @@ const corePublicDir = path.join(__dirname, '..', 'public');
  * @typedef {object} AdminControllerDeps
  * @property {object} config - Frozen app config.
  * @property {(config: object) => object} filterSensitiveKeys - Config key filter utility.
- * @property {(input: string | URL, init?: object) => Promise<Response>} [fetchImpl] - Fetch implementation.
+ * @property {(input: string | URL, init?: object) => Promise<Response>} [fetchImpl]
  * @property {(req: import('express').Request, context: object) => object} [buildApiRequestOptions]
  */
 
