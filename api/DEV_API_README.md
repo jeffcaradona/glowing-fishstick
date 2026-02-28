@@ -174,12 +174,14 @@ The API can sit in front of an existing backend system (e.g., Proxmox cluster, K
 #### Agents Call the Proxy
 
 **Instead of:**
+
 ```bash
 # ❌ Direct agent access (no audit, no limits, risk)
 curl -H "Authorization: Bearer proxmox-token" https://proxmox.internal:8006/api2/json/nodes
 ```
 
 **Use:**
+
 ```bash
 # ✅ Via glowing-fishstick API (audit log, payload limits, throttling)
 curl http://localhost:3001/nodes
@@ -190,6 +192,7 @@ curl http://localhost:3001/nodes
 Create a `.env.local` (or CI secrets) with appropriate settings based on your network:
 
 **Option 1: Internal Agents (Same VPC, No JWT Required)**
+
 ```bash
 # Agents are trusted; JWTs not needed
 API_REQUIRE_JWT=false
@@ -208,6 +211,7 @@ API_ADMIN_RATE_LIMIT_MAX=60
 ```
 
 **Option 2: Strict Multi-Tenant (All Requests Require JWT)**
+
 ```bash
 # All non-health endpoints require valid JWT
 API_REQUIRE_JWT=true
@@ -223,6 +227,7 @@ API_URLENCODED_BODY_LIMIT=100kb
 ```
 
 **Option 3: Hybrid (JWT Optional, Origin Blocked)**
+
 ```bash
 # JWT is optional; useful for self-hosted deployments
 API_REQUIRE_JWT=false
@@ -254,17 +259,17 @@ export function setupProxmoxPlugin(app, config) {
       const response = await fetch(`${proxmoxBaseUrl}/api2/json/nodes`, {
         method: 'GET',
         headers: {
-          'Authorization': `PVEAPIToken=${proxmoxApiToken}`,
+          Authorization: `PVEAPIToken=${proxmoxApiToken}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         return res.status(response.status).json({
           error: `Proxmox returned ${response.status}`,
         });
       }
-      
+
       const data = await response.json();
       res.json(data);
     } catch (err) {
@@ -303,7 +308,7 @@ export function apiConfigOverrides() {
     // Proxmox backend
     proxmoxUrl: process.env.PROXMOX_URL || 'https://proxmox.internal:8006',
     proxmoxApiToken: process.env.PROXMOX_API_TOKEN,
-    
+
     // Or other backend
     backendUrl: process.env.BACKEND_URL,
     backendApiKey: process.env.BACKEND_API_KEY,
@@ -320,7 +325,7 @@ export function apiConfigOverrides() {
 ✅ **Graceful Shutdown**: In-flight proxied requests drain before process exit  
 ✅ **No Backend Changes**: Existing backends (Proxmox, Kubernetes, etc.) remain untouched  
 ✅ **No Agent-Side Auth Logic**: Agents call the proxy; the proxy handles secrets  
-✅ **Flexible Auth**: JWT toggle allows same deployment to serve internal agents or strict tenants  
+✅ **Flexible Auth**: JWT toggle allows same deployment to serve internal agents or strict tenants
 
 ---
 
@@ -347,20 +352,21 @@ Notes:
 - `API_REQUIRE_JWT=true` requires `JWT_SECRET`.
 - `API_BLOCK_BROWSER_ORIGIN=true` rejects non-health requests that include an `Origin` header.
 - Health routes stay available even when enforcement is enabled.
-- Upcoming hardening keys tracked in the current plan: `API_JSON_BODY_LIMIT`, `API_URLENCODED_BODY_LIMIT`, `API_URLENCODED_PARAMETER_LIMIT`.\n  These are now implemented with defaults of `100kb` / `100kb` / `1000`. See config table above.
+- Upcoming hardening keys tracked in the current plan: `API_JSON_BODY_LIMIT`, `API_URLENCODED_BODY_LIMIT`, `API_URLENCODED_PARAMETER_LIMIT`.\n These are now implemented with defaults of `100kb` / `100kb` / `1000`. See config table above.
 
 ### JWT Configuration Reference
 
 The API supports optional JWT enforcement via environment variables:
 
-| Env Var          | Default | Behavior                                          |
-| ---------------- | ------- | ------------------------------------------------- |
-| `API_REQUIRE_JWT`       | `false` | If `true`, all non-health endpoints require valid JWT |
+| Env Var                    | Default | Behavior                                                                        |
+| -------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `API_REQUIRE_JWT`          | `false` | If `true`, all non-health endpoints require valid JWT                           |
 | `API_BLOCK_BROWSER_ORIGIN` | `false` | If `true`, reject requests with `Origin` header (prevents browser-based misuse) |
-| `JWT_SECRET`     | (none)  | Secret key for signing/verifying JWTs; required if `API_REQUIRE_JWT=true` |
-| `JWT_EXPIRES_IN` | `7d`    | JWT expiration duration                           |
+| `JWT_SECRET`               | (none)  | Secret key for signing/verifying JWTs; required if `API_REQUIRE_JWT=true`       |
+| `JWT_EXPIRES_IN`           | `7d`    | JWT expiration duration                                                         |
 
 **Example 1: Internal Proxy (No JWT Required)**
+
 ```bash
 API_REQUIRE_JWT=false
 API_BLOCK_BROWSER_ORIGIN=true
@@ -368,6 +374,7 @@ API_BLOCK_BROWSER_ORIGIN=true
 ```
 
 **Example 2: Strict Access (JWT Required)**
+
 ```bash
 API_REQUIRE_JWT=true
 JWT_SECRET=super-secret-key-from-vault
@@ -375,6 +382,7 @@ JWT_SECRET=super-secret-key-from-vault
 ```
 
 **Example 3: Hybrid (JWT Optional, Origin Blocked)**
+
 ```bash
 API_REQUIRE_JWT=false
 API_BLOCK_BROWSER_ORIGIN=true

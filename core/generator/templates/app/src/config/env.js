@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * Customize these values for your application.
  */
 export const appOverrides = {
-  appName: 'my-app',
+  appName: '{{appName}}',
   appVersion: '0.0.1',
   viewsDir: path.join(__dirname, '..', 'views'),
   publicDir: path.join(__dirname, '..', 'public'),

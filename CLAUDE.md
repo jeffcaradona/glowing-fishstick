@@ -5,7 +5,7 @@ POC Express.js framework distributed as npm modules. Solves "template drift" via
 ## Repository (npm workspaces monorepo)
 
 core/app/ → @glowing-fishstick/app | core/shared/ → @glowing-fishstick/shared | core/api/ → @glowing-fishstick/api
-app/ → consumer example | api/ → API consumer scaffold | template/ → starter templates | tests/ → Vitest integration tests
+app/ → consumer example | api/ → API consumer scaffold | core/generator/ → CLI scaffolding tool + starter templates | tests/ → Vitest integration tests
 
 - Root package is NOT runtime-installable. Consumer examples import from `@glowing-fishstick/*` packages.
 - `app/` demonstrates how external projects consume the published modules.
@@ -32,12 +32,14 @@ app/ → consumer example | api/ → API consumer scaffold | template/ → start
 ## Critical files
 
 ### Core infrastructure
+
 - `core/shared/src/server-factory.js` — HTTP server + graceful shutdown
 - `core/shared/src/hook-registry.js` — lifecycle management
 - `core/shared/src/registry-store.js` — WeakMap-based privacy
 - `core/modules/logger/src/` — Pino structured logging
 
 ### Application framework
+
 - `core/app/src/app-factory.js` — Express app composition
 - `core/app/src/config/env.js` — configuration factory
 - `core/app/src/errors/appError.js` — error classes
@@ -45,10 +47,12 @@ app/ → consumer example | api/ → API consumer scaffold | template/ → start
 - `core/app/src/routes/health.js` — `/healthz`, `/readyz`, `/livez`
 
 ### Consumer examples
+
 - `app/src/server.js` — entry point (composition demo)
 - `app/src/app.js` — task manager plugin
 
 ### Key tests
+
 - `tests/integration/graceful-shutdown.test.js`
 - `tests/integration/startup-hook-ordering.test.js`
 
@@ -83,9 +87,11 @@ Run: `npm run lint` · `npm run format` · `npm run test:all`
 Some code appears in both `core/app` and `core/api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
 
 ### Consolidated (shared)
+
 - **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/app` and `core/api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
 
 ### Intentionally separate (do not consolidate)
+
 - **Error handlers** (`core/app/src/middlewares/errorHandler.js` vs `core/api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
 - **Factories** (`core/app/src/app-factory.js` vs `core/api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
 - **Security hardening tests** (`core/*/tests/integration/security-hardening.test.js`): Parallel test structure validates each framework independently. Each package must prove its own security contract; shared harness would obscure which implementation is under test.

@@ -82,10 +82,10 @@ The API package includes a lightweight **database migration system** and **input
 
 Input constraints for task data:
 
-| Field | Max Length | Notes |
-|-------|---|---|
-| `title` | 255 chars | Required, non-empty |
-| `description` | 4000 chars | Optional |
+| Field         | Max Length | Notes               |
+| ------------- | ---------- | ------------------- |
+| `title`       | 255 chars  | Required, non-empty |
+| `description` | 4000 chars | Optional            |
 
 **Migration failure example:**
 
@@ -137,6 +137,7 @@ Note on repository layout and installs
 - This repository is organized as a workspace containing the packages consumed by an application. The recommended consumer import is the published package name `@glowing-fishstick/app` or `@glowing-fishstick/api` (Option A: workspace is the source; consumers install the package).
 - For local development inside this repository, package linkage is used so that `import { ... } from '@glowing-fishstick/app'` resolves to the local `core/app` package. Consumer and documentation examples should import by package name to preserve real-world package boundaries.
 - See jsconfig.json for an example of resolving a directory to a package name.
+
 ---
 
 ## Quick Start
@@ -750,14 +751,14 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
 
 ### Publishable packages
 
-| Package | npm name |
-|---|---|
-| `core/app` | `@glowing-fishstick/app` |
-| `core/api` | `@glowing-fishstick/api` |
-| `core/shared` | `@glowing-fishstick/shared` |
+| Package               | npm name                    |
+| --------------------- | --------------------------- |
+| `core/app`            | `@glowing-fishstick/app`    |
+| `core/api`            | `@glowing-fishstick/api`    |
+| `core/shared`         | `@glowing-fishstick/shared` |
 | `core/modules/logger` | `@glowing-fishstick/logger` |
 
-`app/`, `api/`, `template/app`, and `template/api` are marked `"private": true` and are never published.
+`app/` and `api/` are marked `"private": true` and are never published. Starter templates live in `core/generator/templates/` and ship as part of the `@glowing-fishstick/generator` package.
 
 ### Local workflow
 
@@ -771,7 +772,7 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) to man
    npm run version-packages
    ```
 4. **Commit** the version bumps and updated `CHANGELOG.md` files.
-5. *(Optional)* **Publish to npm** via CI:
+5. _(Optional)_ **Publish to npm** via CI:
    ```sh
    npm run release
    ```

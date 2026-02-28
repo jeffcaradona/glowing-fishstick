@@ -162,10 +162,7 @@ describe('validateTaskInput (partial mode — PATCH)', () => {
   });
 
   it('validates description only when provided', () => {
-    const result = validateTaskInput(
-      { description: 'x'.repeat(5000) },
-      { partial: true },
-    );
+    const result = validateTaskInput({ description: 'x'.repeat(5000) }, { partial: true });
     expect(result.valid).toBe(false);
     expect(result.errors[0]).toMatch(/description/);
   });

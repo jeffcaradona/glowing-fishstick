@@ -8,12 +8,12 @@
 
 ## Sonar Findings
 
-| File | Duplicated Blocks | Duplicated Lines | Dup % (New Code) |
-|------|-------------------|------------------|-------------------|
-| `core/app/tests/integration/security-hardening.test.js` | 4 | 90 | 42.3% |
-| `core/api/tests/integration/security-hardening.test.js` | 4 | 78 | 28.8% |
-| `core/app/src/app-factory.js` | 1 | 12 | 29.3% |
-| `core/api/src/api-factory.js` | 1 | 11 | 23.9% |
+| File                                                    | Duplicated Blocks | Duplicated Lines | Dup % (New Code) |
+| ------------------------------------------------------- | ----------------- | ---------------- | ---------------- |
+| `core/app/tests/integration/security-hardening.test.js` | 4                 | 90               | 42.3%            |
+| `core/api/tests/integration/security-hardening.test.js` | 4                 | 78               | 28.8%            |
+| `core/app/src/app-factory.js`                           | 1                 | 12               | 29.3%            |
+| `core/api/src/api-factory.js`                           | 1                 | 11               | 23.9%            |
 
 ---
 
@@ -33,8 +33,8 @@ All four files are listed in AGENTS.md as **intentionally separate**. After deep
 
 The `app-factory.js` and `api-factory.js` files have a **load-bearing middleware-ordering divergence**. The shutdown gate mounts at different positions:
 
-- **App:** shutdown gate mounts *before* core routes → admin routes become unreachable during drain
-- **API:** shutdown gate mounts *after* enforcement + metrics → metrics endpoints remain reachable during drain
+- **App:** shutdown gate mounts _before_ core routes → admin routes become unreachable during drain
+- **API:** shutdown gate mounts _after_ enforcement + metrics → metrics endpoints remain reachable during drain
 
 This is a deliberate operational difference that would be obscured by any shared pipeline abstraction.
 
@@ -53,11 +53,11 @@ High-visibility security boilerplate: `app.disable('x-powered-by')`, body parser
 
 ### Consolidation approaches evaluated and rejected
 
-| Approach | Saves | Rejected because |
-|----------|-------|-----------------|
-| Composable pipeline builder | ~5 lines/file | Shutdown gate position differs; must mentally expand abstraction to audit stack |
-| `applyBaseMiddleware(app, config)` | ~12 lines/file | Hides body parser security config (`limit`, `parameterLimit`) from audit view |
-| `createBodyParsers(config)` | ~4 lines/file | Marginal savings; inline version is perfectly readable |
+| Approach                           | Saves          | Rejected because                                                                |
+| ---------------------------------- | -------------- | ------------------------------------------------------------------------------- |
+| Composable pipeline builder        | ~5 lines/file  | Shutdown gate position differs; must mentally expand abstraction to audit stack |
+| `applyBaseMiddleware(app, config)` | ~12 lines/file | Hides body parser security config (`limit`, `parameterLimit`) from audit view   |
+| `createBodyParsers(config)`        | ~4 lines/file  | Marginal savings; inline version is perfectly readable                          |
 
 **Decision: No action required on factory files.**
 
@@ -74,14 +74,14 @@ However, `verifyHealthEndpoints` is **exported but unused** (dead code) — both
 
 ### Block-by-block comparison
 
-| describe block | App (13 tests) | API (16 tests) | Shared pattern? |
-|---|---|---|---|
-| Payload Limits | 4 tests | 4 tests | **Yes** — identical assertions, different factory call |
-| Throttling | 4 tests (3 paths) | 3 tests (2 paths) | **Yes** — same structure, different paths/counts |
-| Health Under Throttle | 3 tests | 3 tests | **Yes** — identical except exhausted path |
-| Error Handler | 2 tests (HTML + logger) | 1 test (JSON envelope) | **No** — intentionally different |
-| Config Defaults | — | 3 tests | API-only |
-| JWT Toggle Regression | — | 2 tests | API-only |
+| describe block        | App (13 tests)          | API (16 tests)         | Shared pattern?                                        |
+| --------------------- | ----------------------- | ---------------------- | ------------------------------------------------------ |
+| Payload Limits        | 4 tests                 | 4 tests                | **Yes** — identical assertions, different factory call |
+| Throttling            | 4 tests (3 paths)       | 3 tests (2 paths)      | **Yes** — same structure, different paths/counts       |
+| Health Under Throttle | 3 tests                 | 3 tests                | **Yes** — identical except exhausted path              |
+| Error Handler         | 2 tests (HTML + logger) | 1 test (JSON envelope) | **No** — intentionally different                       |
+| Config Defaults       | —                       | 3 tests                | API-only                                               |
+| JWT Toggle Regression | —                       | 2 tests                | API-only                                               |
 
 ### Proposed changes
 
@@ -184,13 +184,13 @@ export { default } from '@glowing-fishstick/shared/routes/health';
 
 ## Expected Sonar Impact
 
-| File | Before (Dup Lines) | After (Est.) | Reduction |
-|------|---------------------|-------------|-----------|
-| `security-hardening.test.js` (app) | 90 (42.3%) | ~60 | ~33% fewer dup lines |
-| `security-hardening.test.js` (api) | 78 (28.8%) | ~55 | ~30% fewer dup lines |
-| `app-factory.js` | 12 (29.3%) | 12 (29.3%) | No change (intentional) |
-| `api-factory.js` | 11 (23.9%) | 11 (23.9%) | No change (intentional) |
-| **Overall new-code dup %** | **8.3%** | **~5-6%** | Improved |
+| File                               | Before (Dup Lines) | After (Est.) | Reduction               |
+| ---------------------------------- | ------------------ | ------------ | ----------------------- |
+| `security-hardening.test.js` (app) | 90 (42.3%)         | ~60          | ~33% fewer dup lines    |
+| `security-hardening.test.js` (api) | 78 (28.8%)         | ~55          | ~30% fewer dup lines    |
+| `app-factory.js`                   | 12 (29.3%)         | 12 (29.3%)   | No change (intentional) |
+| `api-factory.js`                   | 11 (23.9%)         | 11 (23.9%)   | No change (intentional) |
+| **Overall new-code dup %**         | **8.3%**           | **~5-6%**    | Improved                |
 
 Health route stubs drop from 49 lines each to ~4 lines — this duplication won't be flagged at all post-consolidation.
 

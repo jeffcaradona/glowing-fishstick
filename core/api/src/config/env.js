@@ -70,12 +70,11 @@ export function createApiConfig(overrides = {}, env = process.env) {
     jwtSecret: overrides.jwtSecret ?? env.JWT_SECRET ?? '',
     jwtExpiresIn: overrides.jwtExpiresIn ?? env.JWT_EXPIRES_IN ?? DEFAULTS.jwtExpiresIn,
     // WHY: Enforce request payload ceilings to prevent OOM from unbounded body parsing.
-    jsonBodyLimit:
-      overrides.jsonBodyLimit ?? env.API_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
+    jsonBodyLimit: overrides.jsonBodyLimit ?? env.API_JSON_BODY_LIMIT ?? DEFAULTS.jsonBodyLimit,
     urlencodedBodyLimit:
       overrides.urlencodedBodyLimit ??
-        env.API_URLENCODED_BODY_LIMIT ??
-        DEFAULTS.urlencodedBodyLimit,
+      env.API_URLENCODED_BODY_LIMIT ??
+      DEFAULTS.urlencodedBodyLimit,
     urlencodedParameterLimit: Number(
       overrides.urlencodedParameterLimit ??
         env.API_URLENCODED_PARAMETER_LIMIT ??

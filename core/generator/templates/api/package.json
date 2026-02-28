@@ -1,0 +1,20 @@
+{
+  "name": "{{projectName}}",
+  "private": true,
+  "description": "{{description}}",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --watch src --ext js,mjs,cjs,json src/server.js"
+  },
+  "dependencies": {
+    "@glowing-fishstick/api": "{{apiDependencySpec}}",
+    "@glowing-fishstick/shared": "{{sharedDependencySpec}}",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.13"
+  }
+}

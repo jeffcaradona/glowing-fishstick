@@ -118,24 +118,24 @@
 │   ├── 00-project-specs.md Full public API surface and design decisions
 │   └── 99-potential-gaps.md Backlog and implementation status
 │
-└── template/               Starter scaffold for new consumer apps
+└── core/generator/         CLI scaffolding tool + starter templates
 ```
 
 ---
 
 ## What Must Never Happen
 
-| Rule | Reason |
-|------|--------|
-| No `*Sync` filesystem/crypto/child-process APIs in routes or middleware | Blocks the event loop; kills throughput under load |
-| No mixed sync/async callback timing in public APIs | Creates non-deterministic call ordering and hidden race conditions |
-| No logger instantiation inside request-path middleware | Repeated allocation on every request; use `req.app.locals.logger` |
-| No importing from root package as a runtime dependency | Root `package.json` is workspace tooling only — not a publishable package |
-| No consumer code in `core/*` packages | `core/*` must be template-agnostic and reusable across any app |
-| No sharing secrets via config viewer (`/admin/config`) | `filterSensitiveKeys()` removes them; never bypass it |
-| No surfacing errors through multiple paths (throw AND callback) | Guarantees callers have one predictable error channel |
-| No unbounded body parsing | Express body parsers must always have `limit` set (already wired via config) |
-| No bypassing enforcement middleware in API | `createEnforcementMiddleware()` must mount before routes, not in plugin loop |
+| Rule                                                                    | Reason                                                                       |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| No `*Sync` filesystem/crypto/child-process APIs in routes or middleware | Blocks the event loop; kills throughput under load                           |
+| No mixed sync/async callback timing in public APIs                      | Creates non-deterministic call ordering and hidden race conditions           |
+| No logger instantiation inside request-path middleware                  | Repeated allocation on every request; use `req.app.locals.logger`            |
+| No importing from root package as a runtime dependency                  | Root `package.json` is workspace tooling only — not a publishable package    |
+| No consumer code in `core/*` packages                                   | `core/*` must be template-agnostic and reusable across any app               |
+| No sharing secrets via config viewer (`/admin/config`)                  | `filterSensitiveKeys()` removes them; never bypass it                        |
+| No surfacing errors through multiple paths (throw AND callback)         | Guarantees callers have one predictable error channel                        |
+| No unbounded body parsing                                               | Express body parsers must always have `limit` set (already wired via config) |
+| No bypassing enforcement middleware in API                              | `createEnforcementMiddleware()` must mount before routes, not in plugin loop |
 
 ---
 
@@ -196,6 +196,7 @@ Same pattern as above but in `api/src/`:
 ### Add a lifecycle hook (startup or shutdown)
 
 In the consumer entrypoint (`server.js`):
+
 ```js
 registerStartupHook(async () => {
   // WHY: Initialize <resource> before traffic arrives.
@@ -216,7 +217,9 @@ For plugin-level hooks, use `app.registerStartupHook()` / `app.registerShutdownH
    ```js
    export function myPlugin(app, config) {
      app.use(myRoutes(config));
-     app.registerStartupHook(async () => { /* init */ });
+     app.registerStartupHook(async () => {
+       /* init */
+     });
    }
    ```
 2. Pass it to `createApp(config, [myPlugin])` or `createApi(config, [myPlugin])` in `server.js`.

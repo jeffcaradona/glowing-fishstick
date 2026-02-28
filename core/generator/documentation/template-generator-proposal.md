@@ -3,6 +3,7 @@ Based on my review of your repository, I've created a comprehensive proposal doc
 ---
 
 # **Template Generator CLI Proposal**
+
 ## Building a Globally Installable Generator for Glowing-Fishstick
 
 **Project:** `jeffcaradona/glowing-fishstick`  
@@ -27,12 +28,14 @@ This becomes a fourth publishable package in your ecosystem, complementing `@glo
 ## Problem Statement
 
 Currently, developers who want to use glowing-fishstick must:
+
 1. Manually create a new project directory
 2. Initialize `package.json` with `"type": "module"`
 3. Understand and copy the server boilerplate pattern
 4. Set up dependencies correctly
 
 **Why this matters:**
+
 - **Friction:** Higher barrier to entry for new users
 - **Errors:** Manual setup prone to misconfiguration
 - **Inconsistency:** Users might not follow best practices
@@ -50,18 +53,18 @@ Currently, developers who want to use glowing-fishstick must:
 │   └── cli.js                    # Entry point (symlinked as `fishstick-create`)
 ├── src/
 │   ├── prompt-engine.js          # Interactive questions
-│   ├── template-renderer.js      # EJS/Handlebars rendering
+│   ├── template-renderer.js      # Handlebars rendering
 │   ├── file-scaffolder.js        # Directory & file creation
 │   └── validators.js             # Input validation
 ├── templates/
 │   ├── app/                      # Express app template files
 │   │   ├── src/
-│   │   │   ├── server.js.ejs
-│   │   │   ├── app.js.ejs
-│   │   │   └── config/env.js.ejs
+│   │   │   ├── server.js
+│   │   │   ├── app.js
+│   │   │   └── config/env.js
 │   │   ├── views/
 │   │   ├── public/
-│   │   └── package.json.ejs
+│   │   └── package.json
 │   └── api/                      # Express API template (optional)
 ├── package.json
 └── README.md
@@ -69,17 +72,14 @@ Currently, developers who want to use glowing-fishstick must:
 
 ### Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `commander` | ^12.0.0 | CLI argument parsing (what Express Generator uses) |
-| `inquirer` | ^9.0.0 | Interactive terminal prompts |
-| `chalk` | ^5.0.0 | Colored console output |
-| `fs-extra` | ^11.0.0 | Enhanced file system operations |
-| `ejs` | ^3.1.8 | Template rendering |
+| Package      | Version | Purpose                                                            |
+| ------------ | ------- | ------------------------------------------------------------------ |
+| `commander`  | ^14.0.3 | CLI argument parsing (what Express Generator uses)                 |
+| `handlebars` | ^4.7.8  | Template rendering (`{{ }}` syntax, avoids Eta `<%= %>` conflicts) |
 
-**Total size impact:** ~2-3 MB (acceptable for dev tooling)
+All other functionality uses Node.js >= 22 built-ins (`node:readline/promises`, `node:fs/promises`, `node:child_process`).
 
----
+**Total size impact:** < 1 MB (minimal for dev tooling)
 
 ## Core Features
 
@@ -97,20 +97,21 @@ $ fishstick-create my-app
 ```
 
 **Prompts to collect:**
+
 - `projectName` — folder and package name (validated)
 - `projectDescription` — added to package.json
-- `templateType` — "app" or "api" 
+- `templateType` — "app" or "api"
 - `includeExample` — sample plugin code (optional)
 - `useGit` — auto-run `git init`
 
 ### 2. **Template Rendering**
 
-Use your existing `template/app` and `template/api` directories as source:
+Use the `core/generator/templates/app` and `core/generator/templates/api` directories as source:
 
 ```
-Input template: template/app/src/server.js.ejs
+Input template: core/generator/templates/app/src/server.js
 Variables: { appName: "my-app", port: 3000 }
-↓ 
+↓  (Handlebars renders {{ }} placeholders)
 Output: my-app/src/server.js
 ```
 
@@ -146,6 +147,7 @@ my-app/
 ## Implementation Phases
 
 ### **Phase 1: MVP (1-2 weeks)**
+
 - [x] Create `core/generator` workspace package
 - [x] Implement CLI entry point with `commander`
 - [x] Basic prompts: name, type (app/api)
@@ -158,17 +160,19 @@ my-app/
 ---
 
 ### **Phase 2: Template Rendering (1 week)**
+
 - [x] Move template files to `core/generator/templates/`
-- [x] Add `.ejs` extensions where placeholders needed
-- [x] Implement `template-renderer.js` using EJS
+- [x] Add Handlebars `{{ }}` placeholders where dynamic values are needed
+- [x] Implement `template-renderer.js` using Handlebars
 - [x] Pass user variables through render engine
-- [x] Update `package.json.ejs` with user values
+- [x] Update `package.json` template with user values
 
 **Deliverable:** Generated app has correct app name, description, port in files
 
 ---
 
 ### **Phase 3: Polish & Distribution (1 week)**
+
 - [x] Publish to npm as `@glowing-fishstick/generator`
 - [x] Add help documentation: `fishstick-create --help`
 - [x] Error handling (invalid project names, conflicting directories)
@@ -246,7 +250,7 @@ my-tasks-app/
 
 ### **Approach 1: Symlink Strategy (Recommended)**
 
-The generator references your existing `template/app` and `template/api` directories:
+The generator uses `core/generator/templates/app` and `core/generator/templates/api` directories:
 
 ```javascript
 // core/generator/src/scaffolder.js
@@ -260,12 +264,14 @@ export function scaffoldApp(projectDir, config) {
 ```
 
 **Pros:**
+
 - Single source of truth for templates
 - Changes to templates automatically reflect in generator
 - Minimal duplication
 
 **Cons:**
-- Must keep `template/app` in sync with what generator publishes
+
+- Must keep `core/generator/templates/app` in sync with what generator publishes
 - When published to npm, templates must be included via `.npmignore`
 
 ### **Approach 2: Duplicate Strategy (Simpler)**
@@ -273,16 +279,17 @@ export function scaffoldApp(projectDir, config) {
 Keep separate template copies in `core/generator/templates/`:
 
 ```
-core/generator/templates/app/  ← Independent copy
-template/app/                  ← Your dev reference
+core/generator/templates/app/  ← Self-contained templates
 ```
 
 **Pros:**
+
 - Generator is self-contained
 - No cross-directory dependencies
 - Easy to publish standalone
 
 **Cons:**
+
 - Templates drift if not kept in sync
 - More code duplication
 
@@ -315,14 +322,12 @@ Add to root `package.json` workspaces:
 {
   "workspaces": [
     "core/app",
-    "core/api", 
+    "core/api",
     "core/shared",
     "core/modules/logger",
-    "core/generator",     // ← NEW
+    "core/generator", // ← NEW
     "app",
-    "api",
-    "template/app",
-    "template/api"
+    "api"
   ]
 }
 ```
@@ -339,27 +344,28 @@ fishstick-create test-app
 
 ## Success Criteria
 
-| Criterion | Metric |
-|-----------|--------|
-| **Usability** | User can scaffold a new app in < 30 seconds with zero manual edits |
-| **Correctness** | Generated app runs immediately: `cd my-app && npm install && npm run dev` works |
-| **Consistency** | All generated apps follow best practices (structure, config, dependencies) |
-| **Discoverability** | Users can find generator via npm search: `npm search glowing-fishstick` |
-| **Documentation** | Generator README + examples clearly explain each prompt option |
+| Criterion           | Metric                                                                          |
+| ------------------- | ------------------------------------------------------------------------------- |
+| **Usability**       | User can scaffold a new app in < 30 seconds with zero manual edits              |
+| **Correctness**     | Generated app runs immediately: `cd my-app && npm install && npm run dev` works |
+| **Consistency**     | All generated apps follow best practices (structure, config, dependencies)      |
+| **Discoverability** | Users can find generator via npm search: `npm search glowing-fishstick`         |
+| **Documentation**   | Generator README + examples clearly explain each prompt option                  |
 
 ---
 
 ## Effort Estimate
 
-| Phase | Duration | Dev Hours |
-|-------|----------|-----------|
-| **Phase 1: MVP** | 1-2 weeks | 16-24 hours |
-| **Phase 2: Template Rendering** | 1 week | 8-12 hours |
-| **Phase 3: Polish & Publishing** | 1 week | 8-12 hours |
-| **Total** | **3-4 weeks** | **32-48 hours** |
+| Phase                            | Duration      | Dev Hours       |
+| -------------------------------- | ------------- | --------------- |
+| **Phase 1: MVP**                 | 1-2 weeks     | 16-24 hours     |
+| **Phase 2: Template Rendering**  | 1 week        | 8-12 hours      |
+| **Phase 3: Polish & Publishing** | 1 week        | 8-12 hours      |
+| **Total**                        | **3-4 weeks** | **32-48 hours** |
 
 **Risk factors:**
-- EJS template syntax edge cases (+2h)
+
+- Handlebars/Eta delimiter separation (mitigated: `{{ }}` vs `<%= %>`)
 - Cross-platform path handling (+2h)
 - npm registry publishing first-time (+1h)
 
@@ -380,25 +386,25 @@ fishstick-create test-app
 
 ## Comparison to Express Generator
 
-| Feature | Express Generator | Proposed Glowing-Fishstick |
-|---------|-------------------|---------------------------|
-| **Command** | `express myapp` | `fishstick-create myapp` |
-| **Prompts** | None (deprecated) | Interactive questions |
-| **Template engine** | Jade (removed) | Eta (modern) |
-| **Output** | Boilerplate app | Composable framework app |
-| **Customization** | Via flags | Via prompts or flags |
-| **Update path** | Manual | Via npm package updates |
+| Feature             | Express Generator | Proposed Glowing-Fishstick |
+| ------------------- | ----------------- | -------------------------- |
+| **Command**         | `express myapp`   | `fishstick-create myapp`   |
+| **Prompts**         | None (deprecated) | Interactive questions      |
+| **Template engine** | Jade (removed)    | Eta (modern)               |
+| **Output**          | Boilerplate app   | Composable framework app   |
+| **Customization**   | Via flags         | Via prompts or flags       |
+| **Update path**     | Manual            | Via npm package updates    |
 
 ---
 
 ## Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| **Template paths break** | Generator fails on npm publish | Test `.npmignore` includes all template files |
-| **Windows path issues** | Generator fails on Windows | Use `path.join()` everywhere, test on Windows CI |
-| **npm registry downtime** | Can't publish | Use GitHub Releases as fallback distribution |
-| **Breaking CLI changes** | Users stuck on old version | Semantic versioning, changelog discipline |
+| Risk                      | Impact                         | Mitigation                                       |
+| ------------------------- | ------------------------------ | ------------------------------------------------ |
+| **Template paths break**  | Generator fails on npm publish | Test `.npmignore` includes all template files    |
+| **Windows path issues**   | Generator fails on Windows     | Use `path.join()` everywhere, test on Windows CI |
+| **npm registry downtime** | Can't publish                  | Use GitHub Releases as fallback distribution     |
+| **Breaking CLI changes**  | Users stuck on old version     | Semantic versioning, changelog discipline        |
 
 ---
 
@@ -423,7 +429,7 @@ These can be added after MVP:
 ✅ **Low complexity** — Standard Node.js CLI tooling  
 ✅ **High value** — Dramatically improves onboarding  
 ✅ **Quick win** — 2-3 weeks to working global tool  
-✅ **Extensible** — Foundation for future enhancements  
+✅ **Extensible** — Foundation for future enhancements
 
 The 48-hour effort is justified by making your framework significantly more approachable to new developers.
 

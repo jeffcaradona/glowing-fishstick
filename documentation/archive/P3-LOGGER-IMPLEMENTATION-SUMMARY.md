@@ -181,8 +181,8 @@ The integration tests show the logger is working correctly:
 
 **Files**:
 
-- `template/app/src/app.js`
-- `template/app/src/server.js`
+- `core/generator/templates/app/src/app.js`
+- `core/generator/templates/app/src/server.js`
 
 **Recommendation**: Update template files to use logger for consistency with main app examples.
 

@@ -1,6 +1,6 @@
 {
   "name": "glowing-fishstick",
-  "version": "0.0.3",
+  "version": "0.1.1",
   "description": "An example of replacing distributed Express templates with a composable module",
   "keywords": [
     "template",
@@ -15,9 +15,7 @@
     "core/generator",
     "core/shared",
     "core/modules/logger",
-    "core/workflows",
-    "template/app",
-    "template/api"
+    "core/workflows"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {
@@ -44,7 +42,7 @@
     "test:integration": "npm run test:integration --workspace core/app",
     "test:smoke": "npm run test:smoke --workspace core/app",
     "test:api": "npm run test --workspace core/api",
-    "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api",
+    "test:all": "npm run test --workspace core/shared && npm run test --workspace core/app && npm run test --workspace core/api && npm run test --workspace core/generator",
     "coverage:shared": "npm run coverage --workspace core/shared",
     "coverage:app": "npm run coverage --workspace core/app",
     "coverage:api": "npm run coverage --workspace core/api",
@@ -60,7 +58,7 @@
     "rollup": "^4.59.0",
     "glob": "^13.0.6",
     "minimatch": "^10.2.4",
-    "test-exclude":"^7.0.1"
+    "test-exclude": "^7.0.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",

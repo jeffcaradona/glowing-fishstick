@@ -8,7 +8,7 @@ import { createLogger } from '@glowing-fishstick/shared';
 import { myApplicationPlugin } from './app.js';
 import { appOverrides } from './config/env.js';
 
-const logger = createLogger({ name: 'my-app' });
+const logger = createLogger({ name: '{{appName}}' });
 const config = createConfig({ ...appOverrides, logger });
 const app = createApp(config, [myApplicationPlugin]);
 const { server, close, registerStartupHook, registerShutdownHook } = createServer(app, config);

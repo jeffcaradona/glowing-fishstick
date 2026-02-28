@@ -4,7 +4,7 @@
  */
 
 export const apiOverrides = Object.freeze({
-  appName: 'my-api',
+  appName: '{{appName}}',
   appVersion: '0.0.1',
-  port: Number(process.env.PORT || 3001),
+  port: Number(process.env.PORT || {{port}}),
 });

@@ -40,9 +40,7 @@ export function normalizeError(err) {
  */
 export function resolveErrorLogger(req) {
   const logger = req.app?.locals?.logger;
-  return logger
-    ? (meta, msg) => logger.error(meta, msg)
-    : (meta, msg) => console.error(msg, meta);
+  return logger ? (meta, msg) => logger.error(meta, msg) : (meta, msg) => console.error(msg, meta);
 }
 
 /**

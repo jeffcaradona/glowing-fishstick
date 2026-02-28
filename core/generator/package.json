@@ -1,0 +1,50 @@
+{
+  "name": "@glowing-fishstick/generator",
+  "version": "0.1.1",
+  "private": false,
+  "description": "CLI template generator for glowing-fishstick applications",
+  "keywords": [
+    "template",
+    "generator",
+    "express",
+    "cli",
+    "glowing-fishstick"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
+  "type": "module",
+  "main": "src/generator.js",
+  "bin": {
+    "fishstick-create": "./bin/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/generator.js"
+    }
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "handlebars": "^4.7.8"
+  }
+}
