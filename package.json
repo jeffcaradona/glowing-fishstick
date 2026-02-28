@@ -5,7 +5,10 @@
   "keywords": [
     "template",
     "module",
-    "app"
+    "app",
+    "api",
+    "generator",
+    "glowing-fishstick"
   ],
   "workspaces": [
     "sandbox/api",
@@ -14,8 +17,7 @@
     "core/service-api",
     "core/generator",
     "core/shared",
-    "core/modules/logger",
-    "core/modules/workflows"
+    "core/modules/logger"
   ],
   "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
   "bugs": {
@@ -31,6 +33,7 @@
   "engines": {
     "node": ">=22"
   },
+  "private": true,
   "files": [],
   "scripts": {
     "start:app": "npm run start --workspace sandbox/app",

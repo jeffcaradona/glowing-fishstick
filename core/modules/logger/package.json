@@ -1,24 +1,43 @@
 {
   "name": "@glowing-fishstick/logger",
   "version": "0.1.2",
-  "description": "A logging module for the core system.",
-  "main": "index.js",
+  "description": "Pino-based structured logging module for glowing-fishstick applications",
+  "keywords": [
+    "logger",
+    "pino",
+    "logging",
+    "express",
+    "glowing-fishstick"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
+  "main": "index.js",
   "exports": {
     ".": {
       "import": "./index.js"
     }
   },
-  "scripts": {
-    "test": "npm run test:unit",
-    "test:unit": "vitest run --reporter=verbose tests/unit"
-  },
   "files": [
     "index.js",
     "src/"
   ],
-  "author": "",
-  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "vitest run --reporter=verbose tests/unit"
+  },
   "dependencies": {
     "pino": "^10.3.1"
   },

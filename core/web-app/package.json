@@ -1,7 +1,24 @@
 {
   "name": "@glowing-fishstick/app",
   "version": "0.1.2",
-  "description": "Core application factory and configuration module",
+  "description": "Express 5 web application factory with template rendering and plugin architecture for glowing-fishstick",
+  "keywords": [
+    "express",
+    "app",
+    "factory",
+    "views",
+    "glowing-fishstick"
+  ],
+  "homepage": "https://github.com/jeffcaradona/glowing-fishstick#readme",
+  "bugs": {
+    "url": "https://github.com/jeffcaradona/glowing-fishstick/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffcaradona/glowing-fishstick.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -9,16 +26,19 @@
       "import": "./index.js"
     }
   },
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "npm run test:integration",
     "test:integration": "vitest run --reporter=verbose tests/integration",
     "test:smoke": "vitest run --reporter=verbose tests/smoke --passWithNoTests",
     "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-app vitest run --reporter=verbose tests/integration tests/smoke --passWithNoTests"
   },
-  "files": [
-    "index.js",
-    "src/"
-  ],
   "dependencies": {
     "@glowing-fishstick/shared": "^0.1.0",
     "dotenv": "^17.3.1",
