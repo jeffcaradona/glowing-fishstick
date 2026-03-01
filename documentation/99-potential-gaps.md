@@ -6,20 +6,26 @@ This document tracks potential server composability features and architectural g
 
 ## Current / In-Flight Work
 
-### Release: v0.1.2 Release Candidate → v0.1.0
+### Release: v0.1.3 Post-Release Closeout
 
-**Status**: In Progress — RC branch targeting merge to `main`
+**Status**: Complete — release already cut and published
 
-**Description**: Version `0.1.2` is designated as the release-candidate branch. Once final validation passes, this branch merges back into `main` and is tagged as the formal `v0.1.0` release. All Security Hardening phases (Ph1–Ph6) are complete as of 2026-02-26; this RC captures any remaining polish, doc sync, and Gantt chart updates before the milestone cut.
+**Description**: The `v0.1.3` release is complete (merge/tag/publish already executed). This section now tracks post-release documentation alignment and next-step prioritization only.
 
 **Checklist**:
 
 - [x] Security Hardening Ph1–Ph6 implemented and tested
 - [x] Gantt chart updated to reflect completed hardening phases
-- [ ] Final `npm run test:all` green
-- [ ] Final `npm run lint` clean
-- [ ] Merge RC branch to `main`
-- [ ] Tag `v0.1.0` release on `main`
+- [x] Final `npm run test:all` green
+- [x] Final `npm run lint` clean
+- [x] Release branch merged to `main`
+- [x] `v0.1.3` release tag created and published
+- [x] Workspace root version aligned to `0.1.3`
+
+**Post-release next-step focus**:
+
+1. Health Check Extensibility (`#3`)
+2. Request-Level Context / `AsyncLocalStorage` (`#1`)
 
 ---
 
