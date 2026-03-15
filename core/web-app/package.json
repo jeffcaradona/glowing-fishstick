@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/app",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Express 5 web application factory with template rendering and plugin architecture for glowing-fishstick",
   "keywords": [
     "express",
@@ -42,7 +42,7 @@
     "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-app vitest run --reporter=verbose tests/integration tests/smoke --passWithNoTests"
   },
   "dependencies": {
-    "@glowing-fishstick/shared": "^0.1.3",
+    "@glowing-fishstick/shared": "^0.1.4",
     "dotenv": "^17.3.1",
     "eta": "^4.5.1",
     "express": "^5.2.1",
