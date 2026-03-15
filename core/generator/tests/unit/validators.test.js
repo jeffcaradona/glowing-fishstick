@@ -163,7 +163,7 @@ describe('validateDescription', () => {
   });
 
   it('rejects backslashes', () => {
-    expect(validateDescription('path\\escape').valid).toBe(false);
+    expect(validateDescription(String.raw`path\escape`).valid).toBe(false);
   });
 
   it('rejects backticks', () => {
