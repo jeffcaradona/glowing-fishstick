@@ -39,7 +39,7 @@ All public exports from `@glowing-fishstick/shared`:
 | Export | Description |
 |---|---|
 | `createLogger(options?)` | Pino logger factory — pretty-printed in dev, JSON in prod |
-| `createRequestLogger(logger)` | Express middleware for structured HTTP request/response logging |
+| `createRequestLogger(logger, options?)` | Express middleware for structured HTTP request/response logging |
 
 ### Request & Middleware
 
