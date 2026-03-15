@@ -18,6 +18,7 @@ import {
   validateProjectName,
   validatePort,
   validateTemplate,
+  validateDescription,
   validateDirectory,
 } from './validators.js';
 import { runPrompts } from './prompts.js';
@@ -246,11 +247,21 @@ async function resolveOptions(rawOptions) {
  * @param {boolean} params.force
  * @returns {Promise<void>}
  */
-async function validateInputs({ projectName, template, port, targetDir, force }) {
+async function validateInputs({ projectName, description, template, port, targetDir, force }) {
   const checks = [validateProjectName(projectName), validateTemplate(template)];
 
   if (port !== undefined) {
     checks.push(validatePort(port));
+  }
+
+  // WHY: Description is interpolated into generated files (package.json, etc.)
+  // via noEscape Handlebars — must reject characters that can break out of
+  // JSON string context or inject template directives.
+  const descResult = validateDescription(description);
+  if (!descResult.valid) {
+    const err = new Error(descResult.message);
+    err.code = 'VALIDATION_ERROR';
+    throw err;
   }
 
   for (const result of checks) {
@@ -322,7 +333,7 @@ export async function generate(rawOptions) {
   const { projectName, description, template, port, install, git } = options;
 
   const targetDir = path.resolve(process.cwd(), projectName);
-  await validateInputs({ projectName, template, port, targetDir, force });
+  await validateInputs({ projectName, description, template, port, targetDir, force });
 
   const context = await buildContext({ projectName, description, template, port, targetDir });
 

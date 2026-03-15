@@ -96,7 +96,7 @@ async function main() {
     console.log('  ─────────────────────────────────────────────────');
 
     summary
-      .sort((a, b) => b.reqPerSec - a.reqPerSec)
+      .toSorted((a, b) => b.reqPerSec - a.reqPerSec)
       .forEach(({ label, reqPerSec, latencyMs, errors }) => {
         const rps = String(Math.round(reqPerSec)).padStart(7);
         const lat = `${latencyMs.toFixed(1)} ms`.padStart(9);
