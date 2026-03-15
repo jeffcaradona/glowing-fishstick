@@ -48,6 +48,47 @@ async function askBoolean(rl, question, defaultValue = true) {
 }
 
 /**
+ * Repeatedly ask a question until the validator returns { valid: true }.
+ * WHY: Consolidates the ask→validate→warn loop that was duplicated across
+ * project-name, template, and description prompts, cutting cognitive
+ * complexity of runPrompts.
+ *
+ * @param {import('node:readline/promises').Interface} rl
+ * @param {string} question
+ * @param {(value: string) => { valid: boolean, message?: string }} validate
+ * @param {string} [defaultValue='']
+ * @returns {Promise<string>}
+ */
+async function askValidated(rl, question, validate, defaultValue = '') {
+  while (true) {
+    const answer = await ask(rl, question, defaultValue);
+    const result = validate(answer);
+    if (result.valid) {
+      return answer;
+    }
+    console.log(`  \x1b[33mWarning:\x1b[0m ${result.message}`);
+  }
+}
+
+/**
+ * Prompt for a valid port number.
+ *
+ * @param {import('node:readline/promises').Interface} rl
+ * @param {string} defaultPort
+ * @returns {Promise<number>}
+ */
+async function askPort(rl, defaultPort) {
+  while (true) {
+    const raw = await ask(rl, 'Port', defaultPort);
+    const n = Number(raw);
+    if (Number.isInteger(n) && n >= 1 && n <= 65535) {
+      return n;
+    }
+    console.log('  \x1b[33mWarning:\x1b[0m Port must be an integer between 1 and 65535.');
+  }
+}
+
+/**
  * Prompt for all generator options interactively.
  * Only prompts for values not already supplied via CLI flags.
  *
@@ -74,32 +115,14 @@ export async function runPrompts(partial) {
     console.log('Press enter to accept defaults.\n');
 
     // ── Project name ─────────────────────────────────────────────
-    let projectName = partial.projectDirectory ?? '';
-    if (!projectName) {
-      while (true) {
-        projectName = await ask(rl, 'Project name');
-        const result = validateProjectName(projectName);
-        if (result.valid) {
-          break;
-        }
-        console.log(`  \x1b[33mWarning:\x1b[0m ${result.message}`);
-        projectName = '';
-      }
-    }
+    const projectName =
+      partial.projectDirectory || (await askValidated(rl, 'Project name', validateProjectName));
 
     // ── Template type ─────────────────────────────────────────────
     let template = partial.template ?? 'app';
-    const templateResult = validateTemplate(template);
-    if (!templateResult.valid) {
-      // User supplied an invalid --template via flag — prompt to correct.
-      while (true) {
-        template = await ask(rl, 'Template type (app / api)', 'app');
-        const result = validateTemplate(template);
-        if (result.valid) {
-          break;
-        }
-        console.log(`  \x1b[33mWarning:\x1b[0m ${result.message}`);
-      }
+    if (!validateTemplate(template).valid) {
+      // WHY: User supplied an invalid --template via flag — prompt to correct.
+      template = await askValidated(rl, 'Template type (app / api)', validateTemplate, 'app');
     }
 
     // ── Description ──────────────────────────────────────────────
@@ -107,32 +130,11 @@ export async function runPrompts(partial) {
       template === 'api'
         ? 'A starter API using glowing-fishstick'
         : 'A starter application using glowing-fishstick';
-    let description;
-    while (true) {
-      description = await ask(rl, 'Description', defaultDesc);
-      const descResult = validateDescription(description);
-      if (descResult.valid) {
-        break;
-      }
-      console.log(`  \x1b[33mWarning:\x1b[0m ${descResult.message}`);
-    }
+    const description = await askValidated(rl, 'Description', validateDescription, defaultDesc);
 
     // ── Port ─────────────────────────────────────────────────────
-    let port;
-    if (partial.port !== undefined) {
-      port = partial.port;
-    } else {
-      const defaultPort = template === 'api' ? '3001' : '3000';
-      while (true) {
-        const raw = await ask(rl, 'Port', defaultPort);
-        const n = Number(raw);
-        if (Number.isInteger(n) && n >= 1 && n <= 65535) {
-          port = n;
-          break;
-        }
-        console.log('  \x1b[33mWarning:\x1b[0m Port must be an integer between 1 and 65535.');
-      }
-    }
+    const defaultPort = template === 'api' ? '3001' : '3000';
+    const port = partial.port ?? (await askPort(rl, defaultPort));
 
     // ── Git / install (only prompt if not already set via flags) ──
     // WHY: commander --no-git sets git=false; if git is already false we skip
