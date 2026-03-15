@@ -22,7 +22,7 @@ import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 const args = process.argv.slice(2);
 const getArg = (flag, defaultVal) => {
   const i = args.indexOf(flag);
-  return i !== -1 ? Number(args[i + 1]) : defaultVal;
+  return i === -1 ? defaultVal : Number(args[i + 1]);
 };
 
 const CONNECTIONS = getArg('--connections', 10);
