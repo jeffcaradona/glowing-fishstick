@@ -29,7 +29,38 @@ This document tracks potential server composability features and architectural g
 
 ---
 
-### Feature: CLI Template Generator (`@glowing-fishstick/generator`)
+### Consumer Feedback: Sprint 13 Discoverability Fixes
+
+**Status**: ✓ Complete — 13 of 14 identified gaps resolved; one remaining (now addressed)
+
+**Description**: First consumer adoption feedback from external integrator (`v0.1.3` release). Identified 14 discoverability gaps across package READMEs, TypeScript declarations, and configuration documentation. Tracked and fixed incrementally during sprint 13.
+
+**Scorecard** (13/14: ✅ Fixed | 1/14: ❌ → ✅ Fixed in this sprint):
+
+| Gap | Status | Resolution |
+|---|---|---|
+| `config.services` documented in `@glowing-fishstick/api` README | ✅ | Added `config.services` (ServiceContainer) to API config factory section with usage example |
+| All 11 missing exports added to `@glowing-fishstick/shared` README | ✅ | Created exports table listing all 11 public APIs with one-line descriptions |
+| TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/api` | ✅ | Created typed signatures for `createApiConfig()`, `createApi()`, config interfaces, and plugin contract |
+| TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/shared` | ✅ | Created typed signatures for server factory, lifecycle, logging, request utilities, and error handling |
+| `pino-pretty` moved to `peerDependencies` in `@glowing-fishstick/logger` | ✅ | Reclassified `pino-pretty` as optional peer dependency; updated logger README with install guidance |
+| TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/logger` | ✅ | Created typed signatures for `createLogger()`, `createRequestLogger()` with full option interfaces and usage examples |
+
+**Changes Implemented**:
+
+- [core/modules/logger/index.d.ts](../core/modules/logger/index.d.ts): New — TypeScript declarations for `createLogger`, `createRequestLogger`, `LoggerOptions`, `RequestLoggerOptions` ✓
+- [core/modules/logger/package.json](../core/modules/logger/package.json): Added `"types": "index.d.ts"` and included in `"files"` array + exports mapping ✓
+- [core/modules/logger/README.md](../core/modules/logger/README.md): Added formal Exports table and Configuration section documenting all options ✓
+
+**Consumer Notes** (informational — not framework changes):
+
+External consumer package.json alignment recommendations:
+1. Update engine constraint to `"engines": { "node": ">=22.0.0" }` (currently `>=21.0.0` in consumer; framework now requires `>=22`)
+2. Remove explicit `pino-pretty` devDependency from consumer — npm v7+ auto-installs it as peer dependency of `@glowing-fishstick/logger`
+
+**Benefit**: Complete discoverability coverage enables IDE type hints, accurate package documentation, and smooth developer experience for consumers integrating glowing-fishstick frameworks.
+
+---
 
 **Status**: ✓ Complete — MVP implemented at `core/generator/`
 

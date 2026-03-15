@@ -21,13 +21,16 @@
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
   "main": "index.js",
+  "types": "index.d.ts",
   "exports": {
     ".": {
-      "import": "./index.js"
+      "import": "./index.js",
+      "types": "./index.d.ts"
     }
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "src/"
   ],
   "engines": {
