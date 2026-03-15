@@ -1,5 +1,11 @@
 # @glowing-fishstick/shared
 
+## 0.1.5
+
+### Patch Changes
+
+- Fixed Express Regression. shamever bumped
+
 ## 0.1.4
 
 ### Patch Changes
