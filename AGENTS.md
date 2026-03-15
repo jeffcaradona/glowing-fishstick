@@ -43,7 +43,9 @@ To avoid guidance loss during token-reduction refactors:
   2. event-loop safety / no blocking sync APIs in request paths,
   3. async-consistency and deterministic error handling expectations,
   4. mandatory WHY-commenting for non-trivial decisions,
-  5. validation command execution before finalizing.
+  5. validation command execution before finalizing,
+  6. reuse-first rule: check `config.services`, shared exports, and existing deps before building new infrastructure,
+  7. discoverability: new exports require README table entry + `index.d.ts` update.
 
 If parity cannot be preserved in a condensed file, restore detail instead of dropping constraints.
 
@@ -79,6 +81,51 @@ Before finishing any documentation update:
 - [ ] Verify every documented import specifier matches current package boundaries
 - [ ] Verify every code snippet reflects current function/file names
 - [ ] Run repo search for known stale strings
+
+## Discoverability Requirements
+
+### Reuse-First Rule (Agents and Developers)
+
+Before building any new service, utility, middleware, or infrastructure module:
+
+1. **Check `config.services`** — both `createConfig()` and `createApiConfig()` inject a `ServiceContainer`. Use it for shared services (DB pools, external clients, caches) instead of module-level singletons or custom DI.
+2. **Check `@glowing-fishstick/shared` exports** — read the README export table or `core/shared/index.js`. The shared package provides auth, error handling, lifecycle, logging, throttling, and DI utilities.
+3. **Check `@glowing-fishstick/logger`** — logger is already configured with dev/prod modes. Do not install or configure Pino separately.
+4. **Check existing `package.json` dependencies** before adding new ones — the dependency may already be available transitively.
+
+If you need a capability that feels like infrastructure, it probably already exists. Search before building.
+
+### Package README Requirements
+
+Every published package README must include:
+
+- **Complete export table** listing every public export with a one-line description
+- **Config property table** for any config factory, including DI-injected properties like `config.services`
+- **Usage examples** showing the intended integration point (not just API signatures)
+
+### Type Declaration Requirements
+
+Every published package must ship an `index.d.ts`:
+
+- All public exports must have typed signatures
+- `"types": "index.d.ts"` must appear in `package.json`
+- `index.d.ts` must be listed in the `"files"` array
+- Update `index.d.ts` whenever exports change
+
+### Dependency Visibility Rules
+
+- Runtime-optional dependencies that consumers are expected to install (e.g., `pino-pretty`) must use `peerDependencies` with `"optional": true` in `peerDependenciesMeta`
+- `devDependencies` is invisible to consumers — never put consumer-facing optional deps there alone
+- Keep `devDependencies` for packages only needed during development/testing within the monorepo
+
+### Discoverability Definition of Done
+
+When adding a new export, config property, or framework capability:
+
+- [ ] Export appears in package README export table with description
+- [ ] `index.d.ts` updated with typed signature
+- [ ] If config-injected (like `config.services`), documented in config factory section with usage example
+- [ ] If runtime-optional transitive dep is required, it is in `peerDependencies`
 
 ## Event Loop Safety
 
@@ -185,6 +232,9 @@ When adding or changing runtime code, verify:
 4. [ ] Error handling is single-path and deterministic
 5. [ ] Logging remains useful but not throughput-dominant
 6. [ ] Tests or checks cover concurrency-sensitive behavior where practical
+7. [ ] New exports added to package README export table and `index.d.ts`
+8. [ ] New config properties documented in config factory section
+9. [ ] No new module-level singletons that duplicate `config.services` container
 
 ### Exception Documentation
 
