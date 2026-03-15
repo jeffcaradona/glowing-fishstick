@@ -62,7 +62,7 @@ config.services.register('vault', async (ctx) => {
 }, { dispose: (client) => client.close() });
 
 // Resolve in a plugin or route handler
-const myPlugin = async (app, cfg) => {
+const myPlugin = (app, cfg) => {
   app.get('/secrets', async (req, res) => {
     const vault = await cfg.services.resolve('vault');
     res.json(await vault.getCredentials());
