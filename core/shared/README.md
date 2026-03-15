@@ -20,24 +20,75 @@ Import shared utilities in your module:
 import { someUtility } from '@glowing-fishstick/shared';
 ```
 
-Server factory:
+## Exports
 
-This package contains the `createServer` factory used to start HTTP servers and provide graceful shutdown. Consumers may import it directly:
+All public exports from `@glowing-fishstick/shared`:
+
+### Server & Lifecycle
+
+| Export | Description |
+|---|---|
+| `createServer(app, config)` | HTTP server factory with graceful shutdown and lifecycle hooks |
+| `createHookRegistry()` | Generic hook registry for sequential async lifecycle execution (FIFO) |
+| `storeRegistries(app, startup, shutdown)` | WeakMap-based private storage for app lifecycle registries |
+| `attachHookRegistries(app)` | Create and attach startup/shutdown registries + register methods to an Express app |
+| `createShutdownGate(app)` | Middleware that rejects new requests with 503 during graceful shutdown |
+
+### Logging (re-exported from `@glowing-fishstick/logger`)
+
+| Export | Description |
+|---|---|
+| `createLogger(options?)` | Pino logger factory — pretty-printed in dev, JSON in prod |
+| `createRequestLogger(logger)` | Express middleware for structured HTTP request/response logging |
+
+### Request & Middleware
+
+| Export | Description |
+|---|---|
+| `createRequestIdMiddleware()` | Generates UUID per request (or uses `x-request-id` header) |
+| `createAdminThrottle({ windowMs, max, paths })` | Fixed-window rate-limiting middleware for expensive routes |
+
+### Error Utilities
+
+| Export | Description |
+|---|---|
+| `normalizeError(err)` | Normalize a thrown error into `{ statusCode, code, message }` |
+| `resolveErrorLogger(req)` | Resolve logger from Express request context (falls back to `console.error`) |
+| `logUnexpectedError(req, err, logFn, label?)` | Log non-operational errors with request context |
+
+### Authentication (JWT)
+
+| Export | Description |
+|---|---|
+| `generateToken(secret, expiresIn?)` | Generate a signed JWT token for service-to-service auth |
+| `verifyToken(token, secret)` | Verify and decode a JWT token |
+| `jwtAuthMiddleware(secret)` | Express middleware that validates bearer JWT tokens |
+
+### Dependency Injection
+
+| Export | Description |
+|---|---|
+| `createServiceContainer(options?)` | Lightweight DI container with singleton/transient lifecycles and LIFO disposal |
+| `ServiceAlreadyRegisteredError` | Thrown when registering a duplicate service name |
+| `ServiceNotFoundError` | Thrown when resolving an unregistered service |
+| `ServiceCircularDependencyError` | Thrown when circular dependencies are detected during resolution |
+| `ServiceResolutionError` | Thrown when a provider function fails during resolution |
+| `ServiceDisposeError` | Thrown when a single service disposer fails |
+| `ServiceAggregateDisposeError` | Thrown when multiple service disposers fail during `dispose()` |
+
+### Formatting
+
+| Export | Description |
+|---|---|
+| `formatUptime(seconds)` | Format seconds into human-readable uptime string (e.g., `"5m 23s"`) |
+
+## Server Factory
 
 ```js
 import { createServer } from '@glowing-fishstick/shared';
 ```
 
-When consuming via `@glowing-fishstick/app`, `createServer` is re-exported from `@glowing-fishstick/app` for convenience.
-
-## Contents
-
-- `server-factory.js` — HTTP server factory with graceful shutdown and lifecycle hooks
-- `hook-registry.js` — Generic hook registry for sequential async lifecycle execution
-- `registry-store.js` — WeakMap-based private storage for app lifecycle registries
-- Logger utilities re-exported from `@glowing-fishstick/logger` (implementation in `core/modules/logger`)
-- Common type definitions
-- Reusable helpers for core/web-app and downstream modules
+When consuming via `@glowing-fishstick/app`, `createServer` is re-exported for convenience.
 
 ## Logger
 
@@ -109,6 +160,22 @@ const config = createConfig({
   logger,
 });
 ```
+
+## Service Container
+
+```js
+import { createServiceContainer } from '@glowing-fishstick/shared';
+
+const services = createServiceContainer({ logger });
+
+services.register('db', async (ctx) => {
+  return await createPool(connectionString);
+}, { dispose: (pool) => pool.close() });
+
+const db = await services.resolve('db');
+```
+
+**Note:** Both `createConfig()` (`@glowing-fishstick/app`) and `createApiConfig()` (`@glowing-fishstick/api`) automatically create a `ServiceContainer` at `config.services`. Prefer using that container over creating your own.
 
 ## Documentation
 

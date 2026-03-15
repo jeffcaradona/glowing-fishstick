@@ -73,6 +73,8 @@ This document tracks potential server composability features and architectural g
 
 **Benefit**: Clear ownership boundaries (`core/modules/*`) for implementation code while preserving stable consumer ergonomics through `core/shared`.
 
+**Discoverability fix**: Moved `pino-pretty` from `devDependencies` to `peerDependencies` (optional) in `@glowing-fishstick/logger` so npm warns consumers who haven't installed it. Updated logger README with install instructions.
+
 ---
 
 ### Feature: Database Schema Migration System & Input Validation
@@ -241,6 +243,12 @@ App refuses to start; operator has full visibility and control over cleanup.
 - No `ctx.config` on provider context (use closure capture)
 - `dispose()` tracks initialized singletons only (transients are not tracked)
 - No strict-mode toggle
+
+**Discoverability fixes** (post-mortem):
+
+- `config.services` documented in `@glowing-fishstick/api` README with usage examples
+- `@glowing-fishstick/shared` README updated to list all 22 exports (was 4)
+- TypeScript declarations (`index.d.ts`) added to `@glowing-fishstick/shared`, `@glowing-fishstick/api`, and `@glowing-fishstick/app` with `"types"` field in `package.json`
 
 ---
 

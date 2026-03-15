@@ -8,6 +8,14 @@ Pino-based structured logging module for glowing-fishstick applications. Provide
 npm install @glowing-fishstick/logger
 ```
 
+In development mode, logs are pretty-printed using `pino-pretty`. Install it as a dev dependency in your project:
+
+```sh
+npm install -D pino-pretty
+```
+
+`pino-pretty` is declared as an optional peer dependency — npm will warn if it is absent.
+
 ## Usage
 
 ### Application logger

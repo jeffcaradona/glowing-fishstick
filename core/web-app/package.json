@@ -21,6 +21,7 @@
   "author": "Jeff Caradona <jeffcaradona@gmail.com>",
   "type": "module",
   "main": "index.js",
+  "types": "index.d.ts",
   "exports": {
     ".": {
       "import": "./index.js"
@@ -28,6 +29,7 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "src/"
   ],
   "engines": {
@@ -44,5 +46,8 @@
     "dotenv": "^17.3.1",
     "eta": "^4.5.1",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "pino-pretty": "^13.1.3"
   }
 }
