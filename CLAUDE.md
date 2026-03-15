@@ -28,6 +28,8 @@ sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | cor
 - No blocking sync APIs in request paths; preserve async-consistent contracts and single-path error handling.
 - Keep routes thin and move heavy work to services/workers.
 - WHY-comments are mandatory for non-trivial decisions.
+- **Reuse-first**: before building any new service, utility, or infrastructure, check `config.services` (DI container), `@glowing-fishstick/shared` exports, `@glowing-fishstick/logger`, and existing `package.json` dependencies.
+- **Discoverability**: new exports require a README table entry + `index.d.ts` update. Config-injected properties need documented usage examples.
 
 ## Critical files
 

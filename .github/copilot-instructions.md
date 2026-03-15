@@ -18,3 +18,5 @@ For performance-sensitive changes, include a brief note in PR description about 
 - Keep routes thin and async; delegate heavier work to services/workers.
 - Add WHY-comments for non-trivial decisions (error handling, fallback, perf/security/legal tradeoffs).
 - Run validation commands from `AGENTS.md` before finalizing.
+- **Reuse-first**: before building any new service, utility, or infrastructure, check `config.services` (the built-in DI container), `@glowing-fishstick/shared` exports, `@glowing-fishstick/logger`, and existing `package.json` dependencies. Do not create module-level singletons when `config.services` exists.
+- **Discoverability**: new exports require a README export table entry + `index.d.ts` typed signature. Runtime-optional consumer deps go in `peerDependencies`, not `devDependencies`.
