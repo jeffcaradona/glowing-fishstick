@@ -27,7 +27,8 @@
       "import": "./index.js"
     },
     "./testing": {
-      "import": "./src/testing/security-helpers.js"
+      "import": "./src/testing/security-helpers.js",
+      "types": "./src/testing/security-helpers.d.ts"
     }
   },
   "files": [
