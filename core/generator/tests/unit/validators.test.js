@@ -7,6 +7,7 @@ import {
   validateProjectName,
   validatePort,
   validateTemplate,
+  validateDescription,
   validateDirectory,
 } from '../../src/validators.js';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -129,6 +130,53 @@ describe('validateTemplate', () => {
 
   it('rejects empty string', () => {
     expect(validateTemplate('').valid).toBe(false);
+  });
+});
+
+// ── validateDescription ─────────────────────────────────────────────────────
+
+describe('validateDescription', () => {
+  it('accepts a simple description', () => {
+    expect(validateDescription('A starter app').valid).toBe(true);
+  });
+
+  it('accepts descriptions with safe punctuation', () => {
+    expect(validateDescription('My app - a POC (v2)!').valid).toBe(true);
+  });
+
+  it('rejects empty string', () => {
+    expect(validateDescription('').valid).toBe(false);
+  });
+
+  it('rejects undefined', () => {
+    expect(validateDescription(undefined).valid).toBe(false);
+  });
+
+  it('rejects descriptions longer than 500 characters', () => {
+    expect(validateDescription('a'.repeat(501)).valid).toBe(false);
+  });
+
+  it('rejects double quotes (JSON breakout)', () => {
+    const result = validateDescription('desc", "scripts": {"postinstall": "evil"}');
+    expect(result.valid).toBe(false);
+    expect(result.message).toMatch(/quotes/);
+  });
+
+  it('rejects backslashes', () => {
+    expect(validateDescription('path\\escape').valid).toBe(false);
+  });
+
+  it('rejects backticks', () => {
+    expect(validateDescription('run `rm -rf`').valid).toBe(false);
+  });
+
+  it('rejects curly braces (Handlebars injection)', () => {
+    expect(validateDescription('{{evil}}').valid).toBe(false);
+  });
+
+  it('rejects control characters', () => {
+    expect(validateDescription('line\nnewline').valid).toBe(false);
+    expect(validateDescription('tab\there').valid).toBe(false);
   });
 });
 

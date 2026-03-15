@@ -94,6 +94,55 @@ export function validateTemplate(template) {
 }
 
 /**
+ * Validate a project description.
+ *
+ * WHY: The description is interpolated into generated source files (package.json,
+ * README, etc.) via Handlebars with noEscape. Characters that can break out of
+ * a JSON string context or inject Handlebars directives must be rejected to
+ * prevent code injection into statically saved files (CWE-96).
+ *
+ * @param {string} description
+ * @returns {{ valid: boolean, message?: string }}
+ */
+export function validateDescription(description) {
+  if (!description || typeof description !== 'string') {
+    return { valid: false, message: 'Description is required.' };
+  }
+
+  const trimmed = description.trim();
+
+  if (trimmed.length === 0) {
+    return { valid: false, message: 'Description cannot be empty.' };
+  }
+
+  if (trimmed.length > 500) {
+    return { valid: false, message: 'Description must be 500 characters or fewer.' };
+  }
+
+  // WHY: Reject characters that can escape JSON string boundaries, inject
+  // Handlebars directives, or introduce control sequences into generated files.
+  // Allowed: letters, digits, spaces, and common safe punctuation.
+  if (/["\\`{}]/.test(trimmed)) {
+    return {
+      valid: false,
+      message:
+        'Description must not contain quotes, backslashes, backticks, or curly braces.',
+    };
+  }
+
+  // WHY: Control characters (tabs, newlines, etc.) can corrupt generated JSON.
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x1f\x7f]/.test(trimmed)) {
+    return {
+      valid: false,
+      message: 'Description must not contain control characters.',
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Check whether the target directory is safe to write into.
  *
  * WHY: Async check via access() rather than existsSync() to stay consistent

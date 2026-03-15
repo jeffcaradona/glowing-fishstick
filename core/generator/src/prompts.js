@@ -10,7 +10,7 @@
 
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { validateProjectName, validateTemplate } from './validators.js';
+import { validateProjectName, validateTemplate, validateDescription } from './validators.js';
 
 /**
  * Ask a single question and return the trimmed answer.
@@ -107,7 +107,15 @@ export async function runPrompts(partial) {
       template === 'api'
         ? 'A starter API using glowing-fishstick'
         : 'A starter application using glowing-fishstick';
-    const description = await ask(rl, 'Description', defaultDesc);
+    let description;
+    while (true) {
+      description = await ask(rl, 'Description', defaultDesc);
+      const descResult = validateDescription(description);
+      if (descResult.valid) {
+        break;
+      }
+      console.log(`  \x1b[33mWarning:\x1b[0m ${descResult.message}`);
+    }
 
     // ── Port ─────────────────────────────────────────────────────
     let port;
