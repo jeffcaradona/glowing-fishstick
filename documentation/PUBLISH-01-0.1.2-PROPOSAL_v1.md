@@ -106,7 +106,7 @@ npm pack -w core/generator --dry-run
 
 ### Step 10 — Documentation sync
 
-Update these 4 docs per AGENTS.md requirements:
+Update these 4 docs per AGENTS-readable.md requirements:
 
 - `README.md` — already has correct versioning section; update if any fields change
 - `sandbox/app/DEV_APP_README.md` — confirm install examples use package names

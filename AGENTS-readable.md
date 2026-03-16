@@ -1,0 +1,306 @@
+# Agent Instructions: Documentation, Organization, and Performance Guardrails
+
+This document outlines the expectations and constraints for working with this repository. All contributions must adhere to these guidelines unless explicitly stated otherwise.
+
+## Repository Structure
+
+This repository is a **monorepo workspace** with the following key directories:
+
+- `sandbox/api/` - Local Development API package
+- `sandbox/app/` - Local Development Application package
+- `core/` - Core libraries (includes `core/generator/templates/` — starter scaffolds)
+- `documentation/` - Project documentation
+- `tests/` - Integration tests
+
+### Package Boundaries
+
+- Consumer runtime examples MUST use current install target packages
+- Root package is NOT runtime-installable unless it has explicit runtime `exports/main` and intended `files`
+- Do not assume root package can be imported directly
+
+### Intentional Code Duplication
+
+Some code appears in both `core/web-app` and `core/service-api` by design. Sonar reports duplication for these pairs; changes should follow the guidelines below rather than blindly consolidating.
+
+#### Consolidated (shared)
+
+- **`createAdminThrottle`** — Canonical source: `core/shared/src/middlewares/admin-throttle.js`. Both `core/web-app` and `core/service-api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/middlewares/admin-throttle.js`) are re-export stubs that preserve the original import path.
+
+#### Intentionally separate (do not consolidate)
+
+- **Error handlers** (`core/web-app/src/middlewares/errorHandler.js` vs `core/service-api/src/middlewares/error-handler.js`): App adds HTML content-negotiation via Eta; API is JSON-only. Keep logging/error-envelope structure aligned; diverge only on response format.
+- **Factories** (`core/web-app/src/app-factory.js` vs `core/service-api/src/api-factory.js`): ~40 lines of shared middleware linking (hook registries, request ID, body parsers, health routes, shutdown gate, throttle, plugin loop). Middleware order is load-bearing and differs (view engine/static files vs JWT/origin enforcement). Abstraction would obscure the auditable middleware stack.
+- **Security hardening tests** (`core/*/tests/integration/security-hardening.test.js`): Parallel test structure validates each framework independently. Each package must prove its own security contract; shared harness would obscure which implementation is under test.
+
+## Instruction File Parity (Required)
+
+To avoid guidance loss during token-reduction refactors:
+
+- `AGENTS-readable.md` is the canonical source of constraints (human-readable).
+- `AGENTS.md` is the machine-optimized RDF-triple representation of these same constraints. It MUST NOT weaken or contradict `AGENTS-readable.md`; update it whenever `AGENTS-readable.md` changes.
+- `CLAUDE.md` and `.github/copilot-instructions.md` may be shorter, but MUST NOT weaken or contradict `AGENTS-readable.md`.
+- Any condensed instruction file must include, at minimum, explicit pointers to:
+  1. documentation sync requirements,
+  2. event-loop safety / no blocking sync APIs in request paths,
+  3. async-consistency and deterministic error handling expectations,
+  4. mandatory WHY-commenting for non-trivial decisions,
+  5. validation command execution before finalizing,
+  6. reuse-first rule: check `config.services`, shared exports, and existing deps before building new infrastructure,
+  7. discoverability: new exports require README table entry + `index.d.ts` update.
+
+If parity cannot be preserved in a condensed file, restore detail instead of dropping constraints.
+
+## Documentation Requirements
+
+### Canonical Truth Sources
+
+1. README installation + import examples
+2. `sandbox/app/DEV_APP_README` examples and directory diagrams
+3. `documentation/00-project-specs` public API snippets
+4. `documentation/99-potential-gaps.md` for implementation state
+
+### Sync Rules
+
+When editing package names, exports, directory structure, or API entrypoints:
+
+1. Update README installation + import examples
+2. Update `sandbox/app/DEV_APP_README` examples and directory diagrams
+3. Update `documentation/00-project-specs` public API snippets
+4. Update status wording in `documentation/99-potential-gaps.md` if implementation state changed
+
+### Forbidden Patterns
+
+- No examples importing from `../../index.js` for consumer usage (unless explicitly marked "local-only")
+- No references to legacy core paths that do not exist
+- No install docs that conflict with actual package export boundaries
+
+### Documentation Definition of Done
+
+Before finishing any documentation update:
+
+- [ ] Verify every documented file path exists
+- [ ] Verify every documented import specifier matches current package boundaries
+- [ ] Verify every code snippet reflects current function/file names
+- [ ] Run repo search for known stale strings
+
+## Discoverability Requirements
+
+### Reuse-First Rule (Agents and Developers)
+
+Before building any new service, utility, middleware, or infrastructure module:
+
+1. **Check `config.services`** — both `createConfig()` and `createApiConfig()` inject a `ServiceContainer`. Use it for shared services (DB pools, external clients, caches) instead of module-level singletons or custom DI.
+2. **Check `@glowing-fishstick/shared` exports** — read the README export table or `core/shared/index.js`. The shared package provides auth, error handling, lifecycle, logging, throttling, and DI utilities.
+3. **Check `@glowing-fishstick/logger`** — logger is already configured with dev/prod modes. Do not install or configure Pino separately.
+4. **Check existing `package.json` dependencies** before adding new ones — the dependency may already be available transitively.
+
+If you need a capability that feels like infrastructure, it probably already exists. Search before building.
+
+### Package README Requirements
+
+Every published package README must include:
+
+- **Complete export table** listing every public export with a one-line description
+- **Config property table** for any config factory, including DI-injected properties like `config.services`
+- **Usage examples** showing the intended integration point (not just API signatures)
+
+### Type Declaration Requirements
+
+Every published package must ship an `index.d.ts`:
+
+- All public exports must have typed signatures
+- `"types": "index.d.ts"` must appear in `package.json`
+- `index.d.ts` must be listed in the `"files"` array
+- Update `index.d.ts` whenever exports change
+
+### Dependency Visibility Rules
+
+- Runtime-optional dependencies that consumers are expected to install (e.g., `pino-pretty`) must use `peerDependencies` with `"optional": true` in `peerDependenciesMeta`
+- `devDependencies` is invisible to consumers — never put consumer-facing optional deps there alone
+- Keep `devDependencies` for packages only needed during development/testing within the monorepo
+
+### Discoverability Definition of Done
+
+When adding a new export, config property, or framework capability:
+
+- [ ] Export appears in package README export table with description
+- [ ] `index.d.ts` updated with typed signature
+- [ ] If config-injected (like `config.services`), documented in config factory section with usage example
+- [ ] If runtime-optional transitive dep is required, it is in `peerDependencies`
+
+## Event Loop Safety
+
+### Critical Rule: Never Block Request-Handling Paths
+
+In any code that can run per request (routes, middleware, renderers, hooks used during traffic):
+
+**Do not use:**
+
+- `fs.*Sync` methods
+- `child_process.*Sync` methods
+- `zlib.*Sync` methods
+- Crypto sync APIs (`pbkdf2Sync`, `scryptSync`, etc.)
+- Long tight loops
+
+**Preferred alternatives:**
+
+- Use async/promise APIs
+- Use bounded work units
+- Delegate heavy work to async services/workers
+
+**Allowed exceptions (must be documented):**
+
+- Startup-only initialization before server begins accepting traffic
+- One-time build/dev scripts that are not runtime code
+
+### Handler Design Principles
+
+- Route handlers and middleware should delegate heavy work to async services/workers
+- If a computation may exceed a few milliseconds under load, move it off the hot path
+- Never do expensive filesystem traversal or template file reads synchronously during request processing
+
+## I/O Patterns
+
+### Preferred Behavior
+
+- Use async `fs/promises` APIs
+- Cache immutable or rarely changing data in memory when safe
+- Use streaming for large payloads/files instead of buffering entire content
+- Apply timeouts, retries, and backpressure-aware patterns for network calls
+
+### Anti-Patterns to Avoid
+
+- Per-request synchronous file existence checks
+- Per-request `readFileSync` / `writeFileSync`
+- Fire-and-forget I/O without error handling
+
+## CPU-bound Work
+
+### Rules
+
+- Avoid CPU-heavy transforms in middleware/routes
+- For expensive CPU tasks, use worker threads, external queues, or precomputation
+- Keep loops bounded and data-size aware
+
+### Practical Guidance
+
+- Add guardrails on input sizes
+- Prefer incremental/streaming processing
+- Avoid accidental O(n²) behavior in hot paths
+
+## Async Consistency
+
+### Contract Rules
+
+- Public APIs should be consistently async when they can perform async work
+- Do not sometimes call callbacks synchronously and sometimes asynchronously
+- If an API is callback-based, ensure callback timing is deterministic (typically async)
+
+### Promise/Callback Hygiene
+
+- Do not mix callback and promise completion paths in a way that can double-complete
+- Return or `await` every Promise you create unless explicitly detached and documented
+- Surface errors through one clear mechanism (throw/reject/callback(err), not multiple)
+
+## V8 Optimization
+
+### Stable Object Shapes
+
+- Initialize expected object fields early when practical
+- Avoid unnecessary per-request monkey-patching of core objects
+- Minimize shape thrash from adding/removing different fields on hot objects
+
+### Hot Path Simplicity
+
+- Avoid polymorphic call sites when a monomorphic pattern is easy
+- Avoid dynamic code generation (`eval`, `new Function`) and `with`
+- Keep serialization/parsing in hot paths lean and predictable
+
+## Logging Guidelines
+
+- Logging in hot paths must be structured and level-gated
+- Avoid expensive stringification/computation for logs that may be dropped
+- Prefer async/non-blocking transports
+- Include latency, status, and request-id correlation where applicable
+
+## PR Review Checklist
+
+When adding or changing runtime code, verify:
+
+1. [ ] No new sync blocking APIs in request or middleware paths
+2. [ ] No mixed sync/async callback timing
+3. [ ] No unbounded loops or heavy CPU work in hot paths
+4. [ ] Error handling is single-path and deterministic
+5. [ ] Logging remains useful but not throughput-dominant
+6. [ ] Tests or checks cover concurrency-sensitive behavior where practical
+7. [ ] New exports added to package README export table and `index.d.ts`
+8. [ ] New config properties documented in config factory section
+9. [ ] No new module-level singletons that duplicate `config.services` container
+
+### Exception Documentation
+
+If any exception is necessary, document:
+
+- Why it is safe
+- Why alternatives were not used
+- Scope of impact (startup-only, dev-only, low-frequency path)
+
+## Code Commenting (Mandatory, Non-negotiable)
+
+Default to documenting rationale ("why"), not mechanics ("what").
+
+### WHY-comment rules
+
+- Do NOT write comments that restate what the code does.
+- DO write short comments explaining why the code exists, what constraint it satisfies, what would break if changed.
+- Add WHY-comments proactively for: conditionals, error handling, fallbacks, workarounds, performance/caching, security, and anything "weird but necessary."
+- If the code is clear but the decision isn't, comment anyway.
+
+Preferred format (use when non-trivial):
+WHY: <constraint / rationale>
+TRADEOFF: <downside accepted>
+VERIFY IF CHANGED: <what to re-test / what might break>
+
+### Architecture constraints
+
+- **Express:** keep routes thin; put decisions in services/modules; WHY-comment middleware order when it matters.
+- **ETA:** pass minimal, explicit view-models; no business logic in templates; WHY-comment precomputed fields.
+- **MSSQL:** stored procedures only — no ad-hoc SQL. Parameterized calls with explicit types. If querying, use approved views only.
+- **Error handling:** consistent HTTP errors; WHY-comment status-code choices and client expectations.
+- **Security:** validate/normalize input; never leak internal errors; WHY-comment security constraints.
+
+### Code quality
+
+- Prefer boring, explicit code over cleverness.
+- Use descriptive names that encode intent (reduce need for comments).
+- When adding logging, explain WHY the log exists (diagnostics, audit, tracing).
+
+"When you add a non-trivial block, include at least one WHY-comment explaining the decision."
+
+## Validation Commands
+
+Use these commands when relevant to the change:
+
+```bash
+# Search for files
+rg --files
+
+# Search for documentation inconsistencies
+rg "from '../../index.js'|npm install glowing-fishstick|./src/app.js|./src/server.js" README.md sandbox/app/DEV_APP_README.md documentation/*.md
+
+# Verify package boundaries
+npm pack --dry-run
+
+# Code quality checks
+npm run lint
+npm run format
+npm run test:all
+
+# Search for synchronous blocking APIs
+rg -n "\\b(readFileSync|writeFileSync|appendFileSync|existsSync|readdirSync|statSync|lstatSync|mkdirSync|rmSync|unlinkSync|execSync|spawnSync|pbkdf2Sync|scryptSync)\\b" app core api
+
+# Search for anti-patterns
+rg -n "res\\.end\\s*=|eval\\(|new Function\\(|with\\s*\\(" app core api
+```
+
+For performance-sensitive changes, include a brief note in PR description about expected latency/throughput impact.

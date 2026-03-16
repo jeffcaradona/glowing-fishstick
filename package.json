@@ -1,6 +1,6 @@
 {
   "name": "glowing-fishstick",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "An example of replacing distributed Express templates with a composable module",
   "keywords": [
     "template",

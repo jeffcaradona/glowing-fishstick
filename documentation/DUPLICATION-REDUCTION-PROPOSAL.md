@@ -19,7 +19,7 @@
 
 ## Analysis Summary
 
-All four files are listed in AGENTS.md as **intentionally separate**. After deep analysis, the recommendation is a three-part response:
+All four files are listed in AGENTS-readable.md as **intentionally separate**. After deep analysis, the recommendation is a three-part response:
 
 1. **Factory files → KEEP separate** (no change)
 2. **Security hardening tests → RELAX policy slightly** (use shared helpers, not shared harnesses)
@@ -116,7 +116,7 @@ async function assertHealthAvailableAfterThrottle(app, exhaustPath, quota) {
 
 Each "Health Under Throttle" `it()` body collapses to a single call while each test file still owns its `describe` block, `beforeEach`, factory call, and test structure.
 
-#### Step 2c: Update AGENTS.md policy wording
+#### Step 2c: Update AGENTS-readable.md policy wording
 
 Change the security hardening tests entry from:
 
@@ -141,7 +141,7 @@ Mirror in `CLAUDE.md`.
 
 ### Discovery
 
-`core/web-app/src/routes/health.js` and `core/service-api/src/routes/health.js` are **100% character-identical** (49 lines each). This duplication is **not documented** in the AGENTS.md intentional-separation table — it appears to be an oversight.
+`core/web-app/src/routes/health.js` and `core/service-api/src/routes/health.js` are **100% character-identical** (49 lines each). This duplication is **not documented** in the AGENTS-readable.md intentional-separation table — it appears to be an oversight.
 
 ### Proposed changes
 
@@ -158,7 +158,7 @@ Follow the established `createAdminThrottle` re-export stub pattern:
 export { default } from '@glowing-fishstick/shared/routes/health';
 ```
 
-4. **Add to AGENTS.md** "Consolidated (shared)" section:
+4. **Add to AGENTS-readable.md** "Consolidated (shared)" section:
 
 > **`healthRoutes`** — Canonical source: `core/shared/src/routes/health.js`. Both `core/web-app` and `core/service-api` import from `@glowing-fishstick/shared`. Local files (`core/*/src/routes/health.js`) are re-export stubs that preserve the original import path.
 
@@ -174,8 +174,8 @@ export { default } from '@glowing-fishstick/shared/routes/health';
 - [ ] Import + use `verifyHealthEndpoints` in app security hardening test
 - [ ] Import + use `verifyHealthEndpoints` in API security hardening test
 - [ ] Refactor health-under-throttle blocks to use `assertHealthAvailableAfterThrottle`
-- [ ] Update AGENTS.md: add health routes to "Consolidated" section
-- [ ] Update AGENTS.md: revise security test policy wording
+- [ ] Update AGENTS-readable.md: add health routes to "Consolidated" section
+- [ ] Update AGENTS-readable.md: revise security test policy wording
 - [ ] Mirror updates in CLAUDE.md
 - [ ] Update `core/shared/README.md` with new exports
 - [ ] Check `documentation/00-project-specs.md` and `documentation/99-potential-gaps.md` for stale refs

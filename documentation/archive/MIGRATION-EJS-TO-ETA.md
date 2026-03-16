@@ -94,7 +94,7 @@ Files:
 
 Update nodemon extension watch lists to include `.eta` (and optionally keep `.ejs` during transition window).
 
-## Phase 4: Documentation Sync (Required by AGENTS.md)
+## Phase 4: Documentation Sync (Required by AGENTS-readable.md)
 
 Update all canonical docs for consistency:
 

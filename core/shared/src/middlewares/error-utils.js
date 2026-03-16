@@ -7,7 +7,7 @@
  * API error handler (JSON-only) intentionally diverge on response format
  * but share identical normalization and logging logic. Extracting those
  * shared lines here satisfies Sonar's duplication threshold without
- * consolidating the handlers themselves (which AGENTS.md forbids).
+ * consolidating the handlers themselves (which AGENTS-readable.md forbids).
  *
  * VERIFY IF CHANGED: Both core/web-app/src/middlewares/errorHandler.js and
  * core/service-api/src/middlewares/error-handler.js depend on these utilities.

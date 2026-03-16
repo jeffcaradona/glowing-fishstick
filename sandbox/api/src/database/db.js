@@ -208,7 +208,7 @@ export const createDatabase = (config) => {
    * migrations, and run a health-check query.
    *
    * WHY: Synchronous SQLite calls are acceptable here — this runs at startup
-   * before traffic arrives (allowed exception per AGENTS.md).
+   * before traffic arrives (allowed exception per AGENTS-readable.md).
    */
   const open = () => {
     db = new DatabaseSync(DB_PATH);

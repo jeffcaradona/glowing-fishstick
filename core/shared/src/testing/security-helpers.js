@@ -7,7 +7,7 @@
  * probes). Extracting the _request construction_ into helpers eliminates
  * Sonar-flagged line duplication while each test file retains its own
  * describe/it structure, factory calls, and assertions — preserving the
- * AGENTS.md requirement that "each package must independently prove its
+ * AGENTS-readable.md requirement that "each package must independently prove its
  * own hardening."
  *
  * These are _helpers_, not a _harness_: test ownership stays in each package.
