@@ -32,25 +32,27 @@ core/web-app,core/service-api IMPORT createAdminThrottle FROM @glowing-fishstick
 core/*/src/middlewares/admin-throttle.js IS reExportStub ; preserves originalImportPath
 
 ### Intentionally Separate — DO NOT consolidate
-errorHandlers SEPARATE core/web-app/src/middlewares/errorHandler.js vs core/service-api/src/middlewares/error-handler.js
-errorHandlers.reason: app HAS htmlContentNegotiation via Eta ; api IS jsonOnly
+errorHandlers SEPARATE core/web-app/src/middlewares/errorHandler.js,core/service-api/src/middlewares/error-handler.js
+errorHandlers SEPARATE_BECAUSE app HAS htmlContentNegotiation via Eta
+errorHandlers SEPARATE_BECAUSE api IS jsonOnly
 errorHandlers MUST_KEEP logging+errorEnvelope aligned ; diverge ONLY on responseFormat
-factories SEPARATE core/web-app/src/app-factory.js vs core/service-api/src/api-factory.js
-factories.reason: middlewareOrder IS loadBearing+differs ; abstraction WOULD_OBSCURE auditableStack
+factories SEPARATE core/web-app/src/app-factory.js,core/service-api/src/api-factory.js
+factories SEPARATE_BECAUSE middlewareOrder IS loadBearing+differs
+factories SEPARATE_BECAUSE abstraction WOULD_OBSCURE auditableStack
 securityTests SEPARATE core/*/tests/integration/security-hardening.test.js
-securityTests.reason: eachPackage MUST_PROVE ownSecurityContract ; sharedHarness WOULD_OBSCURE implementationUnderTest
+securityTests SEPARATE_BECAUSE eachPackage MUST_PROVE ownSecurityContract
+securityTests SEPARATE_BECAUSE sharedHarness WOULD_OBSCURE implementationUnderTest
 
 ## Instruction File Parity
 AGENTS-readable.md IS canonicalSource
 CLAUDE.md,copilot-instructions.md,AGENTS.md MUST_NOT weaken|contradict AGENTS-readable.md
-condensedFile MUST_RETAIN_POINTERS_TO
-  docSyncRequirements,
-  eventLoopSafety,
-  asyncConsistency+deterministicErrorHandling,
-  mandatoryWHYcommenting,
-  validationCommandExecution,
-  reuseFirst (config.services+sharedExports+existingDeps),
-  discoverability (READMEtable+index.d.ts)
+condensedFile MUST_RETAIN_POINTER_TO docSyncRequirements
+condensedFile MUST_RETAIN_POINTER_TO eventLoopSafety
+condensedFile MUST_RETAIN_POINTER_TO asyncConsistency+deterministicErrorHandling
+condensedFile MUST_RETAIN_POINTER_TO mandatoryWHYcommenting
+condensedFile MUST_RETAIN_POINTER_TO validationCommandExecution
+condensedFile MUST_RETAIN_POINTER_TO reuseFirst
+condensedFile MUST_RETAIN_POINTER_TO discoverability
 ifParityCannotBePreserved: restoreDetail ; NOT dropConstraints
 
 ## Documentation Requirements
@@ -108,11 +110,10 @@ devDependencies IS_INVISIBLE toConsumers ; NEVER put consumerFacingOptionalDeps 
 devDependencies IS_FOR monorepoDevTestOnly
 
 ### Discoverability Definition of Done
-newExport|configProperty|capability REQUIRES
-  exportInREADME exportTable+description,
-  index.d.ts updated+typedSignature,
-  ifConfigInjected: documentedInConfigFactorySection+usageExample,
-  ifRuntimeOptionalTransitiveDep: inPeerDependencies
+newExport|configProperty|capability REQUIRES exportInREADME exportTable+description
+newExport|configProperty|capability REQUIRES index.d.ts updated+typedSignature
+newExport|configProperty|capability REQUIRES ifConfigInjected: documentedInConfigFactorySection+usageExample
+newExport|configProperty|capability REQUIRES ifRuntimeOptionalTransitiveDep: inPeerDependencies
 
 ## Event Loop Safety
 
@@ -178,7 +179,6 @@ comments MUST_NOT restate whatCodeDoes
 comments MUST explain whyCodeExists,whatConstraint,whatBreaksIfChanged
 comments MUST_ADD_PROACTIVELY_FOR conditionals,errorHandling,fallbacks,workarounds,performance,security,weirdButNecessary
 nonTrivialBlocks REQUIRE atLeastOne WHYcomment
-commentFormat: `WHY:<rationale> / TRADEOFF:<downside> / VERIFY_IF_CHANGED:<retest>`
 
 ### Architecture Comment Constraints
 express: routes MUST_BE thin ; decisions IN services|modules ; WHYcomment middlewareOrder
