@@ -17,7 +17,7 @@ import { generate } from '../src/generator.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // WHY: Read version from package.json at startup (before traffic) — sync I/O
-// is safe here per AGENTS.md "Allowed exceptions: startup-only initialization."
+// is safe here per AGENTS-readable.md "Allowed exceptions: startup-only initialization."
 const { version } = JSON.parse(readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 
 program

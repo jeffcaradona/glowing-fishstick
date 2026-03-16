@@ -8,7 +8,7 @@
  * registries, attaching register methods, storing registries, and building
  * a shutdown-gate middleware. Extracting these focused utilities removes
  * Sonar-flagged duplication without creating a "base factory" abstraction
- * that would obscure the auditable middleware stack (forbidden by AGENTS.md).
+ * that would obscure the auditable middleware stack (forbidden by AGENTS-readable.md).
  *
  * Each factory retains full control of middleware ordering and app-specific
  * setup; only the mechanical plumbing is shared.

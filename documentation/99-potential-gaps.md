@@ -189,7 +189,7 @@ App refuses to start; operator has full visibility and control over cleanup.
 - **Fail-on-startup forces intervention**: App won't run with broken data; no silent errors or degraded service
 - **Explicit operator control**: Data cleanup is manual, not automated; prevents surprise truncations
 - **SQLite-compliant**: Uses official 12-step rebuild pattern; works with WAL mode, journal modes
-- **Synchronous OK here**: Migrations run at startup before traffic; acceptable exception per AGENTS.md
+- **Synchronous OK here**: Migrations run at startup before traffic; acceptable exception per AGENTS-readable.md
 
 **Management notes**:
 

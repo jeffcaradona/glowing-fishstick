@@ -257,7 +257,7 @@ Package README with:
 | Root `README.md`                         | Update references from `template/app` and `template/api` to `core/generator/templates/`       |
 | `documentation/00-project-specs.md`      | Add "Generator Package" section                                                               |
 | `documentation/99-potential-gaps.md`     | Add generator as a tracked feature (in progress)                                              |
-| `AGENTS.md`                              | Update repository structure to list `core/generator/` properly; remove `template/` references |
+| `AGENTS-readable.md`                     | Update repository structure to list `core/generator/` properly; remove `template/` references |
 | `CLAUDE.md`                              | Add generator to repository description                                                       |
 | `core/generator/templates/app/README.md` | Update structure diagram from `template/app/` to reflect new location                         |
 | `core/generator/templates/api/README.md` | Update structure diagram from `template/api/` to reflect new location                         |
@@ -379,7 +379,7 @@ After implementation, verify:
 - [ ] `npm run test --workspace core/generator` — all unit and integration tests pass
 - [ ] `npm run lint` — no lint errors in new code
 - [ ] `npm run format` — code matches Prettier config
-- [ ] `rg "template/app|template/api" README.md AGENTS.md CLAUDE.md documentation/*.md package.json` — no stale references to old paths
+- [ ] `rg "template/app|template/api" README.md AGENTS-readable.md CLAUDE.md documentation/*.md package.json` — no stale references to old paths
 - [ ] Snyk code scan reports no issues in new first-party code
 
 ---

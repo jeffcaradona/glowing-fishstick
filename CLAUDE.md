@@ -1,6 +1,6 @@
 # Claude Code Instructions: glowing-fishstick
 
-POC Express.js framework distributed as npm modules. Solves "template drift" via composable, plugin-based architecture. See AGENTS.md for all coding constraints, event-loop safety, PR checklists, and WHY-commenting rules — those rules are non-negotiable and not repeated here.
+POC Express.js framework distributed as npm modules. Solves "template drift" via composable, plugin-based architecture. See AGENTS.md (RDF triples, machine-optimized) or AGENTS-readable.md (human-readable) for all coding constraints, event-loop safety, PR checklists, and WHY-commenting rules — those rules are non-negotiable and not repeated here.
 
 ## Repository (npm workspaces monorepo)
 
@@ -23,7 +23,7 @@ sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | cor
 
 ## Non-negotiables snapshot
 
-- `AGENTS.md` is canonical; this file is a compact map, not a substitute.
+- `AGENTS-readable.md` is canonical; this file is a compact map, not a substitute.
 - Keep consumer examples on published package boundaries (`@glowing-fishstick/*`), not root imports.
 - No blocking sync APIs in request paths; preserve async-consistent contracts and single-path error handling.
 - Keep routes thin and move heavy work to services/workers.

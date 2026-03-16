@@ -146,7 +146,7 @@ export function validateDescription(description) {
  * Check whether the target directory is safe to write into.
  *
  * WHY: Async check via access() rather than existsSync() to stay consistent
- * with the AGENTS.md I/O pattern rules (no sync FS in runtime paths).
+ * with the AGENTS-readable.md I/O pattern rules (no sync FS in runtime paths).
  * This function is called from a CLI startup path, not a request path —
  * but we keep it async for contract consistency.
  *

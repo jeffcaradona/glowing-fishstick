@@ -8,7 +8,7 @@
 
 ## Decision
 
-**Do not implement the proposed refactoring.** The current intentional-separation policy in AGENTS.md stands as-is.
+**Do not implement the proposed refactoring.** The current intentional-separation policy in AGENTS-readable.md stands as-is.
 
 The analysis in the proposal is thorough and the technical reasoning is sound, but the "slept on it" addendum at the end of the proposal is the correct conclusion: we should not let SonarCloud's duplication metric design the system.
 
@@ -38,7 +38,7 @@ That said, this project will also serve as a foundation for internal homelab use
 
 ### Intentional duplication is a feature, not a bug
 
-The AGENTS.md policy already documents _why_ the flagged files are separate:
+The AGENTS-readable.md policy already documents _why_ the flagged files are separate:
 
 - **Factories** have load-bearing middleware-ordering differences. Abstracting them hides security-relevant configuration from audit view.
 - **Security hardening tests** must independently prove each package's security contract. Shared test generators would obscure which implementation is under test.
@@ -71,14 +71,14 @@ The discovery that `core/web-app/src/routes/health.js` and `core/service-api/src
 
 If health routes diverge in the future (e.g., API adds dependency-check endpoints), having separate files will be the right call anyway. Consolidating now may create unnecessary churn later.
 
-**Action:** Add health routes to the "Intentionally separate" section in AGENTS.md to document the current state and prevent future confusion. This is a documentation fix, not a code change.
+**Action:** Add health routes to the "Intentionally separate" section in AGENTS-readable.md to document the current state and prevent future confusion. This is a documentation fix, not a code change.
 
 ---
 
 ## What We Should Do Instead
 
 1. **Accept <3% overall duplication as healthy.** Document this as an acceptable threshold for this project's architecture.
-2. **Keep the AGENTS.md intentional-separation policy unchanged.** It correctly explains why the flagged files are separate.
+2. **Keep the AGENTS-readable.md intentional-separation policy unchanged.** It correctly explains why the flagged files are separate.
 3. **Consider SonarCloud duplication exclusions** for test files and intentionally-separated code if the metric continues to create noise on future PRs.
 4. **Stay on the golden path:** security hardening → pluggable auth → 0.1.0 readiness. Every hour spent on metric optimization is an hour not spent on these milestones.
 5. **Use duplication as a signal, not a steering wheel.** This is the right framing from the proposal's own addendum and should be our standing policy.

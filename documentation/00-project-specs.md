@@ -1255,7 +1255,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 **Management notes:**
 
-- **Synchronous SQLite calls accepted here**: Migrations run at startup, before traffic, so synchronous `DatabaseSync` is acceptable per AGENTS.md startup exception.
+- **Synchronous SQLite calls accepted here**: Migrations run at startup, before traffic, so synchronous `DatabaseSync` is acceptable per AGENTS-readable.md startup exception.
 - **Performance**: Table rebuilds acquire brief exclusive locks. On large tables, may take seconds.
 - **Idempotency**: `runMigrations()` is safe to call multiple times; already-applied migrations are skipped.
 - **Testing**: Test migrations with both empty databases (fresh install) and pre-populated databases (constraint violations).
