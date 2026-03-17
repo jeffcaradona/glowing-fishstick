@@ -45,6 +45,7 @@ This document tracks potential server composability features and architectural g
 | TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/shared` | ✅ | Created typed signatures for server factory, lifecycle, logging, request utilities, and error handling |
 | `pino-pretty` moved to `peerDependencies` in `@glowing-fishstick/logger` | ✅ | Reclassified `pino-pretty` as optional peer dependency; updated logger README with install guidance |
 | TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/logger` | ✅ | Created typed signatures for `createLogger()`, `createRequestLogger()` with full option interfaces and usage examples |
+| Consumer-facing runtime contract documented in `@glowing-fishstick/api` README | ✅ | Added package-level contract section covering exports, config surface, middleware order, built-in routes, lifecycle hooks, and request/response guarantees |
 
 **Changes Implemented**:
 

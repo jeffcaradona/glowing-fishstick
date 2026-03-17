@@ -252,9 +252,10 @@ export function setupProxmoxPlugin(app, config) {
   const proxmoxBaseUrl = config.proxmoxUrl || 'https://proxmox.internal:8006';
   const proxmoxApiToken = config.proxmoxApiToken; // from env/vault
 
-  // WHY: Proxy GET /nodes to Proxmox with token auth
-  // All requests are logged via req.log; payload limits enforced upstream
-  router.get('/nodes', async (req, res, next) => {
+  // WHY: Proxy GET /nodes to Proxmox with token auth.
+  // Framework request logging runs upstream; plugin code should use
+  // config.logger because the framework does not attach req.log.
+  router.get('/nodes', async (_req, res, next) => {
     try {
       const response = await fetch(`${proxmoxBaseUrl}/api2/json/nodes`, {
         method: 'GET',
@@ -273,7 +274,7 @@ export function setupProxmoxPlugin(app, config) {
       const data = await response.json();
       res.json(data);
     } catch (err) {
-      req.log.error({ err }, 'Proxmox /nodes request failed');
+      config.logger?.error({ err }, 'Proxmox /nodes request failed');
       next(err);
     }
   });
