@@ -42,11 +42,11 @@
     "coverage": "c8 --all --include=src/**/*.js --exclude=tests/** --reporter=text --reporter=lcov --report-dir=../../coverage/core-app vitest run --reporter=verbose tests/integration tests/smoke --passWithNoTests"
   },
   "dependencies": {
-    "@glowing-fishstick/shared": "^0.1.4",
+    "@glowing-fishstick/shared": "^0.1.5",
     "dotenv": "^17.3.1",
     "eta": "^4.5.1",
     "express": "^5.2.1",
-    "pino": "^9.5.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "pino-pretty": "^13.1.3"
