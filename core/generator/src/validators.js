@@ -125,8 +125,7 @@ export function validateDescription(description) {
   if (/["\\`{}]/.test(trimmed)) {
     return {
       valid: false,
-      message:
-        'Description must not contain quotes, backslashes, backticks, or curly braces.',
+      message: 'Description must not contain quotes, backslashes, backticks, or curly braces.',
     };
   }
 

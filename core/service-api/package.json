@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/api",
-  "version": "0.1.4",
+  "version": "0.1.8",
   "description": "Core API factory and route composition module for glowing-fishstick",
   "keywords": [
     "express",
@@ -42,9 +42,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@glowing-fishstick/shared": "^0.1.4",
+    "@glowing-fishstick/shared": "^0.1.8",
     "express": "^5.2.1",
-    "pino": "^9.5.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "pino-pretty": "^13.1.3"

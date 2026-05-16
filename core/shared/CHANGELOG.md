@@ -1,5 +1,15 @@
 # @glowing-fishstick/shared
 
+## 0.1.8
+
+### Patch Changes
+
+- chore: bump dependencies across workspaces
+- dotenv 17.3.1 → 17.4.2
+- Fixed @glowing-fishstick/logger version specifier (^1.0.8 → ^0.1.8)
+- Updated dependencies
+  - @glowing-fishstick/logger@0.1.8
+
 ## 0.1.5
 
 ### Patch Changes

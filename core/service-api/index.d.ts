@@ -53,6 +53,9 @@ export interface ApiConfigOverrides {
   [key: string]: unknown;
 }
 
-export function createApiConfig(overrides?: ApiConfigOverrides, env?: Record<string, string | undefined>): Readonly<ApiConfig>;
+export function createApiConfig(
+  overrides?: ApiConfigOverrides,
+  env?: Record<string, string | undefined>,
+): Readonly<ApiConfig>;
 
 export function createApi(config: Readonly<ApiConfig>, plugins?: Plugin[]): Express;

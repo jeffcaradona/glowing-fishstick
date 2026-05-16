@@ -50,7 +50,10 @@ export interface AppConfigOverrides {
   [key: string]: unknown;
 }
 
-export function createConfig(overrides?: AppConfigOverrides, env?: Record<string, string | undefined>): Readonly<AppConfig>;
+export function createConfig(
+  overrides?: AppConfigOverrides,
+  env?: Record<string, string | undefined>,
+): Readonly<AppConfig>;
 export function filterSensitiveKeys(config: object): Record<string, unknown>;
 
 export function createApp(config: Readonly<AppConfig>, plugins?: Plugin[]): Express;
