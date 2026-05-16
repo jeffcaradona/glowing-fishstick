@@ -1,7 +1,7 @@
 {
   "name": "glowing-fishstick-tasks",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.8",
   "description": "A local development application to help build the core modules",
   "type": "module",
   "main": "src/server.js",
@@ -10,7 +10,7 @@
     "dev": "nodemon --watch src --watch ../core/web-app/src --watch ../core/shared/src --ext js,mjs,cjs,json,eta src/server.js"
   },
   "dependencies": {
-    "@glowing-fishstick/app": "^0.1.4",
+    "@glowing-fishstick/app": "^0.1.8",
     "express": "^5.2.1"
   },
   "devDependencies": {

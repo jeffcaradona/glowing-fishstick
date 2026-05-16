@@ -74,7 +74,9 @@ export interface NormalizedError {
   message: string;
 }
 
-export function normalizeError(err: Error & { statusCode?: number; code?: string; isOperational?: boolean }): NormalizedError;
+export function normalizeError(
+  err: Error & { statusCode?: number; code?: string; isOperational?: boolean },
+): NormalizedError;
 
 export function resolveErrorLogger(req: Request): (meta: object, msg: string) => void;
 
@@ -105,8 +107,16 @@ export interface ServiceRegistrationOptions {
 }
 
 export interface ServiceContainer {
-  register(name: string, provider: ((ctx: ServiceContainerContext) => unknown | Promise<unknown>) | unknown, opts?: ServiceRegistrationOptions): void;
-  registerValue(name: string, value: unknown, opts?: Omit<ServiceRegistrationOptions, 'lifecycle'>): void;
+  register(
+    name: string,
+    provider: ((ctx: ServiceContainerContext) => unknown | Promise<unknown>) | unknown,
+    opts?: ServiceRegistrationOptions,
+  ): void;
+  registerValue(
+    name: string,
+    value: unknown,
+    opts?: Omit<ServiceRegistrationOptions, 'lifecycle'>,
+  ): void;
   resolve(name: string): Promise<unknown>;
   has(name: string): boolean;
   keys(): string[];

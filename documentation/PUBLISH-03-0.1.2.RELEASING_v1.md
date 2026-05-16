@@ -6,16 +6,16 @@ This document records all changes made to prepare the `@glowing-fishstick/*` pac
 
 ## Summary of changes
 
-| File | Change type | Description |
-|---|---|---|
-| `core/service-api/package.json` | Updated | Added all missing metadata fields |
-| `core/modules/logger/package.json` | Updated | Added all missing metadata fields; fixed empty `author` |
-| `core/shared/package.json` | Updated | Added `keywords`; fixed field order and description |
-| `core/web-app/package.json` | Updated | Added `keywords`; fixed field order and description |
-| `package.json` (root) | Updated | Added `"glowing-fishstick"` to `keywords` |
-| `core/service-api/README.md` | Created | Minimal real content (was 0B) |
-| `core/modules/logger/README.md` | Created | Minimal real content (was 0B) |
-| `RELEASING.md` | Created | End-to-end release runbook at repo root |
+| File                               | Change type | Description                                             |
+| ---------------------------------- | ----------- | ------------------------------------------------------- |
+| `core/service-api/package.json`    | Updated     | Added all missing metadata fields                       |
+| `core/modules/logger/package.json` | Updated     | Added all missing metadata fields; fixed empty `author` |
+| `core/shared/package.json`         | Updated     | Added `keywords`; fixed field order and description     |
+| `core/web-app/package.json`        | Updated     | Added `keywords`; fixed field order and description     |
+| `package.json` (root)              | Updated     | Added `"glowing-fishstick"` to `keywords`               |
+| `core/service-api/README.md`       | Created     | Minimal real content (was 0B)                           |
+| `core/modules/logger/README.md`    | Created     | Minimal real content (was 0B)                           |
+| `RELEASING.md`                     | Created     | End-to-end release runbook at repo root                 |
 
 ---
 
@@ -42,6 +42,7 @@ Field order follows: `name → version → description → keywords → homepage
 ### `core/service-api/package.json` — `@glowing-fishstick/api`
 
 Added:
+
 - `keywords`: `["express", "api", "rest", "factory", "glowing-fishstick"]`
 - `homepage`, `bugs`, `repository`
 - `license`: `"MIT"`
@@ -57,11 +58,13 @@ No changes to: `type`, `main`, `exports`, `files`, `scripts`, `dependencies`.
 ### `core/modules/logger/package.json` — `@glowing-fishstick/logger`
 
 Added:
+
 - `keywords`: `["logger", "pino", "logging", "express", "glowing-fishstick"]`
 - `homepage`, `bugs`, `repository`
 - `engines`: `{ "node": ">=22" }`
 
 Fixed:
+
 - `author`: `""` → `"Jeff Caradona <jeffcaradona@gmail.com>"`
 
 Description updated to: `"Pino-based structured logging module for glowing-fishstick applications"`
@@ -73,9 +76,11 @@ No changes to: `type`, `main`, `exports`, `files`, `scripts`, `license`, `depend
 ### `core/shared/package.json` — `@glowing-fishstick/shared`
 
 Added:
+
 - `keywords`: `["express", "shared", "factory", "server", "glowing-fishstick"]`
 
 Fixed:
+
 - Field order: `type`/`main`/`exports` moved to after `author` (canonical order)
 
 Description updated to: `"Shared server factory, lifecycle hooks, JWT, and admin middleware for glowing-fishstick"`
@@ -87,9 +92,11 @@ No changes to: `homepage`, `bugs`, `repository`, `license`, `author`, `engines`,
 ### `core/web-app/package.json` — `@glowing-fishstick/app`
 
 Added:
+
 - `keywords`: `["express", "app", "factory", "views", "glowing-fishstick"]`
 
 Fixed:
+
 - Field order: `type`/`main`/`exports` moved to after `author` (canonical order)
 - Description: was identical to `@glowing-fishstick/shared` — updated to `"Express 5 web application factory with template rendering and plugin architecture for glowing-fishstick"`
 
@@ -108,6 +115,7 @@ Added `"glowing-fishstick"` to `keywords`. All other fields (`private: true`, `e
 ### `core/service-api/README.md`
 
 Previously missing (0B in pack dry-run). Created with:
+
 - Package name and 1–2 sentence purpose
 - Install snippet
 - ESM usage example (`createApi`, `createApiConfig`)
@@ -118,6 +126,7 @@ Confirmed non-zero size in `npm pack --dry-run`: **689B**.
 ### `core/modules/logger/README.md`
 
 Previously a single blank line (0B effective). Replaced with:
+
 - Package name and purpose (Pino-based structured logging)
 - Install snippet
 - ESM usage example for `createLogger` (dev/prod modes, file logging)
@@ -183,12 +192,12 @@ Changeset config (`.changeset/config.json`) has `"access": "public"` — scoped 
 
 ## Packages published in this release
 
-| Package | Path | Version |
-|---|---|---|
-| `@glowing-fishstick/app` | `core/web-app` | `0.1.2` |
-| `@glowing-fishstick/api` | `core/service-api` | `0.1.2` |
-| `@glowing-fishstick/shared` | `core/shared` | `0.1.2` |
-| `@glowing-fishstick/logger` | `core/modules/logger` | `0.1.2` |
-| `@glowing-fishstick/generator` | `core/generator` | `0.1.2` |
+| Package                        | Path                  | Version |
+| ------------------------------ | --------------------- | ------- |
+| `@glowing-fishstick/app`       | `core/web-app`        | `0.1.2` |
+| `@glowing-fishstick/api`       | `core/service-api`    | `0.1.2` |
+| `@glowing-fishstick/shared`    | `core/shared`         | `0.1.2` |
+| `@glowing-fishstick/logger`    | `core/modules/logger` | `0.1.2` |
+| `@glowing-fishstick/generator` | `core/generator`      | `0.1.2` |
 
 Sandbox packages (`sandbox/app`, `sandbox/api`) are consumer examples — not published.

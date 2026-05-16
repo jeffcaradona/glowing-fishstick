@@ -8,3 +8,4 @@ coverage
 .env.local
 .env.*.local
 .github/instructions/snyk_rules.instructions.md
+core/generator/templates/

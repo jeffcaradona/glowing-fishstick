@@ -1,5 +1,16 @@
 # @glowing-fishstick/app
 
+## 0.1.8
+
+### Patch Changes
+
+- chore: bump dependencies across workspaces
+- pino 9.5.0 → 10.3.1 (major upgrade)
+- eta 4.5.1 → 4.6.0
+- dotenv 17.3.1 → 17.4.2
+- Updated dependencies
+  - @glowing-fishstick/shared@0.1.8
+
 ## 0.1.4
 
 ### Patch Changes

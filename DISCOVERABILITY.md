@@ -1,5 +1,3 @@
-
-
 ## Executive Summary: Agent & Developer Discoverability Failures
 
 ### What happened
@@ -15,12 +13,12 @@ Both mistakes wasted time and introduced unnecessary code. Both were entirely pr
 
 The framework's capabilities were **invisible at every discovery surface**:
 
-| Discovery surface | Gap | Effect |
-|---|---|---|
-| **README** | `config.services` not mentioned in any package README | Agent/dev doesn't know DI exists |
-| **README** | 4 of 22 exports documented in `@glowing-fishstick/shared` | 80% of the API surface is invisible to anyone reading docs |
-| **package.json** | `pino-pretty` listed as `devDependencies` instead of `peerDependencies` | npm gives no warning; consumer hits a runtime crash with no explanation |
-| **Type declarations** | No `.d.ts` files, no `"types"` field | IDE autocomplete and agent type inference both fall back to `any` — the most powerful discovery tool (hover/autocomplete) is blind |
+| Discovery surface     | Gap                                                                     | Effect                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **README**            | `config.services` not mentioned in any package README                   | Agent/dev doesn't know DI exists                                                                                                   |
+| **README**            | 4 of 22 exports documented in `@glowing-fishstick/shared`               | 80% of the API surface is invisible to anyone reading docs                                                                         |
+| **package.json**      | `pino-pretty` listed as `devDependencies` instead of `peerDependencies` | npm gives no warning; consumer hits a runtime crash with no explanation                                                            |
+| **Type declarations** | No `.d.ts` files, no `"types"` field                                    | IDE autocomplete and agent type inference both fall back to `any` — the most powerful discovery tool (hover/autocomplete) is blind |
 
 ### The core principle
 

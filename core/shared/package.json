@@ -1,6 +1,6 @@
 {
   "name": "@glowing-fishstick/shared",
-  "version": "0.1.5",
+  "version": "0.1.8",
   "description": "Shared server factory, lifecycle hooks, JWT, and admin middleware for glowing-fishstick",
   "keywords": [
     "express",
@@ -47,7 +47,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
-    "@glowing-fishstick/logger": "^0.1.4"
+    "@glowing-fishstick/logger": "^0.1.8"
   },
   "peerDependencies": {
     "express": "^5.2.1",

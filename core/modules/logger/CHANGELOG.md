@@ -1,5 +1,11 @@
 # @glowing-fishstick/logger
 
+## 0.1.8
+
+### Patch Changes
+
+- chore: version normalization across workspaces
+
 ## 0.1.4
 
 ### Patch Changes

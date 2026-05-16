@@ -18,10 +18,10 @@ npm install -D pino-pretty
 
 ## Exports
 
-| Export | Description |
-| --- | --- |
-| `createLogger` | Creates a Pino logger with dev/prod modes; file logging in dev, JSON to stdout in prod |
-| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking |
+| Export                | Description                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `createLogger`        | Creates a Pino logger with dev/prod modes; file logging in dev, JSON to stdout in prod |
+| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking    |
 
 ## Configuration
 
@@ -31,12 +31,12 @@ Creates a configured Pino logger instance.
 
 **Options** (`LoggerOptions`):
 
-| Property | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | string | `'app'` | Logger name (used for file naming and context) |
-| `logLevel` | string | `'info'` (or `LOG_LEVEL` env var) | Minimum log level: `trace` \| `debug` \| `info` \| `warn` \| `error` \| `fatal` |
-| `logDir` | string | `process.cwd()/logs` | Directory for log files (dev mode only) |
-| `enableFile` | boolean | `true` | Enable file logging in development mode |
+| Property     | Type    | Default                           | Description                                                                     |
+| ------------ | ------- | --------------------------------- | ------------------------------------------------------------------------------- |
+| `name`       | string  | `'app'`                           | Logger name (used for file naming and context)                                  |
+| `logLevel`   | string  | `'info'` (or `LOG_LEVEL` env var) | Minimum log level: `trace` \| `debug` \| `info` \| `warn` \| `error` \| `fatal` |
+| `logDir`     | string  | `process.cwd()/logs`              | Directory for log files (dev mode only)                                         |
+| `enableFile` | boolean | `true`                            | Enable file logging in development mode                                         |
 
 **Returns**: Pino `Logger` instance with multistream output (pretty stdout + file logging in dev; JSON stdout in prod).
 
@@ -45,6 +45,7 @@ Creates a configured Pino logger instance.
 Creates an Express middleware for request/response logging.
 
 **Arguments**:
+
 - `logger` — Pino logger instance (from `createLogger()`)
 - `options` (`RequestLoggerOptions`):
   - `generateRequestId` (boolean, default `true`) — Auto-generate UUIDs; also reads from `x-request-id` header
