@@ -90,7 +90,7 @@ describe('createLogger', () => {
     });
 
     // Winston file/stream transports flush synchronously for our test transport.
-    const last = records[records.length - 1];
+    const last = records.at(-1);
     expect(last.req.headers.authorization).toBe('[REDACTED]');
     expect(last.password).toBe('[REDACTED]');
     expect(last.keep).toBe('visible');

@@ -54,10 +54,10 @@ export function createServer(app, config) {
   const close = () =>
     new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        logger.warn(
-          { shutdownTimeout, remainingConnections: activeConnections.size },
-          'Shutdown timeout exceeded; forcing remaining connections closed.',
-        );
+        logger.warn('Shutdown timeout exceeded; forcing remaining connections closed.', {
+          shutdownTimeout,
+          remainingConnections: activeConnections.size,
+        });
         // WHY: Destroying sockets is a last resort to prevent pods from hanging
         // indefinitely and missing orchestrator termination deadlines.
         // Destroy all remaining sockets

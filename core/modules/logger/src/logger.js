@@ -24,6 +24,46 @@ import winston from 'winston';
 const { format, transports: winstonTransports } = winston;
 
 /**
+ * Walk a single dotted path in obj, cloning each intermediate level, and set the
+ * leaf value to '[REDACTED]'. Mutates obj in place (caller clones the top level first).
+ *
+ * WHY: extracted from redactPaths to flatten nesting and keep cognitive complexity
+ * within the 15-point limit. The `lastKey in parent` guard from the original is
+ * intentionally omitted — lastKey is only set after `key in cursor` already passed
+ * on that same object, so the check is always true at that point.
+ *
+ * @param {object} obj - Top-level-cloned log info object to mutate
+ * @param {string} dotted - Dotted path to redact (e.g. 'req.headers.authorization')
+ */
+function applyRedaction(obj, dotted) {
+  const segments = dotted.split('.');
+  let cursor = obj;
+  let parent = null;
+  let lastKey = null;
+
+  for (let i = 0; i < segments.length; i += 1) {
+    const key = segments[i];
+    if (cursor === null || typeof cursor !== 'object' || !(key in cursor)) {
+      break;
+    }
+    // Clone each level we descend into so we don't mutate caller-owned objects.
+    const next = cursor[key];
+    if (i < segments.length - 1) {
+      const cloneNext = next && typeof next === 'object' ? { ...next } : next;
+      cursor[key] = cloneNext;
+      cursor = cloneNext;
+    } else {
+      parent = cursor;
+      lastKey = key;
+    }
+  }
+
+  if (parent !== null && lastKey !== null) {
+    parent[lastKey] = '[REDACTED]';
+  }
+}
+
+/**
  * Walk a meta object and replace values at the given dotted paths with '[REDACTED]'.
  * Returns a new object; never mutates input. Used by the redaction format.
  *
@@ -43,29 +83,7 @@ function redactPaths(info, paths) {
   // disturbing the caller's meta object.
   const cloned = { ...info };
   for (const dotted of paths) {
-    const segments = dotted.split('.');
-    let cursor = cloned;
-    let parent = null;
-    let lastKey = null;
-    for (let i = 0; i < segments.length; i += 1) {
-      const key = segments[i];
-      if (cursor === null || typeof cursor !== 'object' || !(key in cursor)) {
-        break;
-      }
-      // Clone each level we descend into so we don't mutate caller-owned objects.
-      const next = cursor[key];
-      if (i < segments.length - 1) {
-        const cloneNext = next && typeof next === 'object' ? { ...next } : next;
-        cursor[key] = cloneNext;
-        cursor = cloneNext;
-      } else {
-        parent = cursor;
-        lastKey = key;
-      }
-    }
-    if (parent && lastKey !== null && lastKey in parent) {
-      parent[lastKey] = '[REDACTED]';
-    }
+    applyRedaction(cloned, dotted);
   }
   return cloned;
 }
@@ -79,6 +97,24 @@ function redactPaths(info, paths) {
 function createRedactFormat(paths) {
   return format((info) => (paths.length ? redactPaths(info, paths) : info))();
 }
+
+/**
+ * Serialize an Error nested under `info.err` into a plain object with `message`,
+ * `name`, and `stack` fields.
+ *
+ * WHY: `format.errors({ stack: true })` only expands stacks when the top-level
+ * info object IS an Error (i.e. `logger.error(new Error(...))`). When an Error is
+ * passed in meta — `logger.error('msg', { err })` — Winston merges it into
+ * `info.err`, which serializes as `{}` (non-enumerable prototype properties).
+ * This format mirrors Pino's built-in `err` serializer so consumers always get
+ * a stack-bearing plain object regardless of call style.
+ */
+const errSerializerFormat = format((info) => {
+  if (info.err instanceof Error) {
+    info.err = { message: info.err.message, name: info.err.name, stack: info.err.stack };
+  }
+  return info;
+})();
 
 /**
  * Dev printf format: human-readable line with appended JSON meta when present.
@@ -138,15 +174,17 @@ export function createLogger(options = {}) {
   const resolvedLevel = level || process.env.LOG_LEVEL || 'info';
 
   // Logger-level formats are applied BEFORE any transport-specific format.
-  // WHY: placing redaction + error/stack serialization here ensures consumer-supplied
-  // `transports` (e.g. test transports) also get redaction applied automatically.
-  // - errors({ stack: true }) ensures Error meta serializes with `stack`; without
-  //   this Winston serializes Error instances as `{}`. Matches Pino's default
-  //   err serializer behavior consumers depend on.
+  // WHY: placing serialization + redaction here ensures consumer-supplied
+  // `transports` (e.g. test transports) also receive fully-serialized records.
+  // - errors({ stack: true }): promotes stack when logger.error(new Error()) is called.
+  // - errSerializerFormat: serializes Error objects nested under `info.err` in meta;
+  //   format.errors alone does NOT handle this case (non-enumerable prototype props
+  //   serialize as {}). Together they mirror Pino's built-in err serializer.
   const loggerFormat = format.combine(
     format.timestamp(),
     format.errors({ stack: true }),
     format.splat(),
+    errSerializerFormat,
     createRedactFormat(redact),
   );
 

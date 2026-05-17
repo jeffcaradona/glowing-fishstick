@@ -111,7 +111,7 @@ export function createConfig(overrides = {}, env = process.env) {
       name: appName,
       ...(logLevel ? { level: logLevel } : {}),
       ...(logDir ? { logDir } : {}),
-      ...(enableFileLogging !== undefined ? { enableFile: enableFileLogging } : {}),
+      ...(enableFileLogging === undefined ? {} : { enableFile: enableFileLogging }),
       ...(logRedact ? { redact: logRedact } : {}),
     });
 

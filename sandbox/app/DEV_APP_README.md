@@ -388,7 +388,7 @@ Winston uses the native `(message, meta)` call signature for structured logging:
 // Log with metadata
 logger.info('User logged in', { userId: 123, action: 'login' });
 
-// Log errors with context (format.errors({ stack: true }) preserves the stack)
+// Log errors with context — the err field is serialized to { message, name, stack }
 logger.error('Database error', { err: new Error('DB connection failed'), dbHost: 'localhost' });
 
 // Different log levels (Winston: error|warn|info|http|verbose|debug|silly)
