@@ -36,7 +36,9 @@ const { format, transports: winstonTransports } = winston;
  * @returns {object} New info object with redactions applied
  */
 function redactPaths(info, paths) {
-  if (!paths.length) return info;
+  if (!paths.length) {
+    return info;
+  }
   // Shallow-clone the top level so we can mutate nested structures safely without
   // disturbing the caller's meta object.
   const cloned = { ...info };
@@ -47,8 +49,7 @@ function redactPaths(info, paths) {
     let lastKey = null;
     for (let i = 0; i < segments.length; i += 1) {
       const key = segments[i];
-      if (cursor == null || typeof cursor !== 'object' || !(key in cursor)) {
-        cursor = undefined;
+      if (cursor === null || typeof cursor !== 'object' || !(key in cursor)) {
         break;
       }
       // Clone each level we descend into so we don't mutate caller-owned objects.
@@ -62,7 +63,7 @@ function redactPaths(info, paths) {
         lastKey = key;
       }
     }
-    if (parent && lastKey != null && lastKey in parent) {
+    if (parent && lastKey !== null && lastKey in parent) {
       parent[lastKey] = '[REDACTED]';
     }
   }

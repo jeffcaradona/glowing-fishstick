@@ -1,7 +1,7 @@
 // Type declarations for @glowing-fishstick/api
 
 import type { Express } from 'express';
-import type { Logger } from 'pino';
+import type { Logger } from 'winston';
 import type { ServiceContainer } from '@glowing-fishstick/shared';
 
 export type Plugin = (app: Express, config: ApiConfig) => void;
@@ -25,6 +25,14 @@ export interface ApiConfig {
   adminRateLimitWindowMs: number;
   adminRateLimitMax: number;
   logger?: Logger;
+  /** Minimum log level forwarded to auto-constructed logger when `logger` is unset. */
+  logLevel?: string;
+  /** Dotted paths in log meta to mask with '[REDACTED]'. */
+  logRedact?: string[];
+  /** Enable JSON file transport on the auto-constructed logger. Defaults to false. */
+  enableFileLogging?: boolean;
+  /** Directory for log files when `enableFileLogging` is true. */
+  logDir?: string;
   /** Dependency injection container — auto-created if not provided. */
   services: ServiceContainer;
   [key: string]: unknown;
@@ -48,6 +56,10 @@ export interface ApiConfigOverrides {
   adminRateLimitWindowMs?: number;
   adminRateLimitMax?: number;
   logger?: Logger;
+  logLevel?: string;
+  logRedact?: string[];
+  enableFileLogging?: boolean;
+  logDir?: string;
   /** Provide your own ServiceContainer, or one is auto-created. */
   services?: ServiceContainer;
   [key: string]: unknown;

@@ -39,7 +39,7 @@ describe('createLogger', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
-    if (originalLevel != null) {
+    if (originalLevel !== null && originalLevel !== undefined) {
       process.env.LOG_LEVEL = originalLevel;
     } else {
       delete process.env.LOG_LEVEL;
@@ -112,7 +112,9 @@ describe('createLogger', () => {
       // Symbol(MESSAGE) holding the JSON line.
       const MESSAGE = Symbol.for('message');
       captured.push(info[MESSAGE] ?? JSON.stringify(info));
-      if (cb) cb();
+      if (cb) {
+        cb();
+      }
       return original?.(info, () => {});
     };
     logger.info('hello', { value: 42 });
