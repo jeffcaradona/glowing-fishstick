@@ -55,6 +55,7 @@ All public exports from `@glowing-fishstick/shared`:
 | `normalizeError(err)`                         | Normalize a thrown error into `{ statusCode, code, message }`               |
 | `resolveErrorLogger(req)`                     | Resolve logger from Express request context (falls back to `console.error`) |
 | `logUnexpectedError(req, err, logFn, label?)` | Log non-operational errors with request context                             |
+| `serializeError(err)`                         | Convert an Error (or unknown value) into a JSON-safe plain object that preserves `name`, `message`, `stack`, `code`, `statusCode`, and `cause` — use when embedding an Error inside a Winston meta object |
 
 ### Authentication (JWT)
 

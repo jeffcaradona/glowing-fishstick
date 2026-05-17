@@ -206,10 +206,20 @@ describe('Security Hardening — App', () => {
       // (core/shared/src/middlewares/error-utils.js) now flips the shape
       // internally so call sites stay untouched; the observable call shape
       // here is the canonical Winston form.
+      // WHY (nested-Error serialization fix): The helper now passes the Error
+      // through serializeError() because Winston's format.errors() does NOT
+      // unwrap nested Errors inside meta — they would otherwise log as
+      // `"err":{}` with no message/stack. The assertion below checks the
+      // serialized shape (plain object with name/message/stack) instead of
+      // an Error instance.
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Unexpected error',
         expect.objectContaining({
-          err: expect.any(Error),
+          err: expect.objectContaining({
+            name: 'Error',
+            message: 'should be logged',
+            stack: expect.any(String),
+          }),
           method: 'GET',
           path: '/test-logged-error',
         }),

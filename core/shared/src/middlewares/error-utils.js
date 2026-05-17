@@ -58,11 +58,39 @@ export function resolveErrorLogger(req) {
 export function logUnexpectedError(req, err, logFn, label = 'Unexpected error') {
   logFn(
     {
-      err,
+      // WHY: Winston's format.errors({ stack: true }) only unwraps an Error passed
+      // as the top-level meta value; nested Error instances inside a meta object
+      // lose all non-enumerable properties (message, name, stack) during JSON
+      // serialization and surface as `"err":{}`, hiding the actual failure.
+      // Explicitly extract the fields so logs are always actionable.
+      err: serializeError(err),
       method: req.method,
       path: req.path,
       reqId: req.id || req.headers['x-request-id'],
     },
     label,
   );
+}
+
+/**
+ * Serialize an Error (or unknown thrown value) into a plain object that
+ * survives JSON serialization without losing message/name/stack.
+ *
+ * @param {unknown} err
+ * @returns {object}
+ */
+export function serializeError(err) {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      // WHY: Preserve common operational-error metadata (AppError.statusCode/code,
+      // upstream cause) so downstream log consumers can filter without re-parsing.
+      ...(err.code !== undefined ? { code: err.code } : {}),
+      ...(err.statusCode !== undefined ? { statusCode: err.statusCode } : {}),
+      ...(err.cause !== undefined ? { cause: serializeError(err.cause) } : {}),
+    };
+  }
+  return { value: err };
 }
