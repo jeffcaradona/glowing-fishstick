@@ -113,34 +113,25 @@ export function createAdminController({
       if (apiVersionResult.status === 'rejected') {
         // WHY: Keep warnings structured so operators can distinguish which
         // upstream panel failed without reproducing locally.
-        logger?.warn(
-          {
-            type: 'api.version.fetch',
-            err: apiVersionResult.reason,
-            upstream: apiVersionUrl.toString(),
-          },
-          'Failed to fetch API version for admin dashboard',
-        );
+        logger?.warn('Failed to fetch API version for admin dashboard', {
+          type: 'api.version.fetch',
+          err: apiVersionResult.reason,
+          upstream: apiVersionUrl.toString(),
+        });
       }
       if (apiMemoryResult.status === 'rejected') {
-        logger?.warn(
-          {
-            type: 'api.memory.fetch',
-            err: apiMemoryResult.reason,
-            upstream: apiMemoryUrl.toString(),
-          },
-          'Failed to fetch API memory usage for admin dashboard',
-        );
+        logger?.warn('Failed to fetch API memory usage for admin dashboard', {
+          type: 'api.memory.fetch',
+          err: apiMemoryResult.reason,
+          upstream: apiMemoryUrl.toString(),
+        });
       }
       if (apiRuntimeResult.status === 'rejected') {
-        logger?.warn(
-          {
-            type: 'api.runtime.fetch',
-            err: apiRuntimeResult.reason,
-            upstream: apiRuntimeUrl.toString(),
-          },
-          'Failed to fetch API runtime for admin dashboard',
-        );
+        logger?.warn('Failed to fetch API runtime for admin dashboard', {
+          type: 'api.runtime.fetch',
+          err: apiRuntimeResult.reason,
+          upstream: apiRuntimeUrl.toString(),
+        });
       }
 
       res.render('admin/dashboard', {
@@ -194,15 +185,12 @@ export function createAdminController({
         );
 
         const durationMs = Date.now() - startedAt;
-        logger?.info(
-          {
-            type: 'api.health.passthrough',
-            upstream: apiUrl.toString(),
-            upstreamStatus: upstreamResponse.status,
-            durationMs,
-          },
-          'Completed API health passthrough check',
-        );
+        logger?.info('Completed API health passthrough check', {
+          type: 'api.health.passthrough',
+          upstream: apiUrl.toString(),
+          upstreamStatus: upstreamResponse.status,
+          durationMs,
+        });
 
         // WHY: Preserve the existing admin contract: any non-2xx upstream health
         // response is surfaced as unhealthy to avoid false-green UI state.
@@ -214,14 +202,11 @@ export function createAdminController({
         res.status(503).json({ status: 'unhealthy' });
       } catch (err) {
         const durationMs = Date.now() - startedAt;
-        logger?.warn(
-          {
-            type: 'api.health.passthrough',
-            err,
-            durationMs,
-          },
-          'API health passthrough failed',
-        );
+        logger?.warn('API health passthrough failed', {
+          type: 'api.health.passthrough',
+          err,
+          durationMs,
+        });
         // WHY: 502 indicates gateway/upstream failure, which is distinct from
         // explicit unhealthy status responses (mapped to 503 above).
         res.status(502).json({ status: 'unhealthy' });

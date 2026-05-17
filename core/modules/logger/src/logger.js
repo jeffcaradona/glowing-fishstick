@@ -1,209 +1,197 @@
 /**
- * @module logger
- * @description Pino logger factory and middleware for structured logging.
+ * @module logger/logger
+ * @description Winston logger factory.
  *
  * Features:
- * - Development: pretty console output + JSON file logging
+ * - Development: colorized printf console output + optional JSON file logging
  * - Production: JSON to stdout for container log collection
- * - Automatic logs/ directory creation in consumer app root
- * - Configurable log levels, directory, and behavior
- * - Optional HTTP request/response logging middleware
- * - Request ID generation and tracking
+ * - Optional redaction of sensitive fields (dotted paths)
+ * - Optional custom transports override
+ *
+ * Exported call signature is native Winston: `logger.info(message, meta)`.
  *
  * @example
- * // Basic usage with defaults
- * import { createLogger } from '@glowing-fishstick/shared';
- * const logger = createLogger();
- * logger.info('Server starting...');
- *
- * @example
- * // Custom configuration
- * const logger = createLogger({
- *   name: 'my-service',
- *   logLevel: 'debug',
- *   logDir: './logs'
- * });
- *
- * @example
- * // With HTTP request logging middleware
- * import { createLogger, createRequestLogger } from '@glowing-fishstick/shared';
- * const logger = createLogger({ name: 'http' });
- * app.use(createRequestLogger(logger));
+ * import { createLogger } from '@glowing-fishstick/logger';
+ * const logger = createLogger({ name: 'server', level: 'debug' });
+ * logger.info('Server listening', { port: 3000 });
+ * logger.error('Operation failed', { err: new Error('boom') });
  */
 
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import pino from 'pino';
+import winston from 'winston';
+
+const { format, transports: winstonTransports } = winston;
 
 /**
- * Create a Pino logger instance.
+ * Walk a meta object and replace values at the given dotted paths with '[REDACTED]'.
+ * Returns a new object; never mutates input. Used by the redaction format.
  *
- * In development mode (NODE_ENV=development):
- * - Logs to stdout with pretty formatting (colorized, human-readable)
- * - Logs to file in JSON format (./logs/<name>.log)
+ * WHY: Winston has no built-in redaction. We implement a minimal, path-based masker
+ * that mirrors the most common Pino `redact` use case (auth headers, tokens) without
+ * pulling in additional dependencies.
  *
- * In production mode:
- * - Logs to stdout in JSON format only (for container log collection)
- *
- * @param {object} [options] - Configuration options
- * @param {string} [options.name='app'] - Logger name (used for file naming
- *   and context)
- * @param {string} [options.logLevel] - Minimum log level
- *   (trace|debug|info|warn|error|fatal). Defaults to LOG_LEVEL env var or 'info'
- * @param {string} [options.logDir] - Directory for log files. Defaults to
- *   process.cwd()/logs
- * @param {boolean} [options.enableFile=true] - Enable file logging in
- *   development mode
- * @returns {import('pino').Logger} Pino logger instance
- *
- * @example
- * const logger = createLogger({ name: 'server', logLevel: 'debug' });
- * logger.debug('Detailed trace info');
- * logger.info('Server listening', { port: 3000 });
- * logger.error({ err: new Error('failure') }, 'Operation failed');
+ * @param {object} info - Winston log info object
+ * @param {string[]} paths - Dotted paths to redact (e.g. 'req.headers.authorization')
+ * @returns {object} New info object with redactions applied
  */
-export function createLogger(options = {}) {
-  const { name = 'app', logLevel, logDir, enableFile = true } = options;
-
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const level = logLevel || process.env.LOG_LEVEL || 'info';
-
-  const pinoOptions = {
-    name,
-    level,
-    timestamp: pino.stdTimeFunctions.isoTime,
-  };
-
-  // Production: JSON to stdout only
-  if (!isDevelopment) {
-    return pino(pinoOptions);
-  }
-
-  // Development: multistream (pretty stdout + optional JSON file)
-  const streams = [
-    {
-      level,
-      stream: pino.transport({
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-        },
-      }),
-    },
-  ];
-
-  // Add file stream if enabled
-  if (enableFile) {
-    const baseLogDir = logDir || path.resolve(process.cwd(), 'logs');
-
-    // Ensure logs directory exists
-    try {
-      fs.mkdirSync(baseLogDir, { recursive: true });
-    } catch (error) {
-      // If directory creation fails, log to console (logger not yet ready)
-      console.error(`Failed to create log directory at ${baseLogDir}:`, error);
+function redactPaths(info, paths) {
+  if (!paths.length) return info;
+  // Shallow-clone the top level so we can mutate nested structures safely without
+  // disturbing the caller's meta object.
+  const cloned = { ...info };
+  for (const dotted of paths) {
+    const segments = dotted.split('.');
+    let cursor = cloned;
+    let parent = null;
+    let lastKey = null;
+    for (let i = 0; i < segments.length; i += 1) {
+      const key = segments[i];
+      if (cursor == null || typeof cursor !== 'object' || !(key in cursor)) {
+        cursor = undefined;
+        break;
+      }
+      // Clone each level we descend into so we don't mutate caller-owned objects.
+      const next = cursor[key];
+      if (i < segments.length - 1) {
+        const cloneNext = next && typeof next === 'object' ? { ...next } : next;
+        cursor[key] = cloneNext;
+        cursor = cloneNext;
+      } else {
+        parent = cursor;
+        lastKey = key;
+      }
     }
-
-    // Sanitize filename: replace colons (Windows reserved char) with hyphens
-    const sanitizedName = name.replaceAll(':', '-');
-    const logFile = path.join(baseLogDir, `${sanitizedName}.log`);
-
-    streams.push({
-      level,
-      stream: fs.createWriteStream(logFile, { flags: 'a' }),
-    });
+    if (parent && lastKey != null && lastKey in parent) {
+      parent[lastKey] = '[REDACTED]';
+    }
   }
-
-  return pino(pinoOptions, pino.multistream(streams));
+  return cloned;
 }
 
 /**
- * Create an HTTP request/response logging middleware.
- * Logs incoming requests and outgoing responses with timing and status.
- * Automatically generates request IDs if not already present.
+ * Build the redaction format. Returns a no-op format when paths is empty.
  *
- * @param {import('pino').Logger} logger - Logger instance to use
- * @param {object} [options] - Middleware options
- * @param {boolean} [options.generateRequestId=true] - Auto-generate request IDs
- * @returns {Function} Express middleware
- *
- * @example
- * import { createLogger, createRequestLogger } from '@glowing-fishstick/shared';
- * const logger = createLogger({ name: 'http' });
- * app.use(createRequestLogger(logger));
- *
- * @example
- * // Disable automatic request ID generation (if using separate middleware)
- * import { createRequestIdMiddleware } from '@glowing-fishstick/shared';
- * app.use(createRequestIdMiddleware());
- * app.use(createRequestLogger(logger, { generateRequestId: false }));
- *
- * @example
- * // Output (development):
- * [2026-02-15 10:23:45] INFO (http): Request received
- *   method: "GET"
- *   pathname: "/api/tasks"
- *   reqId: "abc123"
- * [2026-02-15 10:23:45] INFO (http): Response sent
- *   method: "GET"
- *   pathname: "/api/tasks"
- *   status: 200
- *   duration: 15
- *   reqId: "abc123"
+ * @param {string[]} paths
+ * @returns {import('logform').Format}
  */
-export function createRequestLogger(logger, options = {}) {
-  const { generateRequestId = true } = options;
+function createRedactFormat(paths) {
+  return format((info) => (paths.length ? redactPaths(info, paths) : info))();
+}
 
-  if (!logger || typeof logger.info !== 'function') {
-    throw new TypeError('createRequestLogger requires a valid logger instance');
+/**
+ * Dev printf format: human-readable line with appended JSON meta when present.
+ * WHY: Winston's default printf is sparse; this mirrors the previous pino-pretty
+ * developer ergonomics (timestamp, level, name, message, meta).
+ */
+const devPrintf = format.printf((info) => {
+  const { timestamp, level, message, name, stack, ...rest } = info;
+  // Symbol-keyed Winston internals (level, splat) are filtered automatically by
+  // destructure; only enumerable string keys appear in `rest`.
+  const metaKeys = Object.keys(rest);
+  const metaPart = metaKeys.length ? ` ${JSON.stringify(rest)}` : '';
+  const stackPart = stack ? `\n${stack}` : '';
+  const namePart = name ? ` [${name}]` : '';
+  return `${timestamp} ${level}${namePart} ${message}${metaPart}${stackPart}`;
+});
+
+/**
+ * Create a Winston logger instance.
+ *
+ * In development mode (NODE_ENV=development):
+ * - Console: colorized printf
+ * - Optional file: JSON
+ *
+ * In production:
+ * - Console: JSON (for container log collectors)
+ *
+ * @param {object} [options] - Configuration options
+ * @param {string} [options.name='app'] - Logger name (logged as `name`; used for file naming)
+ * @param {string} [options.level] - Minimum log level. Defaults to LOG_LEVEL env var or 'info'
+ * @param {string} [options.logDir] - Directory for log files. Defaults to process.cwd()/logs
+ * @param {boolean} [options.enableFile=false] - Enable file transport (JSON)
+ * @param {string[]} [options.redact=[]] - Dotted paths to mask with '[REDACTED]'
+ * @param {import('winston').transport[]} [options.transports] - Override transports entirely
+ *   (useful for tests; suppresses Console + File construction)
+ * @returns {import('winston').Logger} Winston logger instance
+ *
+ * @example
+ * const logger = createLogger({ name: 'server', level: 'debug' });
+ * logger.debug('Detailed trace info');
+ * logger.info('Server listening', { port: 3000 });
+ * logger.error('Operation failed', { err: new Error('boom') });
+ */
+export function createLogger(options = {}) {
+  const {
+    name = 'app',
+    level,
+    logDir,
+    enableFile = false,
+    redact = [],
+    transports: transportsOverride,
+  } = options;
+
+  const env = process.env.NODE_ENV;
+  const isProduction = env === 'production';
+  const isTest = env === 'test';
+  const resolvedLevel = level || process.env.LOG_LEVEL || 'info';
+
+  // Logger-level formats are applied BEFORE any transport-specific format.
+  // WHY: placing redaction + error/stack serialization here ensures consumer-supplied
+  // `transports` (e.g. test transports) also get redaction applied automatically.
+  // - errors({ stack: true }) ensures Error meta serializes with `stack`; without
+  //   this Winston serializes Error instances as `{}`. Matches Pino's default
+  //   err serializer behavior consumers depend on.
+  const loggerFormat = format.combine(
+    format.timestamp(),
+    format.errors({ stack: true }),
+    format.splat(),
+    createRedactFormat(redact),
+  );
+
+  let transports;
+  if (transportsOverride) {
+    transports = transportsOverride;
+  } else if (isProduction) {
+    transports = [
+      new winstonTransports.Console({
+        format: format.json(),
+      }),
+    ];
+  } else {
+    // Dev / test default: colorized console.
+    // WHY: colorize disabled in test mode to keep test output clean and free of ANSI noise.
+    const consoleFormats = [];
+    if (!isTest) {
+      consoleFormats.push(format.colorize());
+    }
+    consoleFormats.push(devPrintf);
+    transports = [new winstonTransports.Console({ format: format.combine(...consoleFormats) })];
+
+    if (enableFile) {
+      const baseLogDir = logDir || path.resolve(process.cwd(), 'logs');
+      try {
+        fs.mkdirSync(baseLogDir, { recursive: true });
+      } catch (error) {
+        // Logger is not yet constructed; fall back to console.error so the user sees the cause.
+        console.error(`Failed to create log directory at ${baseLogDir}:`, error);
+      }
+      // Sanitize filename: replace colons (Windows reserved char) with hyphens.
+      const sanitizedName = name.replaceAll(':', '-');
+      const logFile = path.join(baseLogDir, `${sanitizedName}.log`);
+      transports.push(
+        new winstonTransports.File({
+          filename: logFile,
+          format: format.json(),
+        }),
+      );
+    }
   }
 
-  return (req, res, next) => {
-    // Generate request ID if not present and option is enabled
-    if (generateRequestId && !req.id) {
-      req.id = req.headers['x-request-id'] || crypto.randomUUID();
-      res.setHeader('x-request-id', req.id);
-    }
-
-    const startTime = Date.now();
-    const method = req.method;
-    const pathname = req.path;
-    const reqId = req.id || req.headers['x-request-id'];
-
-    // Log incoming request
-    logger.info(
-      {
-        type: 'http.request',
-        method,
-        pathname,
-        reqId,
-      },
-      'Request received',
-    );
-
-    // Log response completion via lifecycle event instead of monkey-patching res.end.
-    // Using 'finish' preserves the full res.end contract and avoids conflicts with
-    // other middleware or APM tools that observe response methods.
-    res.once('finish', () => {
-      const duration = Date.now() - startTime;
-      const status = res.statusCode;
-
-      logger.info(
-        {
-          type: 'http.response',
-          method,
-          pathname,
-          status,
-          duration,
-          reqId,
-        },
-        'Response sent',
-      );
-    });
-
-    next();
-  };
+  return winston.createLogger({
+    level: resolvedLevel,
+    defaultMeta: { name },
+    format: loggerFormat,
+    transports,
+  });
 }

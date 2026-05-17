@@ -1,6 +1,6 @@
 // Type declarations for @glowing-fishstick/logger
 
-import type { Logger } from 'pino';
+import type { Logger, transport as WinstonTransport } from 'winston';
 import type { RequestHandler } from 'express';
 
 /**
@@ -12,20 +12,31 @@ export interface LoggerOptions {
 
   /**
    * Minimum log level.
-   * Accepted values: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'
+   * Accepted values: 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly'
    * Defaults to LOG_LEVEL environment variable or 'info'
    */
-  logLevel?: string;
+  level?: string;
 
-  /** Directory for log files. Defaults to process.cwd()/logs */
+  /** Directory for log files (when enableFile=true). Defaults to process.cwd()/logs */
   logDir?: string;
 
   /**
-   * Enable file logging in development mode.
-   * In production, logs are JSON to stdout only.
-   * Defaults to true.
+   * Enable JSON file logging. Defaults to false.
+   * File transport is only added in non-production mode when this is true.
    */
   enableFile?: boolean;
+
+  /**
+   * Dotted paths inside log meta to mask with '[REDACTED]'.
+   * Example: ['req.headers.authorization', 'password']
+   */
+  redact?: string[];
+
+  /**
+   * Override transports entirely. When provided, Console + File defaults are NOT
+   * constructed. Useful for tests (e.g. silent transports).
+   */
+  transports?: WinstonTransport[];
 }
 
 /**
@@ -40,31 +51,26 @@ export interface RequestLoggerOptions {
 }
 
 /**
- * Create a Pino logger instance.
+ * Create a Winston logger instance.
  *
- * In development mode (NODE_ENV=development):
- * - Logs to stdout with pretty formatting (colorized, human-readable)
- * - Logs to file in JSON format (./logs/<name>.log)
- *
- * In production mode:
- * - Logs to stdout in JSON format only (for container log collection)
+ * In development mode: colorized printf console (+ optional JSON file).
+ * In production: JSON to stdout only.
  *
  * @param options - Configuration options
- * @returns Pino logger instance
+ * @returns Winston logger instance
  *
  * @example
  * import { createLogger } from '@glowing-fishstick/logger';
- * const logger = createLogger({ name: 'server', logLevel: 'debug' });
+ * const logger = createLogger({ name: 'server', level: 'debug' });
  * logger.info('Server listening', { port: 3000 });
  */
 export function createLogger(options?: LoggerOptions): Logger;
 
 /**
  * Create an HTTP request/response logging middleware.
- * Logs incoming requests and outgoing responses with timing and status.
- * Automatically generates request IDs if not already present.
+ * Uses native Winston call signature: `logger.info(message, meta)`.
  *
- * @param logger - Logger instance to use
+ * @param logger - Winston logger instance
  * @param options - Middleware options
  * @returns Express middleware function
  *

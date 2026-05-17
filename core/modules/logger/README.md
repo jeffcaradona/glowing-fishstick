@@ -1,6 +1,6 @@
 # @glowing-fishstick/logger
 
-Pino-based structured logging module for glowing-fishstick applications. Provides a configured Pino logger with dev/prod modes and an Express request-logging middleware.
+Winston-based structured logging module for glowing-fishstick applications. Provides a configured Winston logger with dev/prod modes and an Express request-logging middleware. All exports use **native Winston call signature**: `logger.info(message, meta)`.
 
 ## Install
 
@@ -8,37 +8,37 @@ Pino-based structured logging module for glowing-fishstick applications. Provide
 npm install @glowing-fishstick/logger
 ```
 
-In development mode, logs are pretty-printed using `pino-pretty`. Install it as a dev dependency in your project:
-
-```sh
-npm install -D pino-pretty
-```
-
-`pino-pretty` is declared as an optional peer dependency. Package managers may not warn if it is missing, but `createLogger` expects it to be installed in development; to avoid runtime errors and get pretty-printed logs, ensure `pino-pretty` is present in your devDependencies.
+No additional peer dependencies are required. `winston` is bundled as a runtime dependency.
 
 ## Exports
 
-| Export                | Description                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `createLogger`        | Creates a Pino logger with dev/prod modes; file logging in dev, JSON to stdout in prod |
-| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking    |
+| Export                | Description                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `createLogger`        | Creates a Winston logger with dev/prod modes; optional JSON file transport, redaction.   |
+| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking.    |
 
 ## Configuration
 
 ### `createLogger(options?)`
 
-Creates a configured Pino logger instance.
+Creates a configured Winston logger instance.
 
 **Options** (`LoggerOptions`):
 
-| Property     | Type    | Default                           | Description                                                                     |
-| ------------ | ------- | --------------------------------- | ------------------------------------------------------------------------------- |
-| `name`       | string  | `'app'`                           | Logger name (used for file naming and context)                                  |
-| `logLevel`   | string  | `'info'` (or `LOG_LEVEL` env var) | Minimum log level: `trace` \| `debug` \| `info` \| `warn` \| `error` \| `fatal` |
-| `logDir`     | string  | `process.cwd()/logs`              | Directory for log files (dev mode only)                                         |
-| `enableFile` | boolean | `true`                            | Enable file logging in development mode                                         |
+| Property     | Type                  | Default                           | Description                                                                                              |
+| ------------ | --------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `name`       | string                | `'app'`                           | Logger name (emitted as `name` in meta; also used for file naming).                                      |
+| `level`      | string                | `'info'` (or `LOG_LEVEL` env var) | Minimum log level: `error` \| `warn` \| `info` \| `http` \| `verbose` \| `debug` \| `silly`.             |
+| `logDir`     | string                | `process.cwd()/logs`              | Directory for log files (only when `enableFile` is true).                                                |
+| `enableFile` | boolean               | `false`                           | Enable JSON file transport in non-production mode.                                                       |
+| `redact`     | string[]              | `[]`                              | Dotted paths inside meta to mask with `'[REDACTED]'` (e.g. `['req.headers.authorization', 'password']`). |
+| `transports` | `winston.transport[]` | (none)                            | Override transports entirely. When provided, Console/File defaults are NOT constructed. Tests use this.  |
 
-**Returns**: Pino `Logger` instance with multistream output (pretty stdout + file logging in dev; JSON stdout in prod).
+**Returns**: Winston `Logger` instance.
+
+- **Development** (`NODE_ENV !== 'production'`): colorized printf console output. When `enableFile=true`, a JSON file transport is also added at `<logDir>/<name>.log`.
+- **Production**: JSON to stdout only (for container log collectors).
+- **Test** (`NODE_ENV='test'`): colorize is disabled to keep test output clean.
 
 ### `createRequestLogger(logger, options?)`
 
@@ -46,9 +46,9 @@ Creates an Express middleware for request/response logging.
 
 **Arguments**:
 
-- `logger` — Pino logger instance (from `createLogger()`)
+- `logger` — Winston logger instance (from `createLogger()`).
 - `options` (`RequestLoggerOptions`):
-  - `generateRequestId` (boolean, default `true`) — Auto-generate UUIDs; also reads from `x-request-id` header
+  - `generateRequestId` (boolean, default `true`) — Auto-generate UUIDs; also reads from `x-request-id` header.
 
 **Returns**: Express `RequestHandler` middleware that logs incoming requests and outgoing responses with timing, status, and request ID.
 
@@ -59,13 +59,37 @@ Creates an Express middleware for request/response logging.
 ```js
 import { createLogger } from '@glowing-fishstick/logger';
 
-const logger = createLogger({ name: 'my-api', logLevel: 'info' });
+const logger = createLogger({ name: 'my-api', level: 'info' });
 
 logger.info('Server starting');
-logger.error({ err }, 'Something went wrong');
+logger.error('Something went wrong', { err });
 ```
 
-In development, logs are pretty-printed to stdout and written to `logs/<name>.log`. In production (`NODE_ENV=production`), JSON is written to stdout only.
+In development, logs are colorized and printed to stdout. In production (`NODE_ENV=production`), JSON is written to stdout only.
+
+### Redaction
+
+```js
+const logger = createLogger({
+  name: 'my-api',
+  redact: ['req.headers.authorization', 'password'],
+});
+
+logger.info('login attempt', { req: { headers: { authorization: 'Bearer abc' } } });
+// → req.headers.authorization is replaced with '[REDACTED]'
+```
+
+### Custom transports (tests)
+
+```js
+import winston from 'winston';
+import { createLogger } from '@glowing-fishstick/logger';
+
+const logger = createLogger({
+  name: 'test',
+  transports: [new winston.transports.Console({ silent: true })],
+});
+```
 
 ### Express request middleware
 
