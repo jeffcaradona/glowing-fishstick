@@ -5,6 +5,7 @@ const commonGlobals = {
   process: 'readonly',
   Buffer: 'readonly',
   global: 'readonly',
+  structuredClone: 'readonly',
 };
 
 const browserGlobals = {
