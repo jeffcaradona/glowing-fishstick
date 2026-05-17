@@ -209,7 +209,7 @@ describe('Graceful Shutdown (P1)', () => {
     // Note: Since server.close() waits for connections, and we have a lingering
     // socket, the timeout should eventually fire and force-destroy it.
     expect(logger.warn).toHaveBeenCalled();
-    const warningCalls = logger.warn.mock.calls.map((call) => call[1] ?? '');
+    const warningCalls = logger.warn.mock.calls.map((call) => call[0] ?? '');
     const hasTimeoutWarning = warningCalls.some(
       (msg) => msg.includes('Shutdown timeout') || msg.includes('forcing remaining connections'),
     );

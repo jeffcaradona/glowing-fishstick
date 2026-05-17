@@ -5,7 +5,7 @@
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { formatUptime } from '@glowing-fishstick/shared';
+import { formatUptime, serializeError } from '@glowing-fishstick/shared';
 import {
   createAbortControllerWithTimeout,
   normalizeRelativePathForDisplay,
@@ -115,21 +115,21 @@ export function createAdminController({
         // upstream panel failed without reproducing locally.
         logger?.warn('Failed to fetch API version for admin dashboard', {
           type: 'api.version.fetch',
-          err: apiVersionResult.reason,
+          err: serializeError(apiVersionResult.reason),
           upstream: apiVersionUrl.toString(),
         });
       }
       if (apiMemoryResult.status === 'rejected') {
         logger?.warn('Failed to fetch API memory usage for admin dashboard', {
           type: 'api.memory.fetch',
-          err: apiMemoryResult.reason,
+          err: serializeError(apiMemoryResult.reason),
           upstream: apiMemoryUrl.toString(),
         });
       }
       if (apiRuntimeResult.status === 'rejected') {
         logger?.warn('Failed to fetch API runtime for admin dashboard', {
           type: 'api.runtime.fetch',
-          err: apiRuntimeResult.reason,
+          err: serializeError(apiRuntimeResult.reason),
           upstream: apiRuntimeUrl.toString(),
         });
       }
@@ -204,7 +204,7 @@ export function createAdminController({
         const durationMs = Date.now() - startedAt;
         logger?.warn('API health passthrough failed', {
           type: 'api.health.passthrough',
-          err,
+          err: serializeError(err),
           durationMs,
         });
         // WHY: 502 indicates gateway/upstream failure, which is distinct from

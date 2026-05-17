@@ -81,9 +81,26 @@ export { createHookRegistry } from './src/hook-registry.js';
 export { storeRegistries } from './src/registry-store.js';
 export { createLogger, createRequestLogger } from '@glowing-fishstick/logger';
 export { createRequestIdMiddleware } from './src/request-id.js';
+export { createAdminThrottle } from './src/middlewares/admin-throttle.js';
+export {
+  normalizeError,
+  resolveErrorLogger,
+  logUnexpectedError,
+  serializeError,
+} from './src/middlewares/error-utils.js';
+export { attachHookRegistries, createShutdownGate } from './src/factory-utils.js';
 export { formatUptime } from './src/utils/formatters.js';
 export { generateToken, verifyToken } from './src/auth/jwt.js';
 export { jwtAuthMiddleware } from './src/middlewares/jwt-auth.js';
+export {
+  createServiceContainer,
+  ServiceAlreadyRegisteredError,
+  ServiceNotFoundError,
+  ServiceCircularDependencyError,
+  ServiceResolutionError,
+  ServiceDisposeError,
+  ServiceAggregateDisposeError,
+} from './src/service-container.js';
 ```
 
 Source-of-truth file mapping for this public API surface:
@@ -92,7 +109,8 @@ Source-of-truth file mapping for this public API surface:
 - `createConfig` / `filterSensitiveKeys` → `core/web-app/src/config/env.js`
 - `errors` (`createAppError`, `createNotFoundError`, `createValidationError`) → `core/web-app/src/errors/appError.js`
 - `createServer` implementation → `core/shared/src/server-factory.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
-- `createLogger` / `createRequestLogger` → `core/modules/logger/src/logger.js` (re-exported via the `@glowing-fishstick/shared` compatibility package boundary)
+- `createLogger` / `createRequestLogger` → `core/modules/logger/src/logger.js` (re-exported via the `@glowing-fishstick/shared` compatibility package boundary); logger configuration and examples in this spec must use Winston's `level` option (not the legacy `logLevel` name)
+- `normalizeError` / `resolveErrorLogger` / `logUnexpectedError` / `serializeError` → `core/shared/src/middlewares/error-utils.js` (re-exported via the `@glowing-fishstick/shared` package boundary); `serializeError` produces the `{ message, name, stack, code?, statusCode?, cause? }` plain-object envelope used by both the app and API error handlers for log payloads, and structured JSON log examples should use Winston-style string `level` and `message` fields plus metadata instead of legacy Pino-style numeric `level` / `msg` output
 - `generateToken` / `verifyToken` → `core/shared/src/auth/jwt.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `jwtAuthMiddleware` → `core/shared/src/middlewares/jwt-auth.js` (re-exported via the `@glowing-fishstick/shared` package boundary)
 - `createServiceContainer` / error classes → `core/shared/src/service-container.js` (re-exported via the `@glowing-fishstick/shared` package boundary)

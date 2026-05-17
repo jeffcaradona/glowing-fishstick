@@ -8,6 +8,7 @@ export {
   normalizeError,
   resolveErrorLogger,
   logUnexpectedError,
+  serializeError,
 } from './src/middlewares/error-utils.js';
 export { attachHookRegistries, createShutdownGate } from './src/factory-utils.js';
 export { formatUptime } from './src/utils/formatters.js';

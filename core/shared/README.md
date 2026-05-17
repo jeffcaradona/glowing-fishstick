@@ -55,6 +55,7 @@ All public exports from `@glowing-fishstick/shared`:
 | `normalizeError(err)`                         | Normalize a thrown error into `{ statusCode, code, message }`               |
 | `resolveErrorLogger(req)`                     | Resolve logger from Express request context (falls back to `console.error`) |
 | `logUnexpectedError(req, err, logFn, label?)` | Log non-operational errors with request context                             |
+| `serializeError(err)`                         | Convert an Error (or unknown value) into a JSON-safe plain object that preserves `name`, `message`, `stack`, `code`, `statusCode`, and `cause` — use when embedding an Error inside a Winston meta object |
 
 ### Authentication (JWT)
 
@@ -103,7 +104,7 @@ import { createLogger } from '@glowing-fishstick/shared';
 const logger = createLogger({ name: 'my-service' });
 
 logger.info('Server starting');
-logger.error({ err: new Error('failure') }, 'Operation failed');
+logger.error('Operation failed', { err: new Error('failure') });
 ```
 
 ### Features
@@ -122,9 +123,9 @@ logger.error({ err: new Error('failure') }, 'Operation failed');
 ```js
 const logger = createLogger({
   name: 'my-app', // Logger name (default: 'app')
-  logLevel: 'debug', // Min level: trace|debug|info|warn|error|fatal (default: 'info')
+  level: 'debug', // Min level: error|warn|info|http|verbose|debug|silly (default: 'info')
   logDir: './logs', // Log directory (default: process.cwd()/logs)
-  enableFile: true, // Enable file logging in dev (default: true)
+  enableFile: false, // Enable file logging in dev (default: false)
 });
 ```
 

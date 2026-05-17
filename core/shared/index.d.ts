@@ -81,6 +81,17 @@ export function logUnexpectedError(
   label?: string,
 ): void;
 
+export interface SerializedError {
+  name: string;
+  message: string;
+  stack?: string;
+  code?: string | number;
+  statusCode?: number;
+  cause?: SerializedError | { value: unknown };
+}
+
+export function serializeError(err: unknown): SerializedError | { value: unknown };
+
 // ── Authentication (JWT) ───────────────────────────────────────────────────────
 
 export function generateToken(secret: string, expiresIn?: string): string;
