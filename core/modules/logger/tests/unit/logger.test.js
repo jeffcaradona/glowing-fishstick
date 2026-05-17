@@ -96,6 +96,32 @@ describe('createLogger', () => {
     expect(last.keep).toBe('visible');
   });
 
+  it('serializes Error objects nested under meta.err with message/name/stack', () => {
+    // WHY: regression guard for the Winston migration fix. format.errors({ stack: true })
+    // only expands stacks when the top-level info object IS an Error (e.g.
+    // `logger.error(new Error(...))`). When an Error is passed in meta —
+    // `logger.error('msg', { err })` — Winston merges it into info.err and it
+    // serializes as `{}` because Error's properties are non-enumerable. The
+    // logger-level errSerializerFormat is meant to normalize that to a plain
+    // object with message/name/stack so downstream transports always see the
+    // structured payload.
+    const { transport, records } = createCapturingTransport();
+    const logger = createLogger({
+      name: 'unit',
+      transports: [transport],
+    });
+    const boom = new Error('boom');
+    logger.error('operation failed', { err: boom });
+
+    const last = records.at(-1);
+    expect(last.err).toBeTypeOf('object');
+    expect(last.err).not.toBeInstanceOf(Error);
+    expect(last.err.message).toBe('boom');
+    expect(last.err.name).toBe('Error');
+    expect(typeof last.err.stack).toBe('string');
+    expect(last.err.stack).toContain('boom');
+  });
+
   it('emits JSON in production mode', () => {
     process.env.NODE_ENV = 'production';
     // WHY: capture by swapping the Console transport's underlying write target.
