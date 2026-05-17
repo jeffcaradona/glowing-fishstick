@@ -99,24 +99,31 @@ function createRedactFormat(paths) {
 }
 
 /**
- * Serialize an Error nested under `info.err` into a plain object with `message`,
- * `name`, and `stack` fields.
+ * Serialize an Error nested under `info.err` into a plain object that preserves
+ * existing enumerable fields while forcing `message`, `name`, and `stack`.
  *
  * WHY: `format.errors({ stack: true })` only expands stacks when the top-level
  * info object IS an Error (i.e. `logger.error(new Error(...))`). When an Error is
  * passed in meta — `logger.error('msg', { err })` — Winston merges it into
- * `info.err`, which serializes as `{}` (non-enumerable prototype properties).
- * This format mirrors Pino's built-in `err` serializer so consumers always get
- * a stack-bearing plain object regardless of call style.
+ * `info.err`, which serializes as `{}` for native Error fields because they live
+ * on non-enumerable properties. App-specific enumerable fields such as `code` or
+ * `statusCode` should still survive so downstream log consumers can filter on them.
  */
 const errSerializerFormat = format((info) => {
   if (!(info.err instanceof Error)) {
     return info;
   }
   // WHY: return a new object rather than mutating info.err to satisfy no-param-reassign.
+  // Spread first to preserve enumerable operational fields from custom Error subclasses,
+  // then force native Error fields that are commonly non-enumerable on the original.
   return {
     ...info,
-    err: { message: info.err.message, name: info.err.name, stack: info.err.stack },
+    err: {
+      ...info.err,
+      message: info.err.message,
+      name: info.err.name,
+      stack: info.err.stack,
+    },
   };
 })();
 
