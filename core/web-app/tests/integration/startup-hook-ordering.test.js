@@ -117,11 +117,16 @@ describe('Startup Hook Ordering (P0 Race Condition Fix)', () => {
 
     // All hooks should have executed despite hook-2 throwing
     expect(executionOrder).toEqual(['hook-1', 'hook-2', 'hook-3']);
+    // WHY (Pino → Winston migration): Hook registry logs failures via the
+    // native Winston (message, meta) signature. Pre-migration the meta
+    // object came first (Pino's positional convention). Asserting the
+    // current shape ensures the hook registry was rewritten cleanly and
+    // future regressions to Pino-style call ordering are caught.
     expect(logger.error).toHaveBeenCalledWith(
+      'Error in startup hook',
       expect.objectContaining({
         err: expect.objectContaining({ message: 'Hook 2 failed' }),
       }),
-      'Error in startup hook',
     );
     await close();
   });

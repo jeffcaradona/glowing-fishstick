@@ -167,11 +167,21 @@ export function createConfig(overrides = {}, env = process.env) {
  * @param {object} config - The configuration object to filter.
  * @returns {object} A new object with sensitive keys removed and paths normalized.
  */
+// WHY: Runtime singletons injected into config (e.g. winston Logger, ServiceContainer)
+// contain circular structures that throw inside the admin config template's
+// JSON.stringify call. Pre-Winston Pino loggers serialized cleanly; Winston does not.
+// Replace these with short, stable placeholders so the admin UI can still surface
+// which runtime objects are present without crashing on serialization.
+const NON_SERIALIZABLE_KEYS = new Set(['logger', 'services']);
+
 export function filterSensitiveKeys(config) {
   return Object.fromEntries(
     Object.entries(config)
       .filter(([key]) => !SENSITIVE_PATTERN.test(key))
       .map(([key, value]) => {
+        if (NON_SERIALIZABLE_KEYS.has(key) && value && typeof value === 'object') {
+          return [key, `[${value.constructor?.name ?? 'Object'}]`];
+        }
         // Convert absolute paths to repo-relative paths for display
         if (typeof value === 'string' && path.isAbsolute(value)) {
           try {

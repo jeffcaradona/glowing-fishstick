@@ -159,7 +159,7 @@ Format modeled on `plan-sprint14Reonboarding.prompt.md`. Each file has YAML fron
 - **No `.agent.md` files**: VS Code `.github/` agent mode is not a stable supported format; `mode: agent` in prompt frontmatter is the right mechanism.
 - **No skills directory**: VS Code Skills live in extension assets, not `.github/`; instructions files serve the same auto-injection purpose per-repo.
 - **Instructions are narrow**: each file targets one concern, not a general extract of all rules. Narrow scope = lower false-positive injection noise.
-- **Existing prompts untouched**: the sprint + migration plan prompts are one-time plans; this work adds reusable *workflow* templates alongside them.
+- **Existing prompts untouched**: the sprint + migration plan prompts are one-time plans; this work adds reusable _workflow_ templates alongside them.
 - **`pr-review.prompt.md` is `mode: agent`** (not `ask`) so it can inspect staged files directly rather than relying on a developer's description.
 - **Out of scope**: GitHub Actions workflows, branch protection rules, issue/PR templates, Dependabot config.
 

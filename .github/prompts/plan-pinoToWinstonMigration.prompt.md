@@ -106,7 +106,7 @@ Done in parallel across packages once Phase 1 lands.
 - `sandbox/app/src/server.js`, `sandbox/app/src/app.js`, `sandbox/api/src/server.js`
 - `core/generator/templates/{app,api}/src/*.js` and `core/generator/templates/{app,api}/package.json`
 - `core/{shared,web-app,service-api}/index.d.ts` and `package.json`
-- Docs: README, CLAUDE, AGENTS, AGENTS-readable, DISCOVERABILITY, RELEASING, documentation/00-project-specs, 01-application-development, ARCHITECTURE, 99-potential-gaps, sandbox DEV_*_READMEs, all five CHANGELOGs
+- Docs: README, CLAUDE, AGENTS, AGENTS-readable, DISCOVERABILITY, RELEASING, documentation/00-project-specs, 01-application-development, ARCHITECTURE, 99-potential-gaps, sandbox DEV\_\*\_READMEs, all five CHANGELOGs
 
 ## Risks / Watch-outs
 

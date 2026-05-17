@@ -12,10 +12,10 @@ No additional peer dependencies are required. `winston` is bundled as a runtime 
 
 ## Exports
 
-| Export                | Description                                                                              |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `createLogger`        | Creates a Winston logger with dev/prod modes; optional JSON file transport, redaction.   |
-| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking.    |
+| Export                | Description                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `createLogger`        | Creates a Winston logger with dev/prod modes; optional JSON file transport, redaction. |
+| `createRequestLogger` | Express middleware for structured request/response logging with request ID tracking.   |
 
 ## Configuration
 

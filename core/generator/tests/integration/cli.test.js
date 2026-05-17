@@ -84,6 +84,10 @@ describe('app template', () => {
     const pkg = JSON.parse(raw);
     expect(pkg.scripts.dev).not.toContain('../core/');
     expect(pkg.scripts.dev).toContain('nodemon');
+    // WHY: Pino → Winston migration retired pino-pretty as a scaffolded devDep.
+    // Guard against regression that would re-introduce a blocked transitive.
+    expect(pkg.devDependencies ?? {}).not.toHaveProperty('pino-pretty');
+    expect(raw).not.toContain('pino-pretty');
   });
 
   it('renders appName in server.js logger', async () => {
@@ -135,6 +139,9 @@ describe('api template', () => {
     expect(Object.keys(pkg.dependencies)).not.toContain('@glowing-fishstick/app');
     expect(pkg.dependencies['@glowing-fishstick/api']).toBe(`^${generatorVersion}`);
     expect(pkg.dependencies['@glowing-fishstick/shared']).toBe(`^${generatorVersion}`);
+    // WHY: Pino → Winston migration retired pino-pretty as a scaffolded devDep.
+    expect(pkg.devDependencies ?? {}).not.toHaveProperty('pino-pretty');
+    expect(raw).not.toContain('pino-pretty');
   });
 
   it('renders custom port in config/env.js', async () => {
