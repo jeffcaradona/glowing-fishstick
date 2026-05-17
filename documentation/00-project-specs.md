@@ -955,7 +955,7 @@ Factory function that creates a Winston logger instance.
 | Name                 | Type                  | Default                         | Description                                                                                              |
 | -------------------- | --------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `options.name`       | `string`              | `'app'`                         | Logger name (emitted as `name` in meta; also used for file naming).                                      |
-| `options.level`      | `string`              | `'info'` or `LOG_LEVEL` env var | Minimum log level: `error` \| `warn` \| `info` \| `http` \| `verbose` \| `debug` \| `silly`.            |
+| `options.level`      | `string`              | `'info'` or `LOG_LEVEL` env var | Minimum log level: `error` \| `warn` \| `info` \| `http` \| `verbose` \| `debug` \| `silly`.             |
 | `options.logDir`     | `string`              | `process.cwd()/logs`            | Directory for log files (only when `enableFile` is true).                                                |
 | `options.enableFile` | `boolean`             | `false`                         | Enable JSON file transport in non-production mode.                                                       |
 | `options.redact`     | `string[]`            | `[]`                            | Dotted paths inside meta to mask with `'[REDACTED]'`.                                                    |

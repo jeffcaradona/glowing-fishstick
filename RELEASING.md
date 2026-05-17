@@ -163,10 +163,10 @@ VERIFY IF CHANGED: Confirm published versions in npm registry and local changelo
 
 Long-lived support branches are cut from the last release tag of a given minor line so that critical fixes can be backported without dragging in the next minor's breaking changes.
 
-| Branch              | Tracks                                        | Purpose                                                                                                                          |
-| ------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `main`              | next release line (currently `0.2.x`)         | Active development. All new features and breaking changes land here.                                                             |
-| `maintenance/0.1.x` | last `0.1.x` release (Pino-backed logger)     | Pino-compatible backports only — security fixes and severe bug fixes for consumers still pinned to `@glowing-fishstick/*@^0.1.x`. |
+| Branch              | Tracks                                    | Purpose                                                                                                                           |
+| ------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `main`              | next release line (currently `0.2.x`)     | Active development. All new features and breaking changes land here.                                                              |
+| `maintenance/0.1.x` | last `0.1.x` release (Pino-backed logger) | Pino-compatible backports only — security fixes and severe bug fixes for consumers still pinned to `@glowing-fishstick/*@^0.1.x`. |
 
 WHY: `0.2.0` is a breaking change (Pino → Winston call-signature flip). Consumers blocked on Pino's removal need a place to receive `0.1.x` patches without being forced onto Winston.
 
