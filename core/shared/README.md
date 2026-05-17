@@ -38,7 +38,7 @@ All public exports from `@glowing-fishstick/shared`:
 
 | Export                                  | Description                                                     |
 | --------------------------------------- | --------------------------------------------------------------- |
-| `createLogger(options?)`                | Pino logger factory — pretty-printed in dev, JSON in prod       |
+| `createLogger(options?)`                | Winston logger factory — colorized printf in dev, JSON in prod  |
 | `createRequestLogger(logger, options?)` | Express middleware for structured HTTP request/response logging |
 
 ### Request & Middleware
@@ -92,7 +92,7 @@ When consuming via `@glowing-fishstick/app`, `createServer` is re-exported for c
 
 ## Logger
 
-The package provides a Pino-based logger factory with environment-aware formatting:
+The package provides a Winston-based logger factory with environment-aware formatting:
 
 `@glowing-fishstick/shared` is the recommended consumer import point for logger APIs. Implementation ownership is in `@glowing-fishstick/logger`.
 

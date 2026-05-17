@@ -35,12 +35,16 @@ export function normalizeError(err) {
  * object instantiation on error paths (Snyk javascript/NoRateLimitingForExpensiveWebOperation).
  * Fallback to console.error preserves error visibility without allocation overhead.
  *
+ * WHY (signature): Callers pass `(meta, msg)` for ergonomic reasons (meta is
+ * usually the larger object literal). We flip to native Winston `(msg, meta)`
+ * inside this helper so call sites in app and api error handlers stay untouched.
+ *
  * @param {import('express').Request} req
  * @returns {(meta: object, msg: string) => void}
  */
 export function resolveErrorLogger(req) {
   const logger = req.app?.locals?.logger;
-  return logger ? (meta, msg) => logger.error(meta, msg) : (meta, msg) => console.error(msg, meta);
+  return logger ? (meta, msg) => logger.error(msg, meta) : (meta, msg) => console.error(msg, meta);
 }
 
 /**

@@ -156,7 +156,7 @@ const MIGRATIONS = [
  * may take seconds. Acceptable because migrations run at startup before traffic.
  *
  * @param {import('node:sqlite').DatabaseSync} db
- * @param {object} [logger] - Optional Pino-compatible logger
+ * @param {object} [logger] - Optional Winston-compatible logger
  */
 export function runMigrations(db, logger) {
   // Ensure the version tracking table exists before querying it.
@@ -187,7 +187,7 @@ export function runMigrations(db, logger) {
       logger?.info(`Migration v${migration.version} applied successfully`);
     } catch (err) {
       db.exec('ROLLBACK');
-      logger?.error({ err }, `Migration v${migration.version} failed — rolled back`);
+      logger?.error(`Migration v${migration.version} failed — rolled back`, { err });
       throw err;
     }
   }
@@ -228,7 +228,7 @@ export const createDatabase = (config) => {
       throw new Error('SQLite health check failed — database may be corrupt or locked');
     }
 
-    logger?.info({ dbPath: DB_PATH }, 'SQLite database ready');
+    logger?.info('SQLite database ready', { dbPath: DB_PATH });
   };
 
   /**

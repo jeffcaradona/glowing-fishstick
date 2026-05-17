@@ -281,11 +281,17 @@ describe('Graceful Shutdown (P1)', () => {
 
     // All hooks should execute despite error in hook-2
     expect(executionOrder).toEqual(['hook-1', 'hook-2-error', 'hook-3']);
+    // WHY (Pino → Winston migration): Shutdown hook error path now uses
+    // Winston's native (message, meta) signature. The err object survives
+    // serialization thanks to format.errors({ stack: true }) installed in
+    // @glowing-fishstick/logger; without that format Winston would drop
+    // Error instances down to {} in JSON output and this assertion would
+    // pass on the message but silently lose the stack in production logs.
     expect(logger.error).toHaveBeenCalledWith(
+      'Error in shutdown hook',
       expect.objectContaining({
         err: expect.objectContaining({ message: 'Shutdown hook failed' }),
       }),
-      'Error in shutdown hook',
     );
   }, 10000);
 

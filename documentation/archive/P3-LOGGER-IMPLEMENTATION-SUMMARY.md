@@ -1,5 +1,8 @@
 # P3: Logger Implementation Summary
 
+> **⚠️ Historical — superseded by the 0.2.0 Pino → Winston migration.**
+> This document describes the original Pino-based implementation from 2026-02. The framework migrated off Pino to Winston in 0.2.0 (see `core/modules/logger/CHANGELOG.md` and `.github/prompts/plan-pinoToWinstonMigration.prompt.md`) because Pino is blocked by the corporate package mirror. The `"Pino is ~10x faster than Winston"` comparison below is preserved as historical context; the 0.2.0 PR description carries the latency/throughput tradeoff note.
+
 **Status**: ✅ Complete  
 **Date**: 2026-02-15  
 **Priority**: P3 (Enhancement)

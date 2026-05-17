@@ -6,7 +6,7 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createServiceContainer } from '@glowing-fishstick/shared';
+import { createServiceContainer, createLogger } from '@glowing-fishstick/shared';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,10 +42,31 @@ const DEFAULTS = Object.freeze({
  * @returns {Readonly<object>}
  */
 export function createApiConfig(overrides = {}, env = process.env) {
+  const appName = overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName;
+
+  // WHY: Consumer-provided logger always wins. When unset, auto-construct one
+  // from optional knobs so consumers can opt into structured logging without
+  // importing createLogger themselves. Defaults match @glowing-fishstick/logger.
+  const logLevel = overrides.logLevel ?? env.LOG_LEVEL;
+  const logDir = overrides.logDir ?? env.LOG_DIR;
+  const enableFileLogging =
+    overrides.enableFileLogging ??
+    (env.ENABLE_FILE_LOGGING ? env.ENABLE_FILE_LOGGING === 'true' : undefined);
+  const logRedact = overrides.logRedact;
+  const logger =
+    overrides.logger ??
+    createLogger({
+      name: appName,
+      ...(logLevel ? { level: logLevel } : {}),
+      ...(logDir ? { logDir } : {}),
+      ...(enableFileLogging !== undefined ? { enableFile: enableFileLogging } : {}),
+      ...(logRedact ? { redact: logRedact } : {}),
+    });
+
   const config = {
     port: Number(overrides.port ?? env.PORT ?? DEFAULTS.port),
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
-    appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
+    appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
     frameworkVersion: FRAMEWORK_VERSION,
     enableRequestLogging:
@@ -90,9 +111,12 @@ export function createApiConfig(overrides = {}, env = process.env) {
     adminRateLimitMax: Number(
       overrides.adminRateLimitMax ?? env.API_ADMIN_RATE_LIMIT_MAX ?? DEFAULTS.adminRateLimitMax,
     ),
-    logger: overrides.logger,
-    services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
+    services: overrides.services ?? createServiceContainer({ logger }),
     ...overrides,
+    // WHY: spread overrides above for forward-compat, then re-assert the resolved
+    // logger so a consumer-injected logger still wins without leaving the
+    // auto-constructed instance dangling.
+    logger: overrides.logger ?? logger,
   };
 
   return Object.freeze(config);

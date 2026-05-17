@@ -6,7 +6,7 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
-import { createServiceContainer } from '@glowing-fishstick/shared';
+import { createServiceContainer, createLogger } from '@glowing-fishstick/shared';
 
 /**
  * Regex pattern matching sensitive key names that should be filtered
@@ -93,10 +93,32 @@ const DEFAULTS = Object.freeze({
 export function createConfig(overrides = {}, env = process.env) {
   const defaultApiBaseUrl = `http://localhost:${Number(env.API_PORT ?? 3001)}`;
 
+  const appName = overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName;
+
+  // WHY: Consumer-provided logger always wins. When unset, auto-construct one from
+  // optional knobs so consumers can opt into structured logging without importing
+  // createLogger themselves. Defaults match @glowing-fishstick/logger (level via
+  // LOG_LEVEL env or 'info'; file transport off by default).
+  const logLevel = overrides.logLevel ?? env.LOG_LEVEL;
+  const logDir = overrides.logDir ?? env.LOG_DIR;
+  const enableFileLogging =
+    overrides.enableFileLogging ??
+    (env.ENABLE_FILE_LOGGING ? env.ENABLE_FILE_LOGGING === 'true' : undefined);
+  const logRedact = overrides.logRedact;
+  const logger =
+    overrides.logger ??
+    createLogger({
+      name: appName,
+      ...(logLevel ? { level: logLevel } : {}),
+      ...(logDir ? { logDir } : {}),
+      ...(enableFileLogging !== undefined ? { enableFile: enableFileLogging } : {}),
+      ...(logRedact ? { redact: logRedact } : {}),
+    });
+
   const config = {
     port: Number(overrides.port ?? env.PORT ?? DEFAULTS.port),
     nodeEnv: overrides.nodeEnv ?? env.NODE_ENV ?? DEFAULTS.nodeEnv,
-    appName: overrides.appName ?? env.APP_NAME ?? DEFAULTS.appName,
+    appName,
     appVersion: overrides.appVersion ?? env.APP_VERSION ?? DEFAULTS.appVersion,
     frameworkVersion: FRAMEWORK_VERSION,
     apiBaseUrl: overrides.apiBaseUrl ?? env.API_BASE_URL ?? defaultApiBaseUrl,
@@ -125,8 +147,12 @@ export function createConfig(overrides = {}, env = process.env) {
     adminRateLimitMax: Number(
       overrides.adminRateLimitMax ?? env.APP_ADMIN_RATE_LIMIT_MAX ?? DEFAULTS.adminRateLimitMax,
     ),
-    services: overrides.services ?? createServiceContainer({ logger: overrides.logger }),
+    services: overrides.services ?? createServiceContainer({ logger }),
     ...overrides,
+    // WHY: spread overrides above for forward-compat, then re-assert the resolved
+    // logger/services so consumer-injected values still win without leaving the
+    // auto-constructed instances dangling.
+    logger: overrides.logger ?? logger,
   };
 
   return Object.freeze(config);
@@ -141,11 +167,21 @@ export function createConfig(overrides = {}, env = process.env) {
  * @param {object} config - The configuration object to filter.
  * @returns {object} A new object with sensitive keys removed and paths normalized.
  */
+// WHY: Runtime singletons injected into config (e.g. winston Logger, ServiceContainer)
+// contain circular structures that throw inside the admin config template's
+// JSON.stringify call. Pre-Winston Pino loggers serialized cleanly; Winston does not.
+// Replace these with short, stable placeholders so the admin UI can still surface
+// which runtime objects are present without crashing on serialization.
+const NON_SERIALIZABLE_KEYS = new Set(['logger', 'services']);
+
 export function filterSensitiveKeys(config) {
   return Object.fromEntries(
     Object.entries(config)
       .filter(([key]) => !SENSITIVE_PATTERN.test(key))
       .map(([key, value]) => {
+        if (NON_SERIALIZABLE_KEYS.has(key) && value && typeof value === 'object') {
+          return [key, `[${value.constructor?.name ?? 'Object'}]`];
+        }
         // Convert absolute paths to repo-relative paths for display
         if (typeof value === 'string' && path.isAbsolute(value)) {
           try {

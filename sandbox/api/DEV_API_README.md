@@ -319,7 +319,7 @@ export function apiConfigOverrides() {
 
 #### Advantages of This Pattern
 
-✅ **Audit Logging**: All requests and responses logged via Pino (structured, queryable)  
+✅ **Audit Logging**: All requests and responses logged via Winston (structured, queryable)  
 ✅ **Payload Validation**: Oversized requests return `413` before reaching backend  
 ✅ **Resource Protection**: Requests throttled via fixed-window rate limits  
 ✅ **Request Tracing**: Built-in request IDs correlate logs across services  

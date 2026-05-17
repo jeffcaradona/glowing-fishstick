@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'node:events';
-import { createRequestLogger } from '../../src/logger.js';
+import { createRequestLogger } from '../../src/request-logger.js';
 
 /**
  * Create a minimal mock logger with spied methods.
@@ -69,12 +69,12 @@ describe('createRequestLogger', () => {
       middleware(req, res, next);
 
       expect(logger.info).toHaveBeenCalledWith(
+        'Request received',
         expect.objectContaining({
           type: 'http.request',
           method: 'POST',
           pathname: '/api/tasks',
         }),
-        'Request received',
       );
       expect(next).toHaveBeenCalled();
     });
@@ -98,6 +98,7 @@ describe('createRequestLogger', () => {
 
       expect(logger.info).toHaveBeenCalledTimes(2);
       expect(logger.info).toHaveBeenCalledWith(
+        'Response sent',
         expect.objectContaining({
           type: 'http.response',
           method: 'GET',
@@ -105,7 +106,6 @@ describe('createRequestLogger', () => {
           status: 201,
           duration: expect.any(Number),
         }),
-        'Response sent',
       );
     });
 
@@ -198,7 +198,8 @@ describe('createRequestLogger', () => {
       res.emit('finish');
 
       const responseLogCall = logger.info.mock.calls[1];
-      expect(responseLogCall[0].duration).toBeGreaterThanOrEqual(0);
+      // Native Winston signature: (message, meta) — meta is the second argument.
+      expect(responseLogCall[1].duration).toBeGreaterThanOrEqual(0);
     });
   });
 });

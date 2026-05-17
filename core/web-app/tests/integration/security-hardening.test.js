@@ -198,14 +198,21 @@ describe('Security Hardening — App', () => {
 
       await request(app).get('/test-logged-error').expect(500);
 
-      // Verify the startup-injected logger was used, not a new one
+      // Verify the startup-injected logger was used, not a new one.
+      // WHY (Pino → Winston migration): Winston's native signature is
+      // logger.error(message, meta). Pre-migration this assertion accepted
+      // ({ err, method, path }, 'Unexpected error') because Pino's first
+      // positional argument was the meta object. The error-utils helper
+      // (core/shared/src/middlewares/error-utils.js) now flips the shape
+      // internally so call sites stay untouched; the observable call shape
+      // here is the canonical Winston form.
       expect(mockLogger.error).toHaveBeenCalledWith(
+        'Unexpected error',
         expect.objectContaining({
           err: expect.any(Error),
           method: 'GET',
           path: '/test-logged-error',
         }),
-        'Unexpected error',
       );
     });
   });

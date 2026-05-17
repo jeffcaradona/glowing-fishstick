@@ -21,7 +21,7 @@ export function taskManagerApplicationPlugin(app, config) {
   const tasksApiClient = createTasksApiClient(config, app);
 
   app.registerStartupHook(async () => {
-    logger?.info({ apiUrl: config.apiUrl }, 'Task manager connecting to API…');
+    logger?.info('Task manager connecting to API…', { apiUrl: config.apiUrl });
   });
 
   app.registerShutdownHook(async () => {

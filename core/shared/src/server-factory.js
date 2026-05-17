@@ -135,7 +135,7 @@ export function createServer(app, config) {
         } catch (err) {
           // WHY: Best-effort hook execution avoids one cleanup failure blocking
           // the rest of shutdown and server close.
-          logger.error({ err }, 'Error in shutdown hook');
+          logger.error('Error in shutdown hook', { err });
         }
       }
 
@@ -149,7 +149,7 @@ export function createServer(app, config) {
         process.exit(0);
       }
     } catch (err) {
-      logger.error({ err }, 'Error during shutdown');
+      logger.error('Error during shutdown', { err });
       if (allowProcessExit) {
         process.exit(1);
       }
@@ -170,17 +170,17 @@ export function createServer(app, config) {
         try {
           await hook();
         } catch (err) {
-          logger.error({ err }, 'Error in startup hook');
+          logger.error('Error in startup hook', { err });
         }
       }
       logger.info('Startup sequence completed.');
 
       // Start listening only after initialization succeeds
       server.listen(port, () => {
-        logger.info({ port }, `${config.appName ?? 'app'} listening on http://localhost:${port}`);
+        logger.info(`${config.appName ?? 'app'} listening on http://localhost:${port}`, { port });
       });
     } catch (err) {
-      logger.error({ err }, 'Startup failed');
+      logger.error('Startup failed', { err });
       process.exit(1);
     }
   });

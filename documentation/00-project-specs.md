@@ -930,16 +930,17 @@ import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 **Status**: ✅ Implemented (P3-LOGGER-IMPLEMENTATION)
 
-The framework includes a Pino-based logger with environment-aware formatting and optional HTTP request logging middleware.
+The framework includes a Winston-based logger with environment-aware formatting and optional HTTP request logging middleware.
 
 Implementation ownership lives in `core/modules/logger` (`@glowing-fishstick/logger`), while `@glowing-fishstick/shared` remains the primary compatibility/public import boundary for logger usage.
 
 ### Features
 
-- **Development mode**: Pretty-printed console output + JSON file logs
+- **Development mode**: Colorized printf console output. Optional JSON file logs in `<logDir>/<name>.log` when `enableFile=true`.
 - **Production mode**: JSON-formatted logs to stdout for container log collection
-- **Automatic directory creation**: Creates `logs/` in consumer app root (process.cwd())
-- **Structured logging**: Metadata objects for rich contextual logging
+- **Automatic directory creation**: Creates `logs/` in consumer app root (process.cwd()) when file logging is enabled
+- **Structured logging**: Native Winston `(message, meta)` call signature for rich contextual logging
+- **Optional redaction**: Mask sensitive dotted paths in meta with `'[REDACTED]'`
 - **Optional injection**: Accepts `config.logger` or creates sensible default
 - **Pluggable middleware**: Optional HTTP request/response logging
 
@@ -947,18 +948,20 @@ Implementation ownership lives in `core/modules/logger` (`@glowing-fishstick/log
 
 #### `createLogger(options)`
 
-Factory function that creates a Pino logger instance.
+Factory function that creates a Winston logger instance.
 
 **Parameters**:
 
-| Name                 | Type      | Default                         | Description                                               |
-| -------------------- | --------- | ------------------------------- | --------------------------------------------------------- |
-| `options.name`       | `string`  | `'app'`                         | Logger name for context and file naming                   |
-| `options.logLevel`   | `string`  | `'info'` or `LOG_LEVEL` env var | Minimum log level: trace\|debug\|info\|warn\|error\|fatal |
-| `options.logDir`     | `string`  | `process.cwd()/logs`            | Directory for log files                                   |
-| `options.enableFile` | `boolean` | `true`                          | Enable file logging in development mode                   |
+| Name                 | Type                  | Default                         | Description                                                                                              |
+| -------------------- | --------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `options.name`       | `string`              | `'app'`                         | Logger name (emitted as `name` in meta; also used for file naming).                                      |
+| `options.level`      | `string`              | `'info'` or `LOG_LEVEL` env var | Minimum log level: `error` \| `warn` \| `info` \| `http` \| `verbose` \| `debug` \| `silly`.             |
+| `options.logDir`     | `string`              | `process.cwd()/logs`            | Directory for log files (only when `enableFile` is true).                                                |
+| `options.enableFile` | `boolean`             | `false`                         | Enable JSON file transport in non-production mode.                                                       |
+| `options.redact`     | `string[]`            | `[]`                            | Dotted paths inside meta to mask with `'[REDACTED]'`.                                                    |
+| `options.transports` | `winston.transport[]` | (none)                          | Override transports entirely. When provided, Console/File defaults are NOT constructed (tests use this). |
 
-**Returns**: `pino.Logger` instance
+**Returns**: `winston.Logger` instance
 
 **Example**:
 
@@ -967,12 +970,13 @@ import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({
   name: 'my-service',
-  logLevel: 'debug',
+  level: 'debug',
   logDir: './logs',
 });
 
 logger.info('Server starting');
-logger.error({ err: new Error('failure'), userId: 123 }, 'Operation failed');
+// WHY: Winston native signature is logger.error(message, meta).
+logger.error('Operation failed', { err: new Error('failure'), userId: 123 });
 ```
 
 #### `createRequestLogger(logger)`
@@ -981,9 +985,9 @@ Factory function that creates Express middleware for HTTP request/response loggi
 
 **Parameters**:
 
-| Name     | Type          | Description                        |
-| -------- | ------------- | ---------------------------------- |
-| `logger` | `pino.Logger` | Logger instance to use for logging |
+| Name     | Type             | Description                        |
+| -------- | ---------------- | ---------------------------------- |
+| `logger` | `winston.Logger` | Logger instance to use for logging |
 
 **Returns**: Express middleware function
 

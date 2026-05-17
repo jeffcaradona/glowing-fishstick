@@ -41,7 +41,7 @@ export function createHookRegistry() {
         await hook();
       } catch (err) {
         if (logger && typeof logger.error === 'function') {
-          logger.error({ err }, 'Hook execution error');
+          logger.error('Hook execution error', { err });
         } else {
           // Fallback to console if no logger provided
           console.error('Hook execution error:', err.message);

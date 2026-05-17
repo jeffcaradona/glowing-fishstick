@@ -1,7 +1,8 @@
 // Type declarations for @glowing-fishstick/shared
 
 import type { Express, RequestHandler, Request } from 'express';
-import type { Logger } from 'pino';
+import type { Logger } from 'winston';
+import type { LoggerOptions } from '@glowing-fishstick/logger';
 
 // ── Server & Lifecycle ─────────────────────────────────────────────────────────
 
@@ -44,15 +45,8 @@ export function createShutdownGate(app: Express): RequestHandler;
 
 // ── Logging (re-exported from @glowing-fishstick/logger) ───────────────────────
 
-export interface LoggerOptions {
-  name?: string;
-  logLevel?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-  logDir?: string;
-  enableFile?: boolean;
-}
-
-export function createLogger(options?: LoggerOptions): Logger;
-export function createRequestLogger(logger: Logger): RequestHandler;
+export type { LoggerOptions, RequestLoggerOptions } from '@glowing-fishstick/logger';
+export { createLogger, createRequestLogger } from '@glowing-fishstick/logger';
 
 // ── Request & Middleware ───────────────────────────────────────────────────────
 
