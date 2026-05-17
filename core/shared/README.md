@@ -104,7 +104,7 @@ import { createLogger } from '@glowing-fishstick/shared';
 const logger = createLogger({ name: 'my-service' });
 
 logger.info('Server starting');
-logger.error({ err: new Error('failure') }, 'Operation failed');
+logger.error('Operation failed', { err: new Error('failure') });
 ```
 
 ### Features
@@ -123,9 +123,9 @@ logger.error({ err: new Error('failure') }, 'Operation failed');
 ```js
 const logger = createLogger({
   name: 'my-app', // Logger name (default: 'app')
-  logLevel: 'debug', // Min level: trace|debug|info|warn|error|fatal (default: 'info')
+  level: 'debug', // Min level: error|warn|info|http|verbose|debug|silly (default: 'info')
   logDir: './logs', // Log directory (default: process.cwd()/logs)
-  enableFile: true, // Enable file logging in dev (default: true)
+  enableFile: false, // Enable file logging in dev (default: false)
 });
 ```
 
