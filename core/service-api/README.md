@@ -45,7 +45,7 @@ runtime surface.
 | `@glowing-fishstick/api`    | `createApi`       | `(config, plugins?) => Express app`                                             | Builds the API app with framework middleware, routes, and plugin slot                  |
 | `@glowing-fishstick/api`    | `createApiConfig` | `(overrides?, env?) => frozen config`                                           | Builds the frozen API config object with defaults, env layering, and `config.services` |
 | `@glowing-fishstick/shared` | `createServer`    | `(app, config) => { server, close, registerStartupHook, registerShutdownHook }` | Starts the HTTP server and runs lifecycle hooks                                        |
-| `@glowing-fishstick/shared` | `createLogger`    | `(options?) => pino logger`                                                     | Structured logger factory typically injected into config                               |
+| `@glowing-fishstick/shared` | `createLogger`    | `(options?) => winston.Logger`                                                  | Structured logger factory typically injected into config                               |
 
 ## `createApiConfig(overrides?, env?)`
 
@@ -70,7 +70,7 @@ Returns a frozen config object. Key properties:
 | `urlencodedParameterLimit` | `number`           | `1000`          | Maximum URL-encoded parameter count                          |
 | `adminRateLimitWindowMs`   | `number`           | `60000`         | Metrics rate-limit window                                    |
 | `adminRateLimitMax`        | `number`           | `60`            | Max metrics requests per window                              |
-| `logger`                   | `pino logger`      | `undefined`     | Optional logger injected into the app and request logging    |
+| `logger`                   | `winston.Logger`   | `undefined`     | Optional logger injected into the app and request logging    |
 | `services`                 | `ServiceContainer` | auto-created    | Dependency-injection container for plugin-owned services     |
 
 ## `config.services` - ServiceContainer

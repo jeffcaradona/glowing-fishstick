@@ -6,6 +6,23 @@ This document tracks potential server composability features and architectural g
 
 ## Current / In-Flight Work
 
+### Release: v0.2.0 Logger Backend Migration (Pino → Winston)
+
+**Status**: ✅ Complete
+
+**Description**: The corporate package mirror does not stock `pino`, blocking installs of `@glowing-fishstick/logger@^0.1.x` inside the target deployment environment. 0.2.0 swaps the underlying logger from Pino to Winston while preserving the public export surface (`createLogger`, `createRequestLogger`). The call signature changes to native Winston `logger.info(message, meta)` — this is a deliberate breaking change rather than a compatibility shim because the codebase has very few public consumers and the shim would mask future drift.
+
+**Highlights**:
+
+- `@glowing-fishstick/logger@0.2.0` — Winston backend, new options (`level`, `redact`, `transports`, `enableFile` default `false`), `format.errors({ stack: true })` preserves error stacks.
+- `@glowing-fishstick/shared@0.2.0` — re-exports updated; `resolveErrorLogger(req)` flips internal `(meta, msg)` to native `(msg, meta)`.
+- `@glowing-fishstick/app@0.2.0` / `@glowing-fishstick/api@0.2.0` — all call sites rewritten; new `logLevel` / `logRedact` / `enableFileLogging` / `logDir` config knobs; admin-config page survives Winston circular refs via `[ClassName]` placeholders in `filterSensitiveKeys`.
+- `@glowing-fishstick/generator@0.2.0` — templates retire `pino-pretty` devDep and pin `^0.2.0` workspace ranges.
+- All 204 tests passing; lint clean; `npm ls pino` reports zero results across the install graph.
+- `maintenance/0.1.x` branch cut from the last `0.1.8` release commit before 0.2.0 merges to `main`. Pino-era security and severe-bug backports land there only. See [RELEASING.md → Maintenance branches](../RELEASING.md#maintenance-branches) for workflow and sunset policy.
+
+**Throughput tradeoff (per AGENTS-readable.md perf rule)**: Winston is materially slower than Pino on raw log throughput (canonical Pino benchmarks claim ~5–10× advantage). Acceptable here because the framework is request-scoped, request volume is low, log lines are level-gated, and unblocking the install pipeline outweighs the per-line latency cost. Revisit if log volume becomes a hot-path bottleneck.
+
 ### Release: v0.1.3 Post-Release Closeout
 
 **Status**: Complete — release already cut and published
@@ -43,7 +60,7 @@ This document tracks potential server composability features and architectural g
 | All 11 missing exports added to `@glowing-fishstick/shared` README             | ✅     | Created exports table listing all 11 public APIs with one-line descriptions                                                                                |
 | TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/api`            | ✅     | Created typed signatures for `createApiConfig()`, `createApi()`, config interfaces, and plugin contract                                                    |
 | TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/shared`         | ✅     | Created typed signatures for server factory, lifecycle, logging, request utilities, and error handling                                                     |
-| `pino-pretty` moved to `peerDependencies` in `@glowing-fishstick/logger`       | ✅     | Reclassified `pino-pretty` as optional peer dependency; updated logger README with install guidance                                                        |
+| `pino-pretty` moved to `peerDependencies` in `@glowing-fishstick/logger`       | ✅ *(retired in 0.2.0 \u2014 Winston migration removed `pino-pretty` entirely)* | Reclassified `pino-pretty` as optional peer dependency; updated logger README with install guidance                                                        |
 | TypeScript declarations (`index.d.ts`) for `@glowing-fishstick/logger`         | ✅     | Created typed signatures for `createLogger()`, `createRequestLogger()` with full option interfaces and usage examples                                      |
 | Consumer-facing runtime contract documented in `@glowing-fishstick/api` README | ✅     | Added package-level contract section covering exports, config surface, middleware order, built-in routes, lifecycle hooks, and request/response guarantees |
 

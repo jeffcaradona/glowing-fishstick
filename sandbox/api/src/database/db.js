@@ -156,7 +156,7 @@ const MIGRATIONS = [
  * may take seconds. Acceptable because migrations run at startup before traffic.
  *
  * @param {import('node:sqlite').DatabaseSync} db
- * @param {object} [logger] - Optional Pino-compatible logger
+ * @param {object} [logger] - Optional Winston-compatible logger
  */
 export function runMigrations(db, logger) {
   // Ensure the version tracking table exists before querying it.

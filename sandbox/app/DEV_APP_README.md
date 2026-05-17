@@ -353,9 +353,9 @@ npm run test:smoke
 
 ## Using the Logger
 
-The framework provides a Pino-based logger that's automatically available via configuration. The logger supports environment-aware formatting:
+The framework provides a Winston-based logger that's automatically available via configuration. The logger supports environment-aware formatting:
 
-- **Development**: Pretty console output + JSON file logs in `logs/` directory
+- **Development**: Colorized printf console output. Optional JSON file logs in `logs/<name>.log` when `enableFile=true`.
 - **Production**: JSON-formatted logs to stdout for container log collection
 
 Logger imports in this guide use `@glowing-fishstick/shared` (curated API). Internally, those exports are sourced from the dedicated `@glowing-fishstick/logger` module.
@@ -382,22 +382,20 @@ export function myPlugin(app, config) {
 
 ### Structured Logging
 
-Pino supports structured logging with metadata objects:
+Winston uses the native `(message, meta)` call signature for structured logging:
 
 ```js
 // Log with metadata
-logger.info({ userId: 123, action: 'login' }, 'User logged in');
+logger.info('User logged in', { userId: 123, action: 'login' });
 
-// Log errors with context
-logger.error({ err: new Error('DB connection failed'), dbHost: 'localhost' }, 'Database error');
+// Log errors with context (format.errors({ stack: true }) preserves the stack)
+logger.error('Database error', { err: new Error('DB connection failed'), dbHost: 'localhost' });
 
-// Different log levels
-logger.trace('Detailed trace info');
+// Different log levels (Winston: error|warn|info|http|verbose|debug|silly)
 logger.debug('Debug info');
 logger.info('Informational message');
-logger.warn({ threshold: 100, current: 150 }, 'Threshold exceeded');
+logger.warn('Threshold exceeded', { threshold: 100, current: 150 });
 logger.error('Error occurred');
-logger.fatal('Fatal error - service unavailable');
 ```
 
 ### Custom Logger Configuration
@@ -409,9 +407,9 @@ import { createLogger } from '@glowing-fishstick/shared';
 
 const logger = createLogger({
   name: 'my-app',
-  logLevel: 'debug', // trace|debug|info|warn|error|fatal
+  level: 'debug', // error|warn|info|http|verbose|debug|silly
   logDir: './logs', // Custom log directory
-  enableFile: true, // Enable file logging in development
+  enableFile: true, // Enable JSON file transport in non-production
 });
 
 const config = createConfig({ ...appOverrides, logger });

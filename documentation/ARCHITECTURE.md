@@ -24,7 +24,7 @@
 │                                                             │
 │  1. x-powered-by disabled                                   │
 │  2. createRequestIdMiddleware()   — x-request-id header     │
-│  3. createRequestLogger()        — Pino request logging     │
+│  3. createRequestLogger()        — Winston request logging  │
 │  4. express.json / urlencoded    — body parsing with limits │
 │  5. express.static               — (app only)               │
 │  6. healthRoutes()               — /healthz /readyz /livez  │
@@ -107,7 +107,7 @@
 │   │       └── utils/              formatters, error-utils
 │   │
 │   └── modules/
-│       └── logger/         @glowing-fishstick/logger — Pino structured logging
+│       └── logger/         @glowing-fishstick/logger — Winston structured logging
 │           └── src/logger.js  createLogger(), createRequestLogger()
 │
 ├── tests/                  Integration tests (Vitest + Supertest)

@@ -91,7 +91,7 @@ Before building any new service, utility, middleware, or infrastructure module:
 
 1. **Check `config.services`** — both `createConfig()` and `createApiConfig()` inject a `ServiceContainer`. Use it for shared services (DB pools, external clients, caches) instead of module-level singletons or custom DI.
 2. **Check `@glowing-fishstick/shared` exports** — read the README export table or `core/shared/index.js`. The shared package provides auth, error handling, lifecycle, logging, throttling, and DI utilities.
-3. **Check `@glowing-fishstick/logger`** — logger is already configured with dev/prod modes. Do not install or configure Pino separately.
+3. **Check `@glowing-fishstick/logger`** — logger is already configured with dev/prod modes. Do not install or configure Winston separately.
 4. **Check existing `package.json` dependencies** before adding new ones — the dependency may already be available transitively.
 
 If you need a capability that feels like infrastructure, it probably already exists. Search before building.
@@ -115,7 +115,7 @@ Every published package must ship an `index.d.ts`:
 
 ### Dependency Visibility Rules
 
-- Runtime-optional dependencies that consumers are expected to install (e.g., `pino-pretty`) must use `peerDependencies` with `"optional": true` in `peerDependenciesMeta`
+- Runtime-optional dependencies that consumers are expected to install (e.g., add-on `winston` transports such as `winston-daily-rotate-file`) must use `peerDependencies` with `"optional": true` in `peerDependenciesMeta`
 - `devDependencies` is invisible to consumers — never put consumer-facing optional deps there alone
 - Keep `devDependencies` for packages only needed during development/testing within the monorepo
 

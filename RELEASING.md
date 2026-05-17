@@ -158,3 +158,38 @@ VERIFY IF CHANGED: Confirm published versions in npm registry and local changelo
   - **Minor/major releases:** All packages coordinate to the same version level; root `package.json` and monorepo tag (vX.Y.Z) reflect this coordinated version.
 - All published packages require **Node.js ≥ 22**.
 - Published packages: `@glowing-fishstick/app`, `@glowing-fishstick/api`, `@glowing-fishstick/shared`, `@glowing-fishstick/logger`, `@glowing-fishstick/generator`.
+
+## Maintenance branches
+
+Long-lived support branches are cut from the last release tag of a given minor line so that critical fixes can be backported without dragging in the next minor's breaking changes.
+
+| Branch              | Tracks                                        | Purpose                                                                                                                          |
+| ------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `main`              | next release line (currently `0.2.x`)         | Active development. All new features and breaking changes land here.                                                             |
+| `maintenance/0.1.x` | last `0.1.x` release (Pino-backed logger)     | Pino-compatible backports only — security fixes and severe bug fixes for consumers still pinned to `@glowing-fishstick/*@^0.1.x`. |
+
+WHY: `0.2.0` is a breaking change (Pino → Winston call-signature flip). Consumers blocked on Pino's removal need a place to receive `0.1.x` patches without being forced onto Winston.
+
+### When to backport to `maintenance/0.1.x`
+
+- Security advisories affecting a transitive Pino-era dependency.
+- Severe runtime regressions reproducible on the published `0.1.8` install graph.
+- **Not** new features. **Not** doc cleanups. **Not** dev-tooling changes.
+
+### Backport workflow
+
+```sh
+git checkout maintenance/0.1.x
+git cherry-pick <commit-sha-from-main>     # resolve any Pino-vs-Winston conflicts manually
+npm run test:all
+npm run cs                                 # patch-only changeset
+npm run version-packages                   # bumps 0.1.x → 0.1.(x+1)
+git commit -am "chore: version packages (0.1.x maintenance)"
+npm run release
+git tag v0.1.<n>
+git push --follow-tags origin maintenance/0.1.x
+```
+
+### Sunset policy
+
+`maintenance/0.1.x` is supported until the corporate package mirror stocks `winston` and all known internal consumers have migrated to `^0.2.0`. After that, the branch is archived and no further releases ship.

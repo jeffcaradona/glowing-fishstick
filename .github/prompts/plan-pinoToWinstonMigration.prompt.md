@@ -10,6 +10,7 @@ Replace Pino with Winston across the monorepo because Pino is blocked by jFrog a
 - **Types**: replace `import type { Logger } from 'pino'` with `import type { Logger } from 'winston'` in all four `.d.ts` files.
 - **Version**: bump `@glowing-fishstick/logger`, `@glowing-fishstick/shared`, `@glowing-fishstick/app`, `@glowing-fishstick/api` to `0.2.0`. Generator CLI also bumps to `0.2.0` because its templates change.
 - **Hook registry duck-type** stays (`typeof logger.error === 'function'`) — Winston satisfies it.
+- **Maintenance branch**: `maintenance/0.1.x` is cut from the last `0.1.8` release commit *before* any 0.2.0 work merges to `main`. Pino-era security and severe-bug backports land there. See `RELEASING.md` → "Maintenance branches" for the workflow and sunset policy.
 - **Out of scope**: child loggers, `req.log` attachment, redaction beyond a simple format-based field masker, daily rotation, splat-style printf in production.
 
 ## Phase 1 — Logger module rewrite (foundation; blocks everything else)

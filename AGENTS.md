@@ -99,7 +99,7 @@ run repoSearch for knownStaleStrings
 beforeBuilding newService|utility|middleware|infrastructure MUST_CHECK
 config.services (ServiceContainer via createConfig+createApiConfig),
 @glowing-fishstick/shared exports (README exportTable OR core/shared/index.js),
-@glowing-fishstick/logger (preconfigured dev/prod ; DO_NOT install|configure Pino separately),
+@glowing-fishstick/logger (preconfigured dev/prod ; DO_NOT install|configure Winston separately),
 existing package.json dependencies (may be available transitively)
 
 ### Package README Requirements

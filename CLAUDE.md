@@ -38,7 +38,7 @@ sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | cor
 - `core/shared/src/server-factory.js` — HTTP server + graceful shutdown
 - `core/shared/src/hook-registry.js` — lifecycle management
 - `core/shared/src/registry-store.js` — WeakMap-based privacy
-- `core/modules/logger/src/` — Pino structured logging
+- `core/modules/logger/src/` — Winston structured logging
 
 ### Application framework
 
@@ -60,7 +60,7 @@ sandbox/app/ → consumer example | sandbox/api/ → API consumer scaffold | cor
 
 ## Tech stack
 
-Node.js ≥ 22, ESM, Express 5.x, EJS templates, Pino logging, dotenv.
+Node.js ≥ 22, ESM, Express 5.x, EJS templates, Winston logging, dotenv.
 Dev: Vitest + Supertest, ESLint v10 (flat config), Prettier, Nodemon.
 
 ## Testing
@@ -80,7 +80,7 @@ Run: `npm run lint` · `npm run format` · `npm run test:all`
 
 **Modifying core:** Understand impact on all consumers → maintain backward compat → update `sandbox/app/` and `sandbox/api/` → sync docs → run full test suite.
 
-**Adding routes:** Use `express.Router()`, async handlers, `try/catch` with `next(err)`, request-scoped logging via `req.log`.
+**Adding routes:** Use `express.Router()`, async handlers, `try/catch` with `next(err)`. For request-scoped logging, consume `req.app.locals.logger` or `config.logger` — the framework does not attach `req.log`.
 
 **Adding config:** Spread `coreCreateConfig(overrides, env)` + consumer-specific fields in consumer's `config/env.js`.
 

@@ -51,7 +51,7 @@ Both `@glowing-fishstick/app` and `@glowing-fishstick/api` can act as a lightwei
 
 **Benefits**:
 
-- Centralized audit logging (all requests logged via Pino)
+- Centralized audit logging (all requests logged via Winston)
 - Payload validation (`413` for oversized requests)
 - Rate-limiting on expensive operations
 - Request tracing (built-in request IDs)
@@ -574,7 +574,7 @@ const config = createConfig();
 
 - `core/web-app` — The app factory package. Published as `@glowing-fishstick/app`. Provides `createApp`, `createServer`, `createConfig`, built-in routes, and the plugin system.
 - `core/shared` — Compatibility layer + curated public API used by `core/web-app` and `core/service-api` (request IDs, lifecycle registries, formatters, JWT helpers, and logger re-exports). Published as `@glowing-fishstick/shared` when distributed separately.
-- `core/modules/logger` — Implementation ownership boundary for logging (Pino logger factory + request logging middleware). Published as `@glowing-fishstick/logger`.
+- `core/modules/logger` — Implementation ownership boundary for logging (Winston logger factory + request logging middleware). Published as `@glowing-fishstick/logger`.
 - `core/service-api` — JSON-first API factory package. Published as `@glowing-fishstick/api`. Provides `createApi`, `createApiConfig`, health routes, API middleware composition, and JWT app-access enforcement (`API_BLOCK_BROWSER_ORIGIN`, `API_REQUIRE_JWT`).
 - `core/generator` — CLI scaffolding tool. Published as `@glowing-fishstick/generator`. Provides the `fishstick-create` command to scaffold new app or API projects from starter templates.
 - `sandbox/app/` — A local consumer example application included in this repository to demonstrate composition, configuration overrides, and plugin usage. It imports the workspace package by name to simulate a real consumer.

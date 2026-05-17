@@ -5,7 +5,7 @@
 An AI coding agent (and by extension, any new developer) built two pieces of infrastructure from scratch that the framework already provided:
 
 1. **A vault service** (`initVault` / `getCredentials` / `closeVault`) — the framework already had a dependency injection container (`config.services`) wired into every config object, purpose-built for registering and resolving shared services like this.
-2. **Installed `pino-pretty`** as a consumer dependency through trial-and-error — the framework already bundled it, but npm gave no signal it was needed because it was hidden in `devDependencies` instead of `peerDependencies`.
+2. **Installed `pino-pretty`** as a consumer dependency through trial-and-error — the framework already bundled it, but npm gave no signal it was needed because it was hidden in `devDependencies` instead of `peerDependencies`. *(Historical: the framework migrated off Pino to Winston in 0.2.0, retiring `pino-pretty` entirely. The discoverability lesson — surface optional runtime deps via `peerDependencies` — still applies to any future add-on transports.)*
 
 Both mistakes wasted time and introduced unnecessary code. Both were entirely preventable.
 
@@ -17,7 +17,7 @@ The framework's capabilities were **invisible at every discovery surface**:
 | --------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **README**            | `config.services` not mentioned in any package README                   | Agent/dev doesn't know DI exists                                                                                                   |
 | **README**            | 4 of 22 exports documented in `@glowing-fishstick/shared`               | 80% of the API surface is invisible to anyone reading docs                                                                         |
-| **package.json**      | `pino-pretty` listed as `devDependencies` instead of `peerDependencies` | npm gives no warning; consumer hits a runtime crash with no explanation                                                            |
+| **package.json**      | `pino-pretty` listed as `devDependencies` instead of `peerDependencies` *(retired in 0.2.0 with Winston migration; principle still applies)* | npm gives no warning; consumer hits a runtime crash with no explanation                                                            |
 | **Type declarations** | No `.d.ts` files, no `"types"` field                                    | IDE autocomplete and agent type inference both fall back to `any` — the most powerful discovery tool (hover/autocomplete) is blind |
 
 ### The core principle
