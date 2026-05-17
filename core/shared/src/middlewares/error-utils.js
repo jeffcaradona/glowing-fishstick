@@ -87,9 +87,9 @@ export function serializeError(err) {
       stack: err.stack,
       // WHY: Preserve common operational-error metadata (AppError.statusCode/code,
       // upstream cause) so downstream log consumers can filter without re-parsing.
-      ...(err.code !== undefined ? { code: err.code } : {}),
-      ...(err.statusCode !== undefined ? { statusCode: err.statusCode } : {}),
-      ...(err.cause !== undefined ? { cause: serializeError(err.cause) } : {}),
+      ...(err.code === undefined ? {} : { code: err.code }),
+      ...(err.statusCode === undefined ? {} : { statusCode: err.statusCode }),
+      ...(err.cause === undefined ? {} : { cause: serializeError(err.cause) }),
     };
   }
   return { value: err };

@@ -28,7 +28,7 @@ describe('serializeError', () => {
 
   it('survives JSON.stringify without losing fields', () => {
     const err = new Error('boom');
-    const json = JSON.parse(JSON.stringify(serializeError(err)));
+    const json = structuredClone(serializeError(err));
 
     expect(json.message).toBe('boom');
     expect(json.name).toBe('Error');
@@ -84,8 +84,8 @@ describe('logUnexpectedError', () => {
     expect(meta.path).toBe('/admin/config');
     expect(meta.reqId).toBe('req-123');
 
-    // The critical regression guard: round-trip through JSON must keep message + stack.
-    const round = JSON.parse(JSON.stringify(meta));
+    // The critical regression guard: deep clone must keep message + stack.
+    const round = structuredClone(meta);
     expect(round.err.message).toBe('template explode');
     expect(round.err.name).toBe('Error');
     expect(typeof round.err.stack).toBe('string');

@@ -110,10 +110,14 @@ function createRedactFormat(paths) {
  * a stack-bearing plain object regardless of call style.
  */
 const errSerializerFormat = format((info) => {
-  if (info.err instanceof Error) {
-    info.err = { message: info.err.message, name: info.err.name, stack: info.err.stack };
+  if (!(info.err instanceof Error)) {
+    return info;
   }
-  return info;
+  // WHY: return a new object rather than mutating info.err to satisfy no-param-reassign.
+  return {
+    ...info,
+    err: { message: info.err.message, name: info.err.name, stack: info.err.stack },
+  };
 })();
 
 /**
@@ -127,9 +131,9 @@ const devPrintf = format.printf((info) => {
   // destructure; only enumerable string keys appear in `rest`.
   const metaKeys = Object.keys(rest);
   const metaPart = metaKeys.length ? ` ${JSON.stringify(rest)}` : '';
-  const stackPart = stack ? `\n${stack}` : '';
-  const namePart = name ? ` [${name}]` : '';
-  return `${timestamp} ${level}${namePart} ${message}${metaPart}${stackPart}`;
+  const stackPart = stack ? `\n${String(stack)}` : '';
+  const namePart = name ? ` [${String(name)}]` : '';
+  return `${String(timestamp)} ${level}${namePart} ${String(message)}${metaPart}${stackPart}`;
 });
 
 /**
