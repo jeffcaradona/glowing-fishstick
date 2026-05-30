@@ -58,9 +58,13 @@ Recommended pass/fail guardrails for PoC confidence:
 
 The repository already includes a benchmark harness:
 
-- `core/benchmarks/run.js`
+- `core/benchmarks/run.js` — Node.js orchestrator (starts the server, spawns k6)
+- `core/benchmarks/k6-script.js` — k6 script (per-endpoint metrics + custom summary table)
 
-It starts the app via factory functions and runs `autocannon` across core endpoints in sequence.
+It starts the app via factory functions and spawns `k6` against all core endpoints concurrently.
+
+> **Prerequisite:** Install k6 separately — it is not an npm package.
+> See https://k6.io/docs/get-started/installation/ or `winget install k6` on Windows.
 
 Use:
 

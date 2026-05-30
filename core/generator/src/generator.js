@@ -179,7 +179,11 @@ function runNpmInstall(cwd) {
     // WHY (env): Use sanitized PATH (absolute entries only) to prevent
     // CWD-based executable hijacking — the target directory may contain
     // untrusted files when using --force on an existing project.
-    const child = spawn('npm', ['install'], {
+    //
+    // WHY (command string): Pass `npm install` as a single command string
+    // with shell: true to avoid Node.js deprecation warning about unescaped
+    // arguments to shell.
+    const child = spawn('npm install', {
       cwd,
       stdio: 'inherit',
       shell: true,
