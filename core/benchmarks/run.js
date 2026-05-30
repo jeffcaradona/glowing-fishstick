@@ -20,6 +20,7 @@
 import console from 'node:console';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, URL } from 'node:url';
+import path from 'node:path';
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 // ── CLI args ───────────────────────────────────────────────────
@@ -48,6 +49,31 @@ function waitForListening(server) {
 }
 
 /**
+ * Build a copy of process.env with PATH restricted to absolute entries only.
+ *
+ * WHY: Prevents CWD-based executable hijacking — empty segments or relative
+ * entries (e.g. `.`, `./bin`, or a trailing `:`) in PATH allow a malicious
+ * binary named `k6` placed in the current working directory to shadow the
+ * real tool. Absolute-only entries are the practical defence; k6 is a
+ * system-installed binary and is not expected to live in user-managed
+ * version-manager paths (unlike npm/node via nvm/fnm).
+ *
+ * @returns {NodeJS.ProcessEnv}
+ */
+function getSanitizedEnv() {
+  const env = { ...process.env };
+  const sep = process.platform === 'win32' ? ';' : ':';
+
+  if (env.PATH) {
+    env.PATH = env.PATH.split(sep)
+      .filter((dir) => path.isAbsolute(dir))
+      .join(sep);
+  }
+
+  return env;
+}
+
+/**
  * Spawns k6 and resolves when it exits cleanly.
  * WHY spawn without shell: k6 is a native binary on PATH — shell:false is sufficient and
  * avoids DEP0190 (arg concatenation) and any shell injection surface. Args are passed as
@@ -67,7 +93,9 @@ function runK6(baseUrl) {
         '--env', `BASE_URL=${baseUrl}`,
         k6ScriptPath,
       ],
-      { stdio: 'inherit' },
+      // WHY (env): Sanitize PATH to absolute entries only — prevents a
+      // malicious `k6` binary in the cwd from shadowing the real executable.
+      { stdio: 'inherit', env: getSanitizedEnv() },
     );
 
     k6.on('error', (err) => reject(new Error(`Failed to spawn k6: ${err.message}`)));
