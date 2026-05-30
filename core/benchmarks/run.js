@@ -1,21 +1,25 @@
 /**
  * @file benchmarks/run.js
- * @description Autocannon load benchmark for glowing-fishstick core endpoints.
+ * @description k6 load benchmark for glowing-fishstick core endpoints.
  *
- * Spins up the framework using the factory pattern, runs autocannon against
- * each core endpoint in sequence, then tears down cleanly.
+ * Spins up the framework using the factory pattern, spawns k6 against
+ * all core endpoints concurrently, then tears down cleanly.
  *
  * Usage:
- *   npm run benchmark
- *   node benchmarks/run.js --connections 50 --duration 10
+ *   npm run benchmark:core
+ *   node core/benchmarks/run.js --connections 50 --duration 10
  *
  * Flags:
- *   --connections  Concurrent HTTP connections (default: 10)
- *   --duration     Seconds per endpoint (default: 5)
+ *   --connections  Concurrent virtual users (default: 10)
+ *   --duration     Seconds per run (default: 5)
+ *
+ * Prerequisites:
+ *   k6 must be installed and available on PATH (https://k6.io/docs/get-started/installation/)
  */
 
 import console from 'node:console';
-import autocannon from 'autocannon';
+import { spawn } from 'node:child_process';
+import { fileURLToPath, URL } from 'node:url';
 import { createApp, createServer, createConfig } from '@glowing-fishstick/app';
 
 // ── CLI args ───────────────────────────────────────────────────
@@ -28,15 +32,6 @@ const getArg = (flag, defaultVal) => {
 const CONNECTIONS = getArg('--connections', 10);
 const DURATION = getArg('--duration', 5);
 const PORT = 4000;
-
-// ── Endpoints to hit ───────────────────────────────────────────
-const ENDPOINTS = [
-  { path: '/healthz', label: '/healthz  (liveness check)' },
-  { path: '/readyz', label: '/readyz   (readiness check)' },
-  { path: '/livez', label: '/livez    (liveness alias)' },
-  { path: '/', label: '/          (landing page)' },
-  { path: '/admin', label: '/admin     (admin dashboard)' },
-];
 
 // ── Silent logger — keeps benchmark output clean ───────────────
 const noop = () => {};
@@ -52,11 +47,38 @@ function waitForListening(server) {
   return new Promise((resolve) => server.once('listening', resolve));
 }
 
-/** Runs autocannon against a single URL, prints the result table, returns the result. */
-async function runEndpoint(url, title) {
-  const result = await autocannon({ url, connections: CONNECTIONS, duration: DURATION, title });
-  autocannon.printResult(result);
-  return result;
+/**
+ * Spawns k6 and resolves when it exits cleanly.
+ * WHY spawn without shell: k6 is a native binary on PATH — shell:false is sufficient and
+ * avoids DEP0190 (arg concatenation) and any shell injection surface. Args are passed as
+ * an array and never string-concatenated by the shell.
+ */
+function runK6(baseUrl) {
+  // Resolve absolute path to the k6 script so this works regardless of cwd.
+  const k6ScriptPath = fileURLToPath(new URL('./k6-script.js', import.meta.url));
+
+  return new Promise((resolve, reject) => {
+    const k6 = spawn(
+      'k6',
+      [
+        'run',
+        '--env', `CONNECTIONS=${CONNECTIONS}`,
+        '--env', `DURATION=${DURATION}`,
+        '--env', `BASE_URL=${baseUrl}`,
+        k6ScriptPath,
+      ],
+      { stdio: 'inherit' },
+    );
+
+    k6.on('error', (err) => reject(new Error(`Failed to spawn k6: ${err.message}`)));
+    k6.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`k6 exited with code ${code}`));
+      }
+    });
+  });
 }
 
 // ── Main ───────────────────────────────────────────────────────
@@ -73,38 +95,11 @@ async function main() {
 
     console.log('\n=== glowing-fishstick benchmark ===');
     console.log(`  connections : ${CONNECTIONS}`);
-    console.log(`  duration    : ${DURATION}s per endpoint`);
+    console.log(`  duration    : ${DURATION}s`);
     console.log(`  server      : ${baseUrl}`);
-    console.log(`  endpoints   : ${ENDPOINTS.length}\n`);
-
-    const summary = [];
-
-    for (const { path, label } of ENDPOINTS) {
-      console.log(`\n--- ${label} ---`);
-      const result = await runEndpoint(`${baseUrl}${path}`, label);
-      summary.push({
-        label,
-        reqPerSec: result.requests.average,
-        latencyMs: result.latency.average,
-        errors: result.errors,
-      });
-    }
-
-    // ── Summary sorted by throughput ───────────────────────────
-    console.log('\n=== Summary (sorted by req/sec) ===');
-    console.log('  req/sec    latency    errors    endpoint');
-    console.log('  ─────────────────────────────────────────────────');
-
-    summary
-      .toSorted((a, b) => b.reqPerSec - a.reqPerSec)
-      .forEach(({ label, reqPerSec, latencyMs, errors }) => {
-        const rps = String(Math.round(reqPerSec)).padStart(7);
-        const lat = `${latencyMs.toFixed(1)} ms`.padStart(9);
-        const err = String(errors).padStart(6);
-        console.log(`  ${rps}    ${lat}    ${err}    ${label}`);
-      });
-
     console.log('');
+
+    await runK6(baseUrl);
   } finally {
     await close();
     // Remove the SIGTERM/SIGINT listeners registered by createServer

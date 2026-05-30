@@ -57,19 +57,16 @@
     "version-packages": "changeset version",
     "release": "changeset publish"
   },
-  "overrides": {
-
-  },
+  "overrides": {},
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@eslint/js": "^10.0.1",
-    "autocannon": "^8.0.0",
     "c8": "^11.0.0",
     "cross-env": "^10.1.0",
-    "eslint": "^10.4.0",
+    "eslint": "^10.4.1",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "supertest": "^7.2.2",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.7"
   }
 }

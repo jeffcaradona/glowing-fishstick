@@ -793,7 +793,7 @@ class AppError extends Error {
 | **Unit**        | `core/shared/tests/unit/`             | Pure shared utilities and helper functions (e.g., formatters, JWT, service container).                         | `vitest`              |
 | **Integration** | `core/web-app/tests/integration/`     | `createApp()`/`createServer()` composed with test config + `supertest` — full HTTP request/response lifecycle. | `supertest`, `vitest` |
 | **Integration** | `core/service-api/tests/integration/` | `createApi()`/`createApiConfig()` composed with test config + `supertest` — API factory and config behavior.   | `supertest`, `vitest` |
-| **Stress**      | `autocannon` (optional, dev tool)     | Load testing against a running instance. Validates performance and stability under concurrency.                | `autocannon`          |
+| **Stress**      | `k6` (optional, external binary)      | Load testing against a running instance. Validates performance and stability under concurrency.                | `k6`                  |
 
 ### 12.2 Testability by Design
 
